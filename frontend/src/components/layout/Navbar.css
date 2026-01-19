@@ -1,55 +1,348 @@
+/* ===========================
+   Navbar Container
+   =========================== */
 .navbar {
-    height: 64px;
-    background: var(--bg-white);
-    border-bottom: 1px solid #eee;
+    height: 70px;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 24px;
+    padding: 0 32px;
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 1000;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* ===========================
+   Left Section - Brand & Nav
+   =========================== */
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 48px;
+    flex: 1;
 }
 
 .nav-brand {
     display: flex;
     align-items: center;
     gap: 12px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.nav-brand:hover {
+    opacity: 0.8;
+}
+
+.brand-logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
 }
 
 .brand-text {
-    font-size: 1.25rem;
+    font-size: 1.375rem;
     font-weight: 700;
-    color: var(--primary-orange);
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-.nav-user {
+/* ===========================
+   Navigation Links
+   =========================== */
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: #6b7280;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.nav-link:hover {
+    background: #f9fafb;
+    color: #ff6b35;
+}
+
+.nav-link.active {
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(247, 147, 30, 0.1) 100%);
+    color: #ff6b35;
+    font-weight: 600;
+}
+
+.nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -16px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ff6b35 0%, #f7931e 100%);
+    border-radius: 3px 3px 0 0;
+}
+
+.nav-icon {
+    font-size: 1.125rem;
+    line-height: 1;
+}
+
+.nav-text {
+    line-height: 1;
+}
+
+/* ===========================
+   Right Section - User Menu
+   =========================== */
+.nav-right {
+    display: flex;
+    align-items: center;
+}
+
+.user-menu {
+    position: relative;
+}
+
+.user-trigger {
     display: flex;
     align-items: center;
     gap: 12px;
+    padding: 8px 12px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.user-trigger:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .user-avatar {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    background: #eee;
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
-    color: var(--text-secondary);
+    font-weight: 700;
+    font-size: 0.9375rem;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
 }
 
-.logout-btn {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
+.user-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+}
+
+.user-name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #1f2937;
+    line-height: 1.2;
+}
+
+.user-email {
+    font-size: 0.8125rem;
+    color: #6b7280;
+    line-height: 1.2;
+}
+
+.dropdown-arrow {
+    color: #9ca3af;
+    transition: transform 0.2s ease;
+}
+
+.dropdown-arrow.open {
+    transform: rotate(180deg);
+}
+
+/* ===========================
+   Dropdown Menu
+   =========================== */
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 280px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    animation: dropdownSlide 0.2s ease;
+}
+
+@keyframes dropdownSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.menu-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.05) 0%, rgba(247, 147, 30, 0.05) 100%);
+}
+
+.menu-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
+}
+
+.menu-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.menu-name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.menu-email {
+    font-size: 0.8125rem;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.menu-divider {
+    height: 1px;
+    background: #e5e7eb;
+}
+
+.menu-items {
+    padding: 8px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px;
     background: none;
     border: none;
+    border-radius: 8px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: #374151;
+    text-align: left;
     cursor: pointer;
-    padding: 4px 8px;
+    transition: all 0.2s ease;
 }
 
-.logout-btn:hover {
-    color: var(--error);
+.menu-item:hover {
+    background: #f9fafb;
+    color: #ff6b35;
+}
+
+.menu-item.logout {
+    color: #dc2626;
+}
+
+.menu-item.logout:hover {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.menu-icon {
+    font-size: 1.125rem;
+    line-height: 1;
+    width: 20px;
+    text-align: center;
+}
+
+/* ===========================
+   Responsive Design
+   =========================== */
+@media (max-width: 1024px) {
+    .navbar {
+        padding: 0 20px;
+    }
+
+    .nav-left {
+        gap: 24px;
+    }
+
+    .nav-text {
+        display: none;
+    }
+
+    .nav-link {
+        padding: 10px 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        height: 64px;
+        padding: 0 16px;
+    }
+
+    .brand-text {
+        display: none;
+    }
+
+    .nav-links {
+        display: none;
+    }
+
+    .user-details {
+        display: none;
+    }
+
+    .user-trigger {
+        padding: 8px;
+    }
+
+    .dropdown-menu {
+        width: 260px;
+    }
 }

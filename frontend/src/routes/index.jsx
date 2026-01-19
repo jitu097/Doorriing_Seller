@@ -2,12 +2,17 @@ import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
+import Loader from '../components/common/Loader';
 
 // Lazy load pages
 const Login = lazy(() => import('../pages/auth/Login'));
 const Register = lazy(() => import('../pages/auth/Register'));
 const ShopSetup = lazy(() => import('../pages/onboarding/ShopSetup'));
 const Dashboard = lazy(() => import('../pages/dashboard/Dashboard'));
+const Orders = lazy(() => import('../pages/orders/Orders'));
+const Items = lazy(() => import('../pages/items/Items'));
+const Discounts = lazy(() => import('../pages/discounts/Discounts'));
+const Analytics = lazy(() => import('../pages/analytics/Analytics'));
 const MainLayout = lazy(() => import('../components/layout/MainLayout'));
 const LandingPage = lazy(() => import('../pages/landing/LandingPage'));
 
@@ -23,7 +28,7 @@ const ProtectedRoute = () => {
         return () => unsubscribe();
     }, []);
 
-    if (isAuthenticated === null) return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Loading...</div>;
+    if (isAuthenticated === null) return <Loader variant="fullscreen" message="Loading..." />;
     return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
@@ -37,7 +42,7 @@ const PublicRoute = () => {
         return () => unsubscribe();
     }, []);
 
-    if (isAuthenticated === null) return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Loading...</div>;
+    if (isAuthenticated === null) return <Loader variant="fullscreen" message="Loading..." />;
     return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Outlet />;
 };
 
@@ -45,7 +50,7 @@ const PublicRoute = () => {
 
 const AppRoutes = () => {
     return (
-        <Suspense fallback={<div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Loading App...</div>}>
+        <Suspense fallback={<Loader variant="fullscreen" message="Loading App..." />}>
             <Routes>
 
                 {/* Landing Page */}
@@ -62,6 +67,10 @@ const AppRoutes = () => {
                     <Route path="/setup-shop" element={<ShopSetup />} />
                     <Route element={<MainLayout />}>
                         <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/orders" element={<Orders />} />
+                        <Route path="/items" element={<Items />} />
+                        <Route path="/discounts" element={<Discounts />} />
+                        <Route path="/analytics" element={<Analytics />} />
                     </Route>
                 </Route>
 

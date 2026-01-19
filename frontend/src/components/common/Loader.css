@@ -1,0 +1,304 @@
+/* ===========================
+   Loader Container
+   =========================== */
+.loader-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 2rem;
+}
+
+.loader-container.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+}
+
+.loader-container.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 100;
+}
+
+/* ===========================
+   Loader Wrapper & Sizing
+   =========================== */
+.loader-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loader-small {
+    width: 80px;
+    height: 60px;
+}
+
+.loader-medium {
+    width: 120px;
+    height: 90px;
+}
+
+.loader-large {
+    width: 160px;
+    height: 120px;
+}
+
+/* ===========================
+   Road Animation
+   =========================== */
+.loader-road {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #e0e0e0 0%, #f5f5f5 100%);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.road-line {
+    position: absolute;
+    width: 30%;
+    height: 2px;
+    background: #bdbdbd;
+    top: 50%;
+    transform: translateY(-50%);
+    animation: roadMove 1.5s linear infinite;
+}
+
+.road-line:nth-child(1) {
+    left: -30%;
+    animation-delay: 0s;
+}
+
+.road-line:nth-child(2) {
+    left: -30%;
+    animation-delay: 0.5s;
+}
+
+.road-line:nth-child(3) {
+    left: -30%;
+    animation-delay: 1s;
+}
+
+@keyframes roadMove {
+    0% {
+        left: -30%;
+        opacity: 0;
+    }
+    20% {
+        opacity: 1;
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        left: 100%;
+        opacity: 0;
+    }
+}
+
+/* ===========================
+   Scooter Animation
+   =========================== */
+.loader-scooter {
+    position: relative;
+    z-index: 2;
+    animation: scooterBounce 0.8s ease-in-out infinite;
+}
+
+.scooter-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+}
+
+.loader-small .scooter-image {
+    max-width: 60px;
+}
+
+.loader-medium .scooter-image {
+    max-width: 90px;
+}
+
+.loader-large .scooter-image {
+    max-width: 120px;
+}
+
+.scooter-fallback {
+    font-size: 3rem;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+}
+
+.loader-small .scooter-fallback {
+    font-size: 2rem;
+}
+
+.loader-large .scooter-fallback {
+    font-size: 4rem;
+}
+
+@keyframes scooterBounce {
+    0%, 100% {
+        transform: translateY(0) rotate(-2deg);
+    }
+    50% {
+        transform: translateY(-8px) rotate(-2deg);
+    }
+}
+
+/* ===========================
+   Speed Lines Effect
+   =========================== */
+.speed-lines {
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 1;
+}
+
+.speed-line {
+    display: block;
+    height: 2px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 107, 53, 0.6) 50%, 
+        transparent 100%
+    );
+    border-radius: 2px;
+    animation: speedLineMove 0.6s ease-out infinite;
+}
+
+.speed-line:nth-child(1) {
+    width: 25px;
+    animation-delay: 0s;
+}
+
+.speed-line:nth-child(2) {
+    width: 20px;
+    animation-delay: 0.1s;
+}
+
+.speed-line:nth-child(3) {
+    width: 15px;
+    animation-delay: 0.2s;
+}
+
+@keyframes speedLineMove {
+    0% {
+        transform: translateX(0) scaleX(1);
+        opacity: 0;
+    }
+    20% {
+        opacity: 1;
+    }
+    80% {
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateX(-30px) scaleX(0.5);
+        opacity: 0;
+    }
+}
+
+/* ===========================
+   Loading Message
+   =========================== */
+.loader-message {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #424242;
+    text-align: center;
+    margin: 0;
+    animation: messageFade 1.5s ease-in-out infinite;
+}
+
+.loader-small + .loader-message {
+    font-size: 0.875rem;
+}
+
+.loader-large + .loader-message {
+    font-size: 1.125rem;
+}
+
+@keyframes messageFade {
+    0%, 100% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* ===========================
+   Responsive Design
+   =========================== */
+@media (max-width: 768px) {
+    .loader-container {
+        padding: 1.5rem;
+        gap: 1rem;
+    }
+
+    .loader-large {
+        width: 120px;
+        height: 90px;
+    }
+
+    .loader-message {
+        font-size: 0.9375rem;
+    }
+}
+
+/* ===========================
+   Accessibility & Performance
+   =========================== */
+@media (prefers-reduced-motion: reduce) {
+    .loader-scooter,
+    .road-line,
+    .speed-line,
+    .loader-message {
+        animation: none;
+    }
+
+    .loader-scooter {
+        opacity: 0.8;
+    }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+    .loader-container.fullscreen {
+        background: rgba(18, 18, 18, 0.95);
+    }
+
+    .loader-road {
+        background: linear-gradient(90deg, #2a2a2a 0%, #1a1a1a 100%);
+    }
+
+    .road-line {
+        background: #4a4a4a;
+    }
+
+    .loader-message {
+        color: #e0e0e0;
+    }
+}

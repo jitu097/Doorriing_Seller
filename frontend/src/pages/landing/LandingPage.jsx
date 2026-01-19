@@ -1,9 +1,24 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Loader from '../../components/common/Loader';
 import './LandingPage.css';
 
 const LandingPage = () => {
     const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        // Simulate initial loading
+        const timer = setTimeout(() => {
+            setIsLoading(false);
+        }, 2000);
+
+        return () => clearTimeout(timer);
+    }, []);
+
+    if (isLoading) {
+        return <Loader variant="fullscreen" message="Welcome to BazarSe Seller..." />;
+    }
 
     return (
         <div className="landing-container">
