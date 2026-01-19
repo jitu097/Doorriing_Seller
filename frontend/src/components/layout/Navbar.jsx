@@ -1,29 +1,24 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import '../../styles/layout/navbar.css';
+import { signOut } from 'firebase/auth';
+import { auth } from '../../config/firebase';
+import './Navbar.css';
 
-const Navbar = ({ isLanding = false }) => {
-    const navigate = useNavigate();
+const Navbar = () => {
+    const handleLogout = () => {
+        signOut(auth);
+    };
 
     return (
         <nav className="navbar">
-            <div className="navbar-brand" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-                <img src="/logo.png" alt="BazarSe Logo" className="navbar-logo" />
-                <span>Seller Central</span>
+            <div className="nav-brand">
+                {/* Placeholder for Logo */}
+                <div style={{ width: 32, height: 32, backgroundColor: 'var(--primary-orange)', borderRadius: 8 }}></div>
+                <span className="brand-text">BazarSe Seller</span>
             </div>
 
-            <div className="navbar-actions">
-                {isLanding ? (
-                    <>
-                        <Link to="/login" className="nav-link">Login</Link>
-                        {/* Register button via hero usually */}
-                    </>
-                ) : (
-                    <div className="seller-info">
-                        <span>My Shop</span>
-                        <div className="seller-avatar">S</div>
-                    </div>
-                )}
+            <div className="nav-user">
+                <div className="user-avatar">S</div>
+                <button className="logout-btn" onClick={handleLogout}>Logout</button>
             </div>
         </nav>
     );

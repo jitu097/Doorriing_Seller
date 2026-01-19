@@ -2,98 +2,94 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../../config/firebase';
-import '../../styles/auth/login.css';
 import PrimaryButton from '../../components/common/PrimaryButton';
-import bgImage from '/formimage.png';
+import './Login.css';
 
 const Login = () => {
-    const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const handleLogin = async (e) => {
+    const navigate = useNavigate();
+
+    const handleEmailLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            // Success, route usually handled by auth listener or navigate here
             navigate('/dashboard');
         } catch (err) {
-            console.error(err);
             setError('Invalid email or password');
+            console.error(err);
         } finally {
             setLoading(false);
         }
     };
 
     const handleGoogleLogin = async () => {
+        setLoading(true);
+        setError('');
+
         try {
             await signInWithPopup(auth, googleProvider);
             navigate('/dashboard');
         } catch (err) {
+            setError('Google Sign-In Failed');
             console.error(err);
-            setError('Google sign-in failed');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <div className="auth-container">
-            <div className="auth-image-side">
-                <img src={bgImage} alt="Login Background" className="auth-bg-image" />
-                <div className="auth-overlay"></div>
-            </div>
+            <div className="auth-card">
+                <h1 className="auth-title">Welcome Back</h1>
+                <p className="auth-subtitle">Log in to your seller dashboard</p>
 
-            <div className="auth-form-side">
-                <div className="auth-header">
-                    <h2 className="auth-title">Welcome Back</h2>
-                    <p>Login to manage your restaurant</p>
-                </div>
+                {error && <div style={{ color: 'var(--error)', marginBottom: '16px', fontSize: '0.9rem' }}>{error}</div>}
 
-                {error && <p style={{ color: 'red', marginBottom: '1rem' }}>{error}</p>}
-
-                <form onSubmit={handleLogin}>
-                    <div className="input-group">
-                        <label className="input-label">Email Address</label>
+                <form className="auth-form" onSubmit={handleEmailLogin}>
+                    <div className="form-group">
+                        <label htmlFor="email">Email Address</label>
                         <input
                             type="email"
-                            className="text-input"
+                            id="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="partner@bazarse.com"
+                            placeholder="Enter your email"
                             required
                         />
                     </div>
-
-                    <div className="input-group">
-                        <label className="input-label">Password</label>
+                    <div className="form-group">
+                        <label htmlFor="password">Password</label>
                         <input
                             type="password"
-                            className="text-input"
+                            id="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
+                            placeholder="Enter your password"
                             required
                         />
                     </div>
 
-                    <PrimaryButton type="submit">
-                        {loading ? 'Logging in...' : 'Login'}
+                    <PrimaryButton type="submit" disabled={loading}>
+                        {loading ? 'Logging in...' : 'Log In'}
                     </PrimaryButton>
                 </form>
 
-                <div className="auth-divider">OR</div>
+                <div className="divider">OR</div>
 
-                <button type="button" className="google-btn" onClick={handleGoogleLogin}>
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" alt="Google" />
+                <button className="google-btn" onClick={handleGoogleLogin} disabled={loading}>
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20" />
                     Continue with Google
                 </button>
 
-                <p style={{ marginTop: '24px', textAlign: 'center' }}>
-                    New to BazarSe? <Link to="/register" className="auth-link">Register your store</Link>
+                <p style={{ marginTop: '24px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                    New to BazarSe? <Link to="/register" style={{ color: 'var(--primary-orange)', fontWeight: '600' }}>Register here</Link>
                 </p>
             </div>
         </div>

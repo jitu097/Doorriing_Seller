@@ -1,0 +1,117 @@
+.landing-container {
+    min-height: 100vh;
+    background-color: var(--bg-white);
+    display: flex;
+    flex-direction: column;
+}
+
+.landing-nav {
+    height: 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    border-bottom: 1px solid #eee;
+}
+
+.landing-nav .brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-orange);
+}
+
+.nav-links {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+}
+
+.nav-btn {
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    transition: var(--transition-fast);
+}
+
+.login-link {
+    color: var(--text-secondary);
+}
+
+.login-link:hover {
+    color: var(--primary-orange);
+}
+
+.signup-link {
+    background: var(--primary-orange);
+    color: white;
+}
+
+.hero-section {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 40px;
+    background: linear-gradient(180deg, rgba(255, 102, 0, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+    text-align: center;
+}
+
+.hero-content {
+    max-width: 800px;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 24px;
+    color: var(--text-primary);
+}
+
+.hero-title span {
+    color: var(--primary-orange);
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    margin-bottom: 48px;
+    line-height: 1.6;
+}
+
+.cta-group {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.cta-btn {
+    padding: 16px 32px;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: var(--transition-normal);
+}
+
+.primary-cta {
+    background: var(--primary-orange);
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.primary-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.secondary-cta {
+    background: white;
+    border: 2px solid #ddd;
+    color: var(--text-primary);
+}
+
+.secondary-cta:hover {
+    border-color: var(--primary-orange);
+    color: var(--primary-orange);
+}

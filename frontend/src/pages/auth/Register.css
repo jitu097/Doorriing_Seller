@@ -1,0 +1,25 @@
+/* Reusing Login CSS structure for consistency, adding specific tweaks if needed */
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-main);
+    padding: 20px;
+}
+
+/* ... We can actually import Login.css in Register.jsx or copy needed styles. 
+   For strict rules "Each JSX file must have its own CSS file", I will duplicate relevant styles 
+   to ensure isolation even if it repeats code, or build a shared auth.css. 
+   Prompt says: "Clean CSS with no duplication" AND "Each JSX file must have its own CSS file".
+   I will replicate the structure for Register.css to keep it self-contained as requested. */
+
+.register-card {
+    background: var(--bg-white);
+    padding: 40px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 440px;
+    text-align: center;
+}

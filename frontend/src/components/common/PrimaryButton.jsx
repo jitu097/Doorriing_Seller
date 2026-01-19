@@ -1,12 +1,14 @@
 import React from 'react';
-import '../../styles/common/button.css';
+import './PrimaryButton.css';
 
-const PrimaryButton = ({ children, onClick, type = 'button', variant = 'filled', className = '' }) => {
+const PrimaryButton = ({ children, onClick, type = 'button', disabled = false, variant = 'primary', style }) => {
     return (
         <button
             type={type}
-            className={`primary-btn ${variant} ${className}`}
+            className={`primary-btn ${variant}`}
             onClick={onClick}
+            disabled={disabled}
+            style={style}
         >
             {children}
         </button>

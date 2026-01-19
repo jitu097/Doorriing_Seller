@@ -1,35 +1,30 @@
-import React, { useState } from 'react';
-import '../../styles/layout/sidebar.css';
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+import './Sidebar.css';
 
 const Sidebar = () => {
-    const [collapsed, setCollapsed] = useState(false);
-
     const menuItems = [
-        { name: 'Dashboard', icon: '📊', path: '/dashboard' },
-        { name: 'Orders', icon: '📦', path: '/orders' },
-        { name: 'Menu Items', icon: '🍔', path: '/menu' },
-        { name: 'Analytics', icon: '📈', path: '/analytics' },
-        { name: 'Settings', icon: '⚙️', path: '/settings' },
+        { name: 'Dashboard', path: '/dashboard' },
+        { name: 'Orders', path: '/orders' },
+        { name: 'Items', path: '/items' },
+        { name: 'Discounts', path: '/discounts' },
+        { name: 'Settings', path: '/settings' },
     ];
 
     return (
-        <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
-            <div className="sidebar-menu">
+        <aside className="sidebar">
+            <ul className="menu-list">
                 {menuItems.map((item) => (
-                    <div key={item.name} className={`sidebar-item ${item.name === 'Dashboard' ? 'active' : ''}`}>
-                        <span className="sidebar-icon">{item.icon}</span>
-                        {!collapsed && <span>{item.name}</span>}
-                    </div>
+                    <li key={item.name} className="menu-item">
+                        <NavLink
+                            to={item.path}
+                            className={({ isActive }) => `menu-link ${isActive ? 'active' : ''}`}
+                        >
+                            {item.name}
+                        </NavLink>
+                    </li>
                 ))}
-            </div>
-
-            <button
-                className="toggle-btn"
-                onClick={() => setCollapsed(!collapsed)}
-                title={collapsed ? "Expand" : "Collapse"}
-            >
-                {collapsed ? '→' : '←'}
-            </button>
+            </ul>
         </aside>
     );
 };

@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const itemController = require('./item.controller');
+const discountController = require('./discount.controller');
 const { authenticate } = require('../../middlewares/auth.middleware');
 const { requireSeller } = require('../../middlewares/seller.middleware');
 
 router.use(authenticate, requireSeller);
 
-router.get('/', itemController.getItems);
-router.post('/', itemController.createItem);
-router.patch('/:id', itemController.updateItem);
+router.get('/', discountController.getDiscounts);
+router.post('/', discountController.createDiscount);
+router.patch('/:id', discountController.updateDiscount);
 
 module.exports = router;
