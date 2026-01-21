@@ -20,7 +20,7 @@ const Register = () => {
 
         try {
             await createUserWithEmailAndPassword(auth, email, password);
-            navigate('/setup-shop'); // Direct to shop setup after register
+                navigate('/registration'); // Redirect to registration form after successful registration
         } catch (err) {
             setError(err.message.replace('Firebase: ', ''));
             console.error(err);

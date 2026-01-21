@@ -1,0 +1,90 @@
+body, .registration-bg {
+	background: #f7f8fa;
+	min-height: 100vh;
+}
+
+.registration-container {
+	max-width: 700px;
+	margin: 40px auto;
+	background: #fff;
+	border-radius: 16px;
+	box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+	padding: 32px 40px;
+}
+
+.registration-header {
+	text-align: center;
+	margin-bottom: 32px;
+}
+.registration-header h1 {
+	font-size: 2.2rem;
+	font-weight: 700;
+	margin-bottom: 8px;
+	color: #ff6600;
+}
+.registration-header p {
+	color: #444;
+	font-size: 1.1rem;
+}
+
+.registration-form section {
+	margin-bottom: 32px;
+}
+.registration-form h2 {
+	font-size: 1.2rem;
+	font-weight: 600;
+	margin-bottom: 16px;
+	color: #222;
+}
+.registration-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 20px;
+}
+.registration-grid .full-width {
+	grid-column: 1 / -1;
+}
+.registration-form label {
+	font-weight: 500;
+	margin-bottom: 6px;
+	display: block;
+	color: #333;
+}
+.registration-form input,
+.registration-form select,
+.registration-form textarea {
+	width: 100%;
+	padding: 10px 12px;
+	border: 1px solid #e0e0e0;
+	border-radius: 8px;
+	font-size: 1rem;
+	background: #fafbfc;
+	margin-bottom: 10px;
+	transition: border 0.2s;
+}
+.registration-form input:focus,
+.registration-form select:focus,
+.registration-form textarea:focus {
+	border-color: #ff6600;
+	outline: none;
+}
+.registration-actions {
+	text-align: right;
+	margin-top: 24px;
+}
+.registration-submit {
+	background: #ff6600;
+	color: #fff;
+	font-weight: 600;
+	padding: 12px 32px;
+	border: none;
+	border-radius: 8px;
+	font-size: 1.1rem;
+	cursor: pointer;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+	transition: background 0.2s;
+}
+.registration-submit:disabled {
+	background: #ffb380;
+	cursor: not-allowed;
+}

@@ -1,0 +1,110 @@
+.rest-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  padding: 0 32px;
+  height: 80px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  z-index: 1200;
+}
+/* Add margin to page content to prevent it being hidden under the fixed navbar */
+.rest-navbar-spacer {
+  height: 80px;
+  width: 100%;
+}
+.rest-navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.rest-navbar-logo {
+  height: 56px;
+  width: 56px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: #fffbe6;
+  border: 2px solid #ffe0a3;
+}
+.admin-panel-btn {
+  background: #2ecc40;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 30px;
+  padding: 10px 28px 8px 28px;
+  box-shadow: 0 2px 12px rgba(46,204,64,0.12);
+  margin-left: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+}
+.dot-green {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background: #27ae60;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+  box-shadow: 0 0 8px #27ae60;
+}
+.open-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.rest-navbar-center {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+.rest-navbar-link {
+  color: #222;
+  font-size: 1.08rem;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 8px 22px;
+  border-radius: 22px;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+.rest-navbar-link.active {
+  background: #ff4d4f;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 2px 12px rgba(255,77,79,0.12);
+}
+.rest-navbar-right {
+  display: flex;
+  align-items: center;
+}
+.logout-btn {
+  background: #232f3e;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.08rem;
+  border: none;
+  border-radius: 22px;
+  padding: 10px 28px;
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(35,47,62,0.10);
+  transition: background 0.18s;
+}
+.logout-btn:hover {
+  background: #1a222b;
+}
+@media (max-width: 900px) {
+  .rest-navbar-center {
+    gap: 12px;
+  }
+  .rest-navbar {
+    padding: 0 10px;
+  }
+}

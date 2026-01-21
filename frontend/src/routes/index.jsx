@@ -63,9 +63,12 @@ const AppRoutes = () => {
                 </Route>
 
                 {/* Protected Routes */}
-                <Route element={<ProtectedRoute />}>
-                    <Route path="/setup-shop" element={<ShopSetup />} />
-                    <Route element={<MainLayout />}>
+                <Route element={<ProtectedRoute />}> 
+                    <Route path="/registration" element={React.createElement(lazy(() => import('../pages/onboarding/Registration')))} />
+                    <Route path="/restaurant/dashboard" element={React.createElement(lazy(() => import('../pages/Restaurant/Dashboard')))} />
+                    <Route path="/restaurant/menu" element={React.createElement(lazy(() => import('../pages/Restaurant/Menu')))} />
+                    <Route path="/admin/orders" element={React.createElement(lazy(() => import('../pages/Restaurant/Orders')))} />
+                    <Route element={<MainLayout />}> 
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/orders" element={<Orders />} />
                         <Route path="/items" element={<Items />} />
