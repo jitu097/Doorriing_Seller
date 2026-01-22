@@ -9,6 +9,7 @@ const Login = lazy(() => import('../pages/auth/Login'));
 const Register = lazy(() => import('../pages/auth/Register'));
 const ShopSetup = lazy(() => import('../pages/onboarding/ShopSetup'));
 const Dashboard = lazy(() => import('../pages/dashboard/Dashboard'));
+const GroceryDashboard = lazy(() => import('../pages/Grocery/DAshboard'));
 const Orders = lazy(() => import('../pages/orders/Orders'));
 const Items = lazy(() => import('../pages/items/Items'));
 const Discounts = lazy(() => import('../pages/discounts/Discounts'));
@@ -70,6 +71,7 @@ const AppRoutes = () => {
                     <Route path="/admin/orders" element={React.createElement(lazy(() => import('../pages/Restaurant/Orders')))} />
                     <Route element={<MainLayout />}> 
                         <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/grocery/dashboard" element={<GroceryDashboard />} />
                         <Route path="/orders" element={<Orders />} />
                         <Route path="/items" element={<Items />} />
                         <Route path="/discounts" element={<Discounts />} />

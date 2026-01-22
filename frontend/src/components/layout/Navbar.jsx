@@ -12,6 +12,7 @@ const Navbar = () => {
 
     const navItems = [
         { name: 'Dashboard', path: '/dashboard', icon: '📊' },
+        { name: 'Grocery Dashboard', path: '/grocery/dashboard', icon: '🛒' },
         { name: 'Orders', path: '/orders', icon: '📦' },
         { name: 'Items', path: '/items', icon: '🛍️' },
         { name: 'Discounts', path: '/discounts', icon: '🏷️' },

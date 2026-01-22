@@ -1,0 +1,218 @@
+/* Grocery Dashboard Styles */
+
+.dashboard-container {
+	max-width: 1200px;
+	margin: 2rem auto;
+	background: #fff7ed;
+	border-radius: 18px;
+	box-shadow: 0 4px 24px 0 rgba(0,0,0,0.07);
+	padding: 2.5rem 2rem 2rem 2rem;
+	font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.dashboard-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1.5rem;
+}
+
+.status-badge {
+	background: #34d399;
+	color: #fff;
+	font-size: 0.9rem;
+	padding: 0.2rem 0.8rem;
+	border-radius: 12px;
+	margin-left: 0.7rem;
+	font-weight: 600;
+}
+
+.dashboard-actions .btn {
+	margin-left: 1rem;
+	padding: 0.5rem 1.2rem;
+	border: none;
+	border-radius: 8px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+.dashboard-actions .re-register {
+	background: #10b981;
+	color: #fff;
+}
+.dashboard-actions .re-register:hover {
+	background: #059669;
+}
+.dashboard-actions .signout {
+	background: #f87171;
+	color: #fff;
+}
+.dashboard-actions .signout:hover {
+	background: #dc2626;
+}
+
+.shop-info {
+	margin-bottom: 1.5rem;
+}
+.shop-card {
+	background: #fff;
+	border-radius: 12px;
+	box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+	padding: 1.2rem 2rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	font-size: 1.1rem;
+}
+.shop-card h3 {
+	margin: 0 0 0.2rem 0;
+	font-size: 1.4rem;
+	font-weight: 600;
+}
+.shop-rating {
+	color: #fbbf24;
+	font-weight: 600;
+	font-size: 1.1rem;
+}
+.shop-rating span {
+	color: #888;
+	font-size: 0.95rem;
+	font-weight: 400;
+	margin-left: 0.3rem;
+}
+
+.dashboard-tabs {
+	display: flex;
+	gap: 2.5rem;
+	margin: 1.5rem 0 2rem 0;
+	border-bottom: 2px solid #f3f4f6;
+}
+.dashboard-tabs span {
+	font-size: 1.1rem;
+	font-weight: 500;
+	color: #888;
+	padding-bottom: 0.5rem;
+	cursor: pointer;
+	transition: color 0.2s, border-bottom 0.2s;
+}
+.dashboard-tabs .active {
+	color: #ea580c;
+	border-bottom: 3px solid #ea580c;
+}
+
+.dashboard-overview {
+	margin-top: 1.5rem;
+}
+.stats-row {
+	display: flex;
+	gap: 2rem;
+	margin-bottom: 2rem;
+}
+.stat-card {
+	flex: 1;
+	background: #fff1e6;
+	border-radius: 10px;
+	box-shadow: 0 1px 4px 0 rgba(0,0,0,0.03);
+	padding: 1.2rem 1.5rem;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	font-size: 1.1rem;
+	font-weight: 500;
+	color: #ea580c;
+}
+.stat-card div:last-child {
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: #222;
+	margin-top: 0.3rem;
+}
+
+.overview-row {
+	display: flex;
+	gap: 2rem;
+}
+.recent-orders, .products-overview {
+	flex: 1;
+	background: #fff;
+	border-radius: 10px;
+	box-shadow: 0 1px 4px 0 rgba(0,0,0,0.03);
+	padding: 1.5rem 1.2rem;
+}
+.recent-orders h4, .products-overview h4 {
+	margin: 0 0 1rem 0;
+	font-size: 1.2rem;
+	font-weight: 600;
+}
+.recent-orders ul {
+	list-style: none;
+	padding: 0;
+	margin: 0 0 1rem 0;
+}
+.recent-orders li {
+	padding: 0.7rem 0;
+	border-bottom: 1px solid #f3f4f6;
+	font-size: 1.05rem;
+}
+.recent-orders li:last-child {
+	border-bottom: none;
+}
+.recent-orders button {
+	background: #ea580c;
+	color: #fff;
+	border: none;
+	border-radius: 6px;
+	padding: 0.5rem 1.1rem;
+	font-size: 1rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+.recent-orders button:hover {
+	background: #c2410c;
+}
+
+.products-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1rem;
+}
+.products-header button {
+	background: #10b981;
+	color: #fff;
+	border: none;
+	border-radius: 6px;
+	padding: 0.5rem 1.1rem;
+	font-size: 1rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+.products-header button:hover {
+	background: #059669;
+}
+.product-analysis h5 {
+	margin: 0 0 0.7rem 0;
+	font-size: 1.1rem;
+	color: #ea580c;
+	font-weight: 600;
+}
+.stock-levels table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 1rem;
+}
+.stock-levels th, .stock-levels td {
+	padding: 0.6rem 0.5rem;
+	border-bottom: 1px solid #f3f4f6;
+	text-align: left;
+}
+.stock-levels th {
+	color: #ea580c;
+	font-weight: 600;
+	background: #fff7ed;
+}
+.stock-levels tr:last-child td {
+	border-bottom: none;
+}
