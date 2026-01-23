@@ -1,145 +1,162 @@
-import React, { useEffect, useState, Suspense, lazy } from 'react';
-const GroceryOrders = lazy(() => import('./Orders'));
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+
+import React from 'react';
+import { Link } from 'react-router-dom';
+import Navbar from './Navbar';
 import './Dashboard.css';
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-const Dashboard = () => {
-	const [shop, setShop] = useState(null);
-	const [stats, setStats] = useState({ orders: 0, revenue: 0, customers: 0, products: 0 });
-	const [recentOrders, setRecentOrders] = useState([]);
-	const [products, setProducts] = useState([]);
-	const [loading, setLoading] = useState(true);
-	const [tab, setTab] = useState('overview');
-	const navigate = useNavigate();
+// Dummy data for demonstration (replace with real API calls as needed)
+const stats = {
+	totalOrders: 1200,
+	totalRevenue: 450000,
+	pendingOrders: 8,
+	confirmedOrders: 12,
+	preparingOrders: 5,
+	outForDelivery: 3,
+	deliveredOrders: 1100,
+	cancelledOrders: 72
+};
 
-	useEffect(() => {
-		const fetchData = async () => {
-			setLoading(true);
-			try {
-				// Fetch shop details
-				const shopRes = await axios.get(`${API_BASE}/api/shop/me`, { withCredentials: true });
-				setShop(shopRes.data);
+const recentOrders = [
+	{ _id: 'ORD1234567890', status: 'Pending', totalAmount: 1200, createdAt: new Date() },
+	{ _id: 'ORD1234567891', status: 'Delivered', totalAmount: 800, createdAt: new Date() },
+	{ _id: 'ORD1234567892', status: 'Preparing', totalAmount: 650, createdAt: new Date() },
+	{ _id: 'ORD1234567893', status: 'OutForDelivery', totalAmount: 900, createdAt: new Date() },
+	{ _id: 'ORD1234567894', status: 'Cancelled', totalAmount: 500, createdAt: new Date() }
+];
 
-				// Fetch dashboard stats
-				const statsRes = await axios.get(`${API_BASE}/api/shop/dashboard-stats`, { withCredentials: true });
-				setStats(statsRes.data);
+const activeOrdersCount = (stats.pendingOrders || 0) + (stats.confirmedOrders || 0) + (stats.preparingOrders || 0) + (stats.outForDelivery || 0);
 
-				// Fetch recent orders
-				const ordersRes = await axios.get(`${API_BASE}/api/orders/recent`, { withCredentials: true });
-				setRecentOrders(ordersRes.data);
-
-				// Fetch products
-				const productsRes = await axios.get(`${API_BASE}/api/products`, { withCredentials: true });
-				setProducts(productsRes.data);
-			} catch (err) {
-				// Handle error (show toast or fallback UI)
-			}
-			setLoading(false);
-		};
-		fetchData();
-	}, []);
-
-	const handleTab = (tabName) => setTab(tabName);
-	const handleManageProducts = () => navigate('/grocery/products');
-	const handleViewAllOrders = () => navigate('/orders');
-	const handleReRegister = () => navigate('/onboarding/shop-setup');
-	const handleSignOut = () => {
-		axios.post(`${API_BASE}/api/auth/logout`, {}, { withCredentials: true }).then(() => {
-			navigate('/login');
-		});
-	};
-
-	if (loading) return <div>Loading...</div>;
-
+function Dashboard() {
 	return (
-		<div className="dashboard-container">
-			<header className="dashboard-header">
-				<h2>Shop Dashboard <span className="status-badge">Active</span></h2>
-				<div className="dashboard-actions">
-					<button className="btn re-register" onClick={handleReRegister}>Re-register Shop (Trial)</button>
-					<button className="btn signout" onClick={handleSignOut}>Sign Out</button>
+		<>
+			<Navbar />
+			<div className="admin-container">
+			<header className="admin-header">
+				<div className="header-content">
+					<h1>Dashboard</h1>
+					<p>Welcome back! Here's your daily overview.</p>
+				</div>
+				<div className="header-actions">
+					<span className="date-badge">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
 				</div>
 			</header>
-			<section className="shop-info">
-				<div className="shop-card">
-					<h3>{shop?.name || 'Shop Name'}</h3>
-					<div>Owner: {shop?.ownerName || '-'} &bull; {shop?.category || '-'}</div>
-					<div>Joined: {shop?.createdAt ? new Date(shop.createdAt).toLocaleDateString() : '-'}</div>
-					<div className="shop-rating">★ {shop?.rating || 0} <span>Rating</span></div>
+
+			{/* Stats Grid */}
+			<div className="stats-grid">
+				<div className="stat-card">
+					<div className="stat-icon revenue-icon">💰</div>
+					<div className="stat-info">
+						<h3>Total Revenue</h3>
+						<p className="stat-value">₹{stats.totalRevenue.toLocaleString()}</p>
+						<span className="stat-hint">Lifetime earnings</span>
+					</div>
 				</div>
-			</section>
-			<nav className="dashboard-tabs">
-				{['overview', 'orders', 'products', 'analytics', 'settings'].map(t => (
-					<span
-						key={t}
-						className={tab === t ? 'active' : ''}
-						onClick={() => {
-							if (t === 'products') {
-								navigate('/grocery/products');
-							} else {
-								handleTab(t);
-							}
-						}}
-					>
-						{t.charAt(0).toUpperCase() + t.slice(1)}
-					</span>
-				))}
-			</nav>
-			{tab === 'overview' && (
-				<section className="dashboard-overview">
-					<div className="stats-row">
-						<div className="stat-card"><div>Today's Orders</div><div>{stats.orders}</div></div>
-						<div className="stat-card"><div>Total Revenue</div><div>${stats.revenue.toFixed(2)}</div></div>
-						<div className="stat-card"><div>Total Customers</div><div>{stats.customers}</div></div>
-						<div className="stat-card"><div>Products</div><div>{stats.products}</div></div>
+
+				<div className="stat-card">
+					<div className="stat-icon orders-icon">🥡</div>
+					<div className="stat-info">
+						<h3>Active Orders</h3>
+						<p className="stat-value">{activeOrdersCount}</p>
+						<span className="stat-hint">In preparation or delivery</span>
 					</div>
-					<div className="overview-row">
-						<div className="recent-orders">
-							<h4>Recent Orders</h4>
-							{recentOrders.length === 0 ? <div>No recent orders</div> : (
-								<ul>
-									{recentOrders.map(order => (
-										<li key={order.id}>
-											<div>Order #{order.id} - {order.customerName}</div>
-											<div>{order.status} - ${order.totalAmount}</div>
-										</li>
-									))}
-								</ul>
-							)}
-							<button onClick={() => setTab('orders')}>View all orders →</button>
-						</div>
-						<div className="products-overview">
-							<div className="products-header">
-								<h4>Products Overview</h4>
-								<button onClick={handleManageProducts}>Manage Products</button>
-							</div>
-							<div className="product-analysis">
-								<h5>Product Analysis Dashboard</h5>
-								<div className="stock-levels">
-									<table>
-										<thead><tr><th>Product</th><th>Stock</th></tr></thead>
-										<tbody>
-											{products.map(p => (
-												<tr key={p.id}><td>{p.name}</td><td>{p.stock}</td></tr>
-											))}
-										</tbody>
-									</table>
-								</div>
-							</div>
-						</div>
+				</div>
+
+				<div className="stat-card">
+					<div className="stat-icon success-icon">✅</div>
+					<div className="stat-info">
+						<h3>Delivered</h3>
+						<p className="stat-value">{stats.deliveredOrders}</p>
+						<span className="stat-hint">Successfully served</span>
 					</div>
-				</section>
-			)}
-			{tab === 'orders' && (
-				<Suspense fallback={<div>Loading Orders...</div>}>
-					<GroceryOrders />
-				</Suspense>
-			)}
-			{/* Implement other tabs as needed */}
-		</div>
+				</div>
+
+				<div className="stat-card">
+					<div className="stat-icon cancel-icon">❌</div>
+					<div className="stat-info">
+						<h3>Cancelled</h3>
+						<p className="stat-value">{stats.cancelledOrders}</p>
+						<span className="stat-hint">Total cancellations</span>
+					</div>
+				</div>
+			</div>
+
+			<div className="dashboard-content-grid">
+				{/* Recent Orders Panel */}
+				<div className="dashboard-panel recent-orders">
+					<div className="panel-header">
+						<h2>Recent Orders</h2>
+						<Link to="/grocery/orders" className="view-all-link">View All Orders</Link>
+					</div>
+					<div className="table-responsive">
+						<table className="admin-table">
+							<thead>
+								<tr>
+									<th>Order ID</th>
+									<th>Status</th>
+									<th>Amount</th>
+									<th>Time</th>
+								</tr>
+							</thead>
+							<tbody>
+								{recentOrders.length === 0 ? (
+									<tr><td colSpan="4" className="empty-state">No recent orders found</td></tr>
+								) : (
+									recentOrders.slice(0, 5).map(order => (
+										<tr key={order._id}>
+											<td className="order-id">#{order._id.substring(0, 8)}...</td>
+											<td>
+												<span className={`status-badge ${order.status.toLowerCase()}`}>
+													{order.status}
+												</span>
+											</td>
+											<td className="amount">₹{order.totalAmount}</td>
+											<td className="time">{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+										</tr>
+									))
+								)}
+							</tbody>
+						</table>
+					</div>
+				</div>
+
+				{/* Quick Actions Panel */}
+				<div className="dashboard-panel quick-actions-panel">
+					<h2>Quick Actions</h2>
+					<div className="actions-grid">
+						<Link to="/grocery/products" className="action-card">
+							<span className="action-icon">🛒</span>
+							<div className="action-details">
+								<h3>Manage Products</h3>
+								<p>Add or edit items</p>
+							</div>
+						</Link>
+						<Link to="/grocery/orders" className="action-card">
+							<span className="action-icon">📦</span>
+							<div className="action-details">
+								<h3>View Orders</h3>
+								<p>Track delivery status</p>
+							</div>
+						</Link>
+						<Link to="/grocery/offers" className="action-card">
+							<span className="action-icon">🏷️</span>
+							<div className="action-details">
+								<h3>Create Offer</h3>
+								<p>Boost sales now</p>
+							</div>
+						</Link>
+						<Link to="/grocery/reports" className="action-card">
+							<span className="action-icon">📈</span>
+							<div className="action-details">
+								<h3>View Reports</h3>
+								<p>Check analytics</p>
+							</div>
+						</Link>
+					</div>
+				</div>
+			</div>
+			</div>
+		</>
 	);
-};
+}
 
 export default Dashboard;

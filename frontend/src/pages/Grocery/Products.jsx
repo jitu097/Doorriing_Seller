@@ -1,229 +1,273 @@
-import React from 'react';
-// ...existing code...
+import React, { useState } from 'react';
+import './Products.css';
+import Navbar from './Navbar';
 
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+const initialCategories = [
+	{ name: 'kuo', items: 5, hidden: true, active: false },
+	{ name: 'rolls', items: 1, hidden: true, active: true },
+	{ name: 'chinese', items: 1, hidden: true, active: true },
+	{ name: 'how', items: 1, hidden: false, active: true },
+];
 
-export default function Products() {
-	const [searchTerm, setSearchTerm] = useState('');
-	const [selectedCategory, setSelectedCategory] = useState('all');
+const Products = () => {
+	const [categories, setCategories] = useState(initialCategories);
+	const [openIndex, setOpenIndex] = useState(null);
+	const [items, setItems] = useState([]);
 
-	// Sample product data
-	const products = [
-		{
-			id: 1,
-			name: 'Fresh Organic Tomatoes',
-			price: 4.99,
-			image: '/api/placeholder/300/200',
-			category: 'vegetables',
-			shop: 'Green Valley Farm',
-			rating: 4.5,
-			inStock: true
-		},
-		{
-			id: 2,
-			name: 'Artisan Bread',
-			price: 8.99,
-			image: '/api/placeholder/300/200',
-			category: 'bakery',
-			shop: 'Local Bakery',
-			rating: 4.8,
-			inStock: true
-		},
-		{
-			id: 3,
-			name: 'Handmade Soap',
-			price: 12.99,
-			image: '/api/placeholder/300/200',
-			category: 'personal-care',
-			shop: 'Natural Wellness',
-			rating: 4.7,
-			inStock: false
-		},
-		{
-			id: 4,
-			name: 'Local Honey',
-			price: 15.99,
-			image: '/api/placeholder/300/200',
-			category: 'food',
-			shop: 'Honey Bee Farm',
-			rating: 4.9,
-			inStock: true
-		},
-		{
-			id: 5,
-			name: 'Ceramic Mug',
-			price: 19.99,
-			image: '/api/placeholder/300/200',
-			category: 'home',
-			shop: 'Potter\'s Corner',
-			rating: 4.6,
-			inStock: true
-		},
-		{
-			id: 6,
-			name: 'Organic Apples',
-			price: 6.99,
-			image: '/api/placeholder/300/200',
-			category: 'fruits',
-			shop: 'Orchard Fresh',
-			rating: 4.4,
-			inStock: true
-		}
-	];
-
-	const categories = [
-		{ id: 'all', name: 'All Products' },
-		{ id: 'vegetables', name: 'Vegetables' },
-		{ id: 'fruits', name: 'Fruits' },
-		{ id: 'bakery', name: 'Bakery' },
-		{ id: 'food', name: 'Food' },
-		{ id: 'personal-care', name: 'Personal Care' },
-		{ id: 'home', name: 'Home & Garden' }
-	];
-
-	const filteredProducts = products.filter(product => {
-		const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-												 product.shop.toLowerCase().includes(searchTerm.toLowerCase());
-		const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-		return matchesSearch && matchesCategory;
+	const [showModal, setShowModal] = useState(false);
+	const [showCategoryModal, setShowCategoryModal] = useState(false);
+	const [newCategory, setNewCategory] = useState('');
+	const [newItem, setNewItem] = useState({
+		name: '',
+		description: '',
+		category: '',
+		image: null,
+		quantity: '',
+		unit: '',
+		price: '',
+		active: true,
 	});
 
+	const handleAccordion = (idx) => {
+		setOpenIndex(openIndex === idx ? null : idx);
+	};
+
+	const handleInputChange = (e) => {
+		const { name, value, type, checked, files } = e.target;
+		if (type === 'checkbox') {
+			setNewItem({ ...newItem, [name]: checked });
+		} else if (type === 'file') {
+			setNewItem({ ...newItem, image: files[0] });
+		} else {
+			setNewItem({ ...newItem, [name]: value });
+		}
+	};
+
+	const handleModalClose = () => {
+		setShowModal(false);
+		 setNewItem({
+			 name: '', description: '', category: '', image: null, quantity: '', unit: '', price: '', active: true
+		 });
+	};
+
+	const handleModalOpen = () => setShowModal(true);
+	const handleCategoryModalOpen = () => setShowCategoryModal(true);
+	const handleCategoryModalClose = () => setShowCategoryModal(false);
+
+	const handleCreateItem = (e) => {
+		e.preventDefault();
+		// Add item to items array
+		 setItems(prev => [
+			 ...prev,
+			 {
+				 name: newItem.name,
+				 description: newItem.description,
+				 category: newItem.category,
+				 image: newItem.image ? URL.createObjectURL(newItem.image) : '',
+				 quantity: newItem.quantity,
+				 unit: newItem.unit,
+				 price: newItem.price,
+				 active: newItem.active
+			 }
+		 ]);
+		handleModalClose();
+	};
+
+	const handleAddCategory = (e) => {
+		e.preventDefault();
+		if (newCategory.trim()) {
+			setCategories([...categories, { name: newCategory, items: 0, hidden: false, active: true }]);
+			setNewCategory('');
+		}
+	};
+
+	const handleCategoryToggle = (idx) => {
+		setCategories(categories => categories.map((cat, i) =>
+			i === idx ? { ...cat, active: !cat.active } : cat
+		));
+	};
+
+	const handleDeleteCategory = (idx) => {
+		setCategories(categories => categories.filter((_, i) => i !== idx));
+	};
+
+	const handleToggleActive = (idx) => {
+		setCategories(categories => categories.map((cat, i) =>
+			i === idx ? { ...cat, active: !cat.active } : cat
+		));
+	};
+
 	return (
-		<div className="min-h-screen bg-gray-50">
-			{/* Header */}
-			<header className="bg-white shadow-sm">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="flex justify-between items-center py-4">
-						<div className="flex items-center space-x-4">
-							<Link to="/" className="text-blue-600 hover:text-blue-500">
-								← Back to Home
-							</Link>
-							<h1 className="text-2xl font-bold text-gray-900">Products</h1>
-						</div>
-						<div className="flex items-center space-x-4">
-							<button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-								Add to Cart
-							</button>
-						</div>
+		<>
+			<Navbar />
+			<div className="menu-container">
+				<div className="menu-header">
+					<span className="menu-emoji" role="img" aria-label="menu">🛒</span>
+					<div>
+						<h1 className="menu-title">Manage Products</h1>
+						<div className="menu-overview">Overview: <b>{items.length} Items</b> | <b>{items.filter(i => i.active).length} Active</b> | <b>{categories.length} Categories</b></div>
 					</div>
 				</div>
-			</header>
-
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-				{/* Search and Filters */}
-				<div className="mb-8 flex flex-col lg:flex-row gap-4">
-					<div className="flex-1">
-						<div className="relative">
-							<input
-								type="text"
-								placeholder="Search products or shops..."
-								value={searchTerm}
-								onChange={(e) => setSearchTerm(e.target.value)}
-								className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-							/>
-							<svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-							</svg>
-						</div>
-					</div>
-          
-					<div className="lg:w-64">
-						<select
-							value={selectedCategory}
-							onChange={(e) => setSelectedCategory(e.target.value)}
-							className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-						>
-							{categories.map(category => (
-								<option key={category.id} value={category.id}>
-									{category.name}
-								</option>
-							))}
-						</select>
-					</div>
+				<div className="menu-actions">
+					<button className="btn btn-primary" onClick={handleModalOpen}>+ Add New Product</button>
+					<button className="btn btn-outline" onClick={handleCategoryModalOpen}>Manage Categories</button>
 				</div>
 
-				{/* Results Summary */}
-				<div className="mb-6">
-					<p className="text-gray-600">
-						Showing {filteredProducts.length} of {products.length} products
-					</p>
-				</div>
-
-				{/* Products Grid */}
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-					{filteredProducts.map(product => (
-						<div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-							<div className="aspect-w-16 aspect-h-9">
-								<div className="w-full h-48 bg-gray-200 flex items-center justify-center">
-									<svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-									</svg>
-								</div>
-							</div>
-              
-							<div className="p-4">
-								<div className="flex justify-between items-start mb-2">
-									<h3 className="text-lg font-semibold text-gray-900">{product.name}</h3>
-									<span className={`px-2 py-1 text-xs rounded-full ${
-										product.inStock 
-											? 'bg-green-100 text-green-800' 
-											: 'bg-red-100 text-red-800'
-									}`}>
-										{product.inStock ? 'In Stock' : 'Out of Stock'}
+				<div className="menu-categories">
+					{categories.map((cat, idx) => {
+						const catItems = items.filter(item => item.category === cat.name);
+						return (
+							<div className="category-accordion" key={cat.name}>
+								<div className="category-header">
+									<span className="category-arrow" onClick={() => handleAccordion(idx)}>{openIndex === idx ? '▼' : '▶'}</span>
+									<span className="category-name" onClick={() => handleAccordion(idx)}>{cat.name}</span>
+									<span className="category-items">{catItems.length} items</span>
+									{cat.hidden && <span className="category-badge hidden">Hidden</span>}
+									<span className="category-toggle">
+										<label className="switch">
+											<input type="checkbox" checked={cat.active} onChange={() => handleToggleActive(idx)} />
+											<span className="slider round"></span>
+										</label>
 									</span>
 								</div>
-                
-								<p className="text-sm text-gray-600 mb-2">by {product.shop}</p>
-                
-								<div className="flex items-center mb-2">
-									<div className="flex items-center">
-										{[...Array(5)].map((_, i) => (
-											<svg
-												key={i}
-												className={`w-4 h-4 ${
-													i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-300'
-												}`}
-												fill="currentColor"
-												viewBox="0 0 24 24"
-											>
-												<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-											</svg>
-										))}
+								{openIndex === idx && (
+									<div className="category-content">
+										{catItems.length === 0 ? (
+											<div className="empty-items">No items to display.</div>
+										) : (
+											<div className="item-card-list">
+												{catItems.map((item, i) => (
+													<div className="item-card" key={item.name + i}>
+														{item.image && <img src={item.image} alt={item.name} className="item-card-img" />}
+														<div className="item-card-body">
+															<div className="item-card-header">
+																<span className="item-card-title">{item.name}</span>
+																{item.active && <span className="item-card-active">ACTIVE</span>}
+															</div>
+															<div className="item-card-category">{item.category}</div>
+															<div className="item-card-desc">{item.description}</div>
+															<div className="item-card-prices">
+																<span className="item-card-price full">Price: ₹{item.price}</span>
+																<span className="item-card-qty">Qty: {item.quantity} {item.unit}</span>
+															</div>
+														</div>
+													</div>
+												))}
+											</div>
+										)}
 									</div>
-									<span className="text-sm text-gray-600 ml-2">({product.rating})</span>
+								)}
+							</div>
+						);
+					})}
+				</div>
+			</div>
+
+			{/* Modals at the top level */}
+			{showModal && (
+				<div className="modal-overlay">
+					<div className="modal-content">
+						<h2 className="modal-title">Add New Product</h2>
+						<form className="add-item-form" onSubmit={handleCreateItem}>
+							<label>Product Name
+								<input type="text" name="name" placeholder="e.g. Apple" value={newItem.name} onChange={handleInputChange} required />
+							</label>
+							<label>Description
+								<textarea name="description" placeholder="Short description of the product" value={newItem.description} onChange={handleInputChange} />
+							</label>
+							<div className="form-row">
+								<label>Category
+									<select name="category" value={newItem.category} onChange={handleInputChange} required>
+										<option value="">Select Category</option>
+										{categories.map((cat) => (
+											<option key={cat.name} value={cat.name}>{cat.name}</option>
+										))}
+									</select>
+								</label>
+								<label>
+									Quantity
+									<div style={{ display: 'flex', gap: 8 }}>
+										<input type="number" name="quantity" placeholder="e.g. 10" value={newItem.quantity} onChange={handleInputChange} min="1" required style={{ width: '80px' }} />
+										<select name="unit" value={newItem.unit || ''} onChange={handleInputChange} required style={{ width: '110px' }}>
+											<option value="">Unit</option>
+											<option value="gram">Gram</option>
+											<option value="kg">Kg</option>
+											<option value="dozen">Dozen</option>
+											<option value="pieces">Pieces</option>
+											<option value="litre">Litre</option>
+											<option value="ml">ml</option>
+											<option value="packet">Packet</option>
+											<option value="box">Box</option>
+											<option value="bottle">Bottle</option>
+										</select>
+									</div>
+								</label>
+							</div>
+							<label>Image
+								<div className="image-upload-box">
+									<input type="file" name="image" accept="image/*" onChange={handleInputChange} />
+									<span>Click to Upload Image</span>
 								</div>
-                
-								<div className="flex justify-between items-center">
-									<span className="text-xl font-bold text-gray-900">${product.price}</span>
-									<button 
-										disabled={!product.inStock}
-										className={`px-4 py-2 rounded-md text-sm font-medium ${
-											product.inStock
-												? 'bg-blue-600 text-white hover:bg-blue-700'
-												: 'bg-gray-300 text-gray-500 cursor-not-allowed'
-										} transition-colors`}
-									>
-										{product.inStock ? 'Add to Cart' : 'Out of Stock'}
+							</label>
+							<label>Full Price (₹)
+								<input type="number" name="price" value={newItem.price} onChange={handleInputChange} required />
+							</label>
+							<div className="form-row">
+								<label className="active-checkbox">
+									<input type="checkbox" name="active" checked={newItem.active} onChange={handleInputChange} />
+									<span>Active (Visible to users)</span>
+								</label>
+							</div>
+							<div className="modal-actions">
+								<button type="button" className="btn btn-cancel" onClick={handleModalClose}>Cancel</button>
+								<button type="submit" className="btn btn-primary">Create Product</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			)}
+			{showCategoryModal && (
+				<div className="modal-overlay">
+					<div className="modal-content">
+						<h2 className="modal-title">Manage Categories</h2>
+						<form className="add-category-form" onSubmit={handleAddCategory} style={{ display: 'flex', gap: 12, marginBottom: 18 }}>
+							<input
+								type="text"
+								placeholder="New category name"
+								value={newCategory}
+								onChange={e => setNewCategory(e.target.value)}
+								style={{ flex: 1 }}
+								required
+							/>
+							<button type="submit" className="btn btn-primary" style={{ minWidth: 110 }}>Add</button>
+						</form>
+						<hr style={{ margin: '18px 0 10px 0', border: 'none', borderTop: '1.5px solid #f3f4f6' }} />
+						<div style={{ fontWeight: 700, fontSize: '1.15rem', marginBottom: 12 }}>Existing Categories</div>
+						<div className="category-list-modal">
+							{categories.map((cat, idx) => (
+								<div className="category-modal-row" key={cat.name}>
+									<span style={{ fontWeight: 700, textTransform: 'lowercase', minWidth: 80 }}>{cat.name}</span>
+									<span style={{ color: '#6b7280', fontSize: '0.98rem', marginLeft: 8 }}>({cat.items} items)</span>
+									<span className="category-toggle">
+										<label className="switch">
+											<input type="checkbox" checked={cat.active} onChange={() => handleCategoryToggle(idx)} />
+											<span className="slider round"></span>
+										</label>
+									</span>
+									<button className="delete-category-btn" type="button" onClick={() => handleDeleteCategory(idx)} title="Delete">
+										<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="5.5" y="9.5" width="1.5" height="6" rx="0.75" fill="#bbb"/><rect x="10.25" y="9.5" width="1.5" height="6" rx="0.75" fill="#bbb"/><rect x="15" y="9.5" width="1.5" height="6" rx="0.75" fill="#bbb"/><rect x="4" y="6" width="14" height="2" rx="1" fill="#eee"/><rect x="7" y="4" width="8" height="2" rx="1" fill="#eee"/></svg>
 									</button>
 								</div>
-							</div>
+							))}
 						</div>
-					))}
-				</div>
-
-				{/* Empty State */}
-				{filteredProducts.length === 0 && (
-					<div className="text-center py-12">
-						<svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414a1 1 0 00-.707-.293H4" />
-						</svg>
-						<h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-						<p className="text-gray-600">Try adjusting your search or filter criteria</p>
+						<div className="modal-actions" style={{ marginTop: 24 }}>
+							<button type="button" className="btn btn-cancel" onClick={handleCategoryModalClose}>Close</button>
+						</div>
 					</div>
-				)}
-			</div>
-		</div>
+				</div>
+			)}
+		</>
 	);
-}
-						
+};
+
+export default Products;
