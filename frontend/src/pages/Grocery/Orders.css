@@ -1,10 +1,13 @@
 /* Grocery Orders Page Styles */
 
+/* Add your styles here */
+/* Grocery Orders Page Styles */
+
 .orders-container {
 	max-width: 1100px;
 	margin: 2.5rem auto;
 	background: #fff7ed;
-	border-radius: 16px;
+	border-radius: 22px;
 	box-shadow: 0 4px 24px 0 rgba(0,0,0,0.07);
 	padding: 2rem 2rem 2.5rem 2rem;
 	font-family: 'Segoe UI', Arial, sans-serif;
@@ -143,4 +146,207 @@
 	font-size: 1.08rem;
 	font-weight: 600;
 	color: #222;
+}
+
+body {
+	background: #f8fafc;
+}
+
+.orders-container {
+	max-width: 900px;
+	margin: 2.5rem auto;
+	background: #fff7ed;
+	border-radius: 22px;
+	box-shadow: 0 8px 32px 0 rgba(0,0,0,0.10);
+	padding: 2.5rem 2rem 2rem 2rem;
+	font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+.orders-header {
+	display: flex;
+	align-items: flex-end;
+	gap: 1.2rem;
+	margin-bottom: 1.5rem;
+}
+.orders-emoji {
+	font-size: 2.2rem;
+	margin-right: 0.5rem;
+}
+.orders-title {
+	font-size: 2rem;
+	font-weight: 800;
+	color: #1e293b;
+	margin-bottom: 0.2rem;
+}
+.orders-overview {
+	color: #64748b;
+	font-size: 1.1rem;
+	margin-bottom: 0.2rem;
+}
+
+.orders-tabs {
+	display: flex;
+	gap: 1.1rem;
+	margin-bottom: 1.5rem;
+	border-bottom: 1.5px solid #f3f4f6;
+	padding-bottom: 0.7rem;
+}
+.orders-tab {
+	background: none;
+	border: none;
+	font-size: 1.08rem;
+	font-weight: 600;
+	color: #888;
+	cursor: pointer;
+	padding: 0.3rem 0.7rem;
+	border-radius: 8px 8px 0 0;
+	transition: color 0.2s, background 0.2s;
+}
+.orders-tab.active {
+	color: #ea580c;
+	background: #fff1e6;
+	border-bottom: 3px solid #ea580c;
+}
+
+.orders-list {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+.order-card {
+	background: #fff;
+	border-radius: 16px;
+	box-shadow: 0 2px 12px 0 rgba(16,24,40,0.07);
+	padding: 1.5rem 1.2rem 1.2rem 1.2rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.7rem;
+	font-size: 1.08rem;
+	position: relative;
+}
+.order-card-header {
+	display: flex;
+	align-items: center;
+	gap: 1.1rem;
+	margin-bottom: 0.2rem;
+}
+.order-id {
+	font-family: 'Fira Mono', 'Consolas', monospace;
+	color: #334155;
+	font-size: 1.01rem;
+	font-weight: 700;
+}
+.order-status {
+	display: inline-block;
+	min-width: 90px;
+	text-align: center;
+	font-size: 0.98rem;
+	padding: 0.22rem 0.9rem;
+	border-radius: 14px;
+	font-weight: 700;
+	color: #fff;
+	box-shadow: 0 1px 4px 0 rgba(0,0,0,0.04);
+	margin-left: 0.7rem;
+}
+.order-status[style*='#22d06a'] { background: linear-gradient(90deg, #22d06a 60%, #16a34a 100%); }
+.order-status[style*='#3b82f6'] { background: linear-gradient(90deg, #3b82f6 60%, #2563eb 100%); }
+.order-status[style*='#f59e42'] { background: linear-gradient(90deg, #fbbf24 60%, #f59e42 100%); }
+.order-status[style*='#f7931e'] { background: linear-gradient(90deg, #fbbf24 60%, #f7931e 100%); }
+.order-status[style*='#dc2626'] { background: linear-gradient(90deg, #f87171 60%, #dc2626 100%); }
+
+.order-customer {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.2rem;
+	color: #1e293b;
+	font-size: 1.01rem;
+}
+.order-customer div {
+	min-width: 180px;
+}
+.order-items {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.1rem;
+	margin-top: 0.2rem;
+}
+.order-item {
+	background: #fff7ed;
+	border-radius: 8px;
+	padding: 0.5rem 1rem;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.98rem;
+}
+.order-item-img {
+	width: 32px;
+	height: 32px;
+	border-radius: 6px;
+	object-fit: cover;
+	margin-right: 0.5rem;
+}
+.order-item-qty {
+	font-weight: 700;
+	color: #ea580c;
+}
+.order-item-name {
+	font-weight: 600;
+	color: #1e293b;
+}
+.order-item-type {
+	color: #64748b;
+}
+.order-item-price {
+	color: #0ea5e9;
+	font-weight: 600;
+	margin-left: 0.5rem;
+}
+.order-summary {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.5rem;
+	color: #1e293b;
+	font-size: 1.01rem;
+	margin-top: 0.2rem;
+}
+.order-summary div {
+	min-width: 160px;
+}
+.order-driver {
+	color: #ea580c;
+	font-weight: 600;
+}
+.order-actions {
+	display: flex;
+	gap: 0.7rem;
+	margin-top: 0.2rem;
+}
+.order-action-btn {
+	background: #ea580c;
+	color: #fff;
+	border: none;
+	border-radius: 8px;
+	padding: 0.5rem 1.2rem;
+	font-size: 1rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 0.18s;
+}
+.order-action-btn:hover {
+	background: #c2410c;
+}
+.order-footer {
+	color: #64748b;
+	font-size: 0.97rem;
+	margin-top: 0.2rem;
+}
+
+@media (max-width: 700px) {
+	.orders-container {
+		padding: 1.2rem 0.5rem;
+	}
+	.order-card {
+		padding: 1rem 0.5rem;
+	}
 }

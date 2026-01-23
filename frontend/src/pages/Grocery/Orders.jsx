@@ -1,84 +1,151 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useState } from 'react';
+import Navbar from './Navbar';
 import './Orders.css';
 
-const mockOrders = [];
-// Example: populate with mock data if needed
-// for (let i = 1; i <= 0; i++) mockOrders.push({ id: i, customer: 'Customer ' + i, amount: 100 + i, status: 'Pending', date: '2026-01-22', });
+const orderTabs = [
+	{ label: 'All', key: 'all' },
+	{ label: 'Pending', key: 'pending' },
+	{ label: 'Confirmed', key: 'confirmed' },
+	{ label: 'Preparing', key: 'preparing' },
+	{ label: 'Out for Delivery', key: 'out' },
+	{ label: 'Delivered', key: 'delivered' },
+	{ label: 'Cancelled', key: 'cancelled' },
+];
 
-const statusOptions = ['All Status', 'Pending', 'Completed', 'Cancelled'];
+const sampleOrders = [
+	{
+		id: 'grc1a2b3...',
+		status: 'preparing',
+		customer: {
+			name: 'Amit Kumar',
+			phone: '9876543210',
+			email: 'amitkumar@email.com',
+			address: '123 Main St, City, State, Mobile: 9876543210',
+		},
+		payment: 'Online',
+		items: [
+			{ name: 'Rice', qty: 2, type: 'Kg', price: 80, img: '' },
+			{ name: 'Wheat', qty: 1, type: 'Kg', price: 50, img: '' },
+			{ name: 'Oil', qty: 1, type: 'Litre', price: 120, img: '' },
+		],
+		subtotal: 230,
+		delivery: 30,
+		total: 260,
+		driver: '',
+		created: '23/1/2026, 10:15:00 am',
+		actions: ['Assign Driver'],
+	},
+	{
+		id: 'grc4d5e6...',
+		status: 'pending',
+		customer: {
+			name: 'Priya Sharma',
+			phone: '9123456780',
+			email: 'priyasharma@email.com',
+			address: '456 Market Rd, City, State, Mobile: 9123456780',
+		},
+		payment: 'COD',
+		items: [
+			{ name: 'Sugar', qty: 3, type: 'Kg', price: 40, img: '' },
+			{ name: 'Salt', qty: 2, type: 'Kg', price: 20, img: '' },
+		],
+		subtotal: 160,
+		delivery: 20,
+		total: 180,
+		driver: '',
+		created: '22/1/2026, 4:45:00 pm',
+		actions: ['Accept', 'Reject'],
+	},
+];
 
-const Orders = () => {
-	const [orders, setOrders] = useState(mockOrders);
-	const [status, setStatus] = useState('All Status');
-	const [search, setSearch] = useState('');
-	const [page, setPage] = useState(1);
-	const pageSize = 10;
-
-	// Filtered and searched orders
-	const filteredOrders = orders.filter(order => {
-		const matchesStatus = status === 'All Status' || order.status === status;
-		const matchesSearch = order.customer?.toLowerCase().includes(search.toLowerCase()) || order.id.toString().includes(search);
-		return matchesStatus && matchesSearch;
-	});
-	const paginatedOrders = filteredOrders.slice((page - 1) * pageSize, page * pageSize);
-	const totalPages = Math.ceil(filteredOrders.length / pageSize) || 1;
-
-	useEffect(() => { setPage(1); }, [status, search]);
-
-	return (
-		<div className="orders-container">
-			<div className="orders-header-row">
-				<h2>All Orders</h2>
-				<div className="orders-controls">
-					<select value={status} onChange={e => setStatus(e.target.value)}>
-						{statusOptions.map(opt => <option key={opt}>{opt}</option>)}
-					</select>
-					<input
-						type="text"
-						placeholder="Search orders..."
-						value={search}
-						onChange={e => setSearch(e.target.value)}
-					/>
-				</div>
-			</div>
-			<div className="orders-table-wrapper">
-				<table className="orders-table">
-					<thead>
-						<tr>
-							<th>ORDER ID</th>
-							<th>CUSTOMER</th>
-							<th>AMOUNT</th>
-							<th>STATUS</th>
-							<th>DATE</th>
-							<th>ACTIONS</th>
-						</tr>
-					</thead>
-					<tbody>
-						{paginatedOrders.length === 0 ? (
-							<tr><td colSpan={6} className="no-orders">No orders found</td></tr>
-						) : paginatedOrders.map(order => (
-							<tr key={order.id}>
-								<td>{order.id}</td>
-								<td>{order.customer}</td>
-								<td>${order.amount}</td>
-								<td><span className={`status-badge ${order.status.toLowerCase()}`}>{order.status}</span></td>
-								<td>{order.date}</td>
-								<td><button className="view-btn">View</button></td>
-							</tr>
-						))}
-					</tbody>
-				</table>
-				<div className="orders-pagination-row">
-					<span>Showing {(filteredOrders.length === 0 ? 0 : (page - 1) * pageSize + 1)}-{Math.min(page * pageSize, filteredOrders.length)} of {filteredOrders.length} orders</span>
-					<div className="pagination-controls">
-						<button disabled={page === 1} onClick={() => setPage(page - 1)}>&lt;</button>
-						<span>{page}</span>
-						<button disabled={page === totalPages} onClick={() => setPage(page + 1)}>&gt;</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	);
+const statusColors = {
+	preparing: '#22d06a',
+	pending: '#3b82f6',
+	confirmed: '#f59e42',
+	out: '#f7931e',
+	delivered: '#22d06a',
+	cancelled: '#dc2626',
 };
 
-export default Orders;
+const statusLabels = {
+	preparing: 'PREPARING',
+	pending: 'PENDING',
+	confirmed: 'CONFIRMED',
+	out: 'OUT FOR DELIVERY',
+	delivered: 'DELIVERED',
+	cancelled: 'CANCELLED',
+};
+
+export default function Orders() {
+	const [tab, setTab] = useState('all');
+	const orders = tab === 'all' ? sampleOrders : sampleOrders.filter(o => o.status === tab);
+
+	return (
+		<>
+			<Navbar />
+			<div className="orders-container">
+				<div className="orders-header">
+					<span className="orders-emoji">🛒</span>
+					<div>
+						<h1 className="orders-title">Manage Orders</h1>
+						<div className="orders-overview">Overview: <b>{sampleOrders.length} Total</b> | <b>{sampleOrders.filter(o => o.status === 'pending').length} Pending Action</b></div>
+					</div>
+				</div>
+				<div className="orders-tabs">
+					{orderTabs.map(t => (
+						<button
+							key={t.key}
+							className={"orders-tab" + (tab === t.key ? ' active' : '')}
+							onClick={() => setTab(t.key)}
+						>
+							{t.label}
+						</button>
+					))}
+				</div>
+				<div className="orders-list">
+					{orders.map((order, i) => (
+						<div className="order-card" key={order.id}>
+							<div className="order-card-header">
+								<span className="order-id">#{order.id}</span>
+								<span className="order-status" style={{ background: statusColors[order.status] + '22', color: statusColors[order.status] }}>{statusLabels[order.status]}</span>
+							</div>
+							<div className="order-customer">
+								<div><span role="img" aria-label="user">👤</span> {order.customer.name}</div>
+								<div><span role="img" aria-label="phone">📞</span> {order.customer.phone}</div>
+								<div><span role="img" aria-label="email">📧</span> {order.customer.email}</div>
+								<div><span role="img" aria-label="address">📍</span> {order.customer.address}</div>
+								<div>Payment: {order.payment}</div>
+							</div>
+							<div className="order-items">
+								{order.items.map((item, idx) => (
+									<div className="order-item" key={item.name + idx}>
+										{item.img && <img src={item.img} alt={item.name} className="order-item-img" />}
+										<span className="order-item-qty">{item.qty}x</span>
+										<span className="order-item-name">{item.name}</span>
+										<span className="order-item-type">({item.type})</span>
+										<span className="order-item-price">₹{item.price}</span>
+									</div>
+								))}
+							</div>
+							<div className="order-summary">
+								<div>Subtotal <b>₹{order.subtotal}</b></div>
+								<div>Delivery Charge <b>₹{order.delivery}</b></div>
+								<div>Total Amount <b>₹{order.total}</b></div>
+								<div>Delivery Partner: <span className="order-driver">{order.driver || 'Not Assigned'}</span></div>
+							</div>
+							<div className="order-actions">
+								{order.actions.map(action => (
+									<button key={action} className={"order-action-btn " + action.toLowerCase().replace(/ /g, '-')}>{action}</button>
+								))}
+							</div>
+							<div className="order-footer">
+								<span>{order.created}</span>
+							</div>
+						</div>
+					))}
+				</div>
+			</div>
+		</>
+	);
+}

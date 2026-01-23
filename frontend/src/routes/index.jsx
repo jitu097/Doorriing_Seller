@@ -18,6 +18,7 @@ const MainLayout = lazy(() => import('../components/layout/MainLayout'));
 const LandingPage = lazy(() => import('../pages/landing/LandingPage'));
 const RestaurantDashboard = lazy(() => import('../pages/Restaurant/Dashboard'));
 const GroceryProducts = lazy(() => import('../pages/Grocery/Products'));
+const GroceryOrders = lazy(() => import('../pages/Grocery/Orders'));
 
 // --- Route Guards (Consolidated) ---
 
@@ -75,6 +76,7 @@ const AppRoutes = () => {
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/grocery/dashboard" element={<GroceryDashboard />} />
                         <Route path="/grocery/products" element={<GroceryProducts />} />
+                        <Route path="/grocery/orders" element={<GroceryOrders />} />
                         <Route path="/orders" element={<Orders />} />
                         <Route path="/items" element={<Items />} />
                         <Route path="/discounts" element={<Discounts />} />
