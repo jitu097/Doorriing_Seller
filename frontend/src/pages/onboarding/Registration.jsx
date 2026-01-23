@@ -1,180 +1,280 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Registration.css';
 
-const categories = [
-  'Restaurant',
-  'Grocery',
-  'Pharmacy',
-  'Clothing',
-  'Electronics',
-  'Home & Garden',
-  'Beauty & Health',
-  'Books & Stationery',
-  'Sports & Fitness',
-  'Automotive',
-  'Services',
-  'Other'
-];
-
 export default function Registration() {
-  const [formData, setFormData] = useState({
-    shopName: '',
-    ownerName: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    category: '',
-    description: '',
-    website: '',
-    socialMedia: {
-      facebook: '',
-      instagram: '',
-      twitter: ''
-    },
-    businessLicense: '',
-    taxId: ''
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
+	const navigate = useNavigate();
+	const [formData, setFormData] = useState({
+		shopName: '',
+		ownerName: '',
+		email: '',
+		phone: '',
+		address: '',
+		city: 'Latehar',
+		state: 'Jharkhand',
+		PINCode: '829206',
+		category: '',
+		subcategory: '',
+		description: '',
+		website: '',
+		businessLicense: '',
+		taxId: '',
+		panCard: '',
+		aadhaarNumber: '',
+		shopPhoto: null
+	});
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [photoPreview, setPhotoPreview] = useState(null);
+	const [isLoading, setIsLoading] = useState(false);
+	const [isExistingShop, setIsExistingShop] = useState(false);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    if (name.includes('socialMedia.')) {
-      const platform = name.split('.')[1];
-      setFormData(prev => ({
-        ...prev,
-        socialMedia: {
-          ...prev.socialMedia,
-          [platform]: value
-        }
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
-  };
+	const categories = [
+		'Grocery',
+		'Restaurant'
+	];
+	const subcategories = {
+		'Grocery': [
+			'Vegetable Shop',
+			'Fruit Shop',
+			'Electronics Groceries',
+			'Cosmetics',
+			'General Store',
+			'Dairy Products',
+			'Others'
+		],
+		'Restaurant': [
+			'Restaurant',
+			'Sweet Store',
+			'Dhaba',
+			'Fast Food',
+			'Cafe',
+			'Bakery',
+			'Others'
+		]
+	};
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    // Simulate form submission
-    setTimeout(() => {
-      setIsSubmitting(false);
-      alert('Shop registration submitted successfully!');
-      navigate('/dashboard');
-    }, 2000);
-  };
+	const handleInputChange = (e) => {
+		const { name, value } = e.target;
+		if (name === 'category') {
+			setFormData(prev => ({ ...prev, [name]: value, subcategory: '' }));
+			return;
+		}
+		if (name === 'panCard') {
+			setFormData(prev => ({ ...prev, [name]: value.toUpperCase().replace(/[^A-Z0-9]/g, '') }));
+			return;
+		}
+		if (name === 'aadhaarNumber') {
+			setFormData(prev => ({ ...prev, [name]: value.replace(/[^0-9]/g, '') }));
+			return;
+		}
+		setFormData(prev => ({ ...prev, [name]: value }));
+	};
 
-  return (
-    <div className="registration-bg">
-      <div className="registration-container">
-        <header className="registration-header">
-          <h1>Shop Registration</h1>
-          <p>Join our hyperlocal marketplace and start selling to your community</p>
-        </header>
-        <form onSubmit={handleSubmit} className="registration-form">
-          <section>
-            <h2>Basic Information</h2>
-            <div className="registration-grid">
-              <div>
-                <label>Shop Name *</label>
-                <input type="text" name="shopName" value={formData.shopName} onChange={handleInputChange} required />
-              </div>
-              <div>
-                <label>Owner Name *</label>
-                <input type="text" name="ownerName" value={formData.ownerName} onChange={handleInputChange} required />
-              </div>
-              <div>
-                <label>Email *</label>
-                <input type="email" name="email" value={formData.email} onChange={handleInputChange} required />
-              </div>
-              <div>
-                <label>Phone *</label>
-                <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} required />
-              </div>
-              <div className="full-width">
-                <label>Category *</label>
-                <select name="category" value={formData.category} onChange={handleInputChange} required>
-                  <option value="">Select a category</option>
-                  {categories.map(category => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="full-width">
-                <label>Description</label>
-                <textarea name="description" value={formData.description} onChange={handleInputChange} rows={3} />
-              </div>
-            </div>
-          </section>
-          <section>
-            <h2>Address Information</h2>
-            <div className="registration-grid">
-              <div className="full-width">
-                <label>Street Address *</label>
-                <input type="text" name="address" value={formData.address} onChange={handleInputChange} required />
-              </div>
-              <div>
-                <label>City *</label>
-                <input type="text" name="city" value={formData.city} onChange={handleInputChange} required />
-              </div>
-              <div>
-                <label>State *</label>
-                <input type="text" name="state" value={formData.state} onChange={handleInputChange} required />
-              </div>
-              <div>
-                <label>ZIP Code *</label>
-                <input type="text" name="zipCode" value={formData.zipCode} onChange={handleInputChange} required />
-              </div>
-            </div>
-          </section>
-          <section>
-            <h2>Online Presence</h2>
-            <div className="registration-grid">
-              <div className="full-width">
-                <label>Website</label>
-                <input type="url" name="website" value={formData.website} onChange={handleInputChange} />
-              </div>
-              <div>
-                <label>Facebook</label>
-                <input type="url" name="socialMedia.facebook" value={formData.socialMedia.facebook} onChange={handleInputChange} />
-              </div>
-              <div>
-                <label>Instagram</label>
-                <input type="url" name="socialMedia.instagram" value={formData.socialMedia.instagram} onChange={handleInputChange} />
-              </div>
-              <div>
-                <label>Twitter</label>
-                <input type="url" name="socialMedia.twitter" value={formData.socialMedia.twitter} onChange={handleInputChange} />
-              </div>
-            </div>
-          </section>
-          <section>
-            <h2>Business Information</h2>
-            <div className="registration-grid">
-              <div>
-                <label>Business License Number</label>
-                <input type="text" name="businessLicense" value={formData.businessLicense} onChange={handleInputChange} />
-              </div>
-              <div>
-                <label>Tax ID</label>
-                <input type="text" name="taxId" value={formData.taxId} onChange={handleInputChange} />
-              </div>
-            </div>
-          </section>
-          <div className="registration-actions">
-            <button type="submit" disabled={isSubmitting} className="registration-submit">
-              {isSubmitting ? 'Registering...' : 'Register Shop'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
+	const handlePhotoChange = (e) => {
+		const file = e.target.files[0];
+		if (file) {
+			// Validate file type
+			const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+			if (!validTypes.includes(file.type)) {
+				alert('Please select a valid image file (JPEG, PNG, or WebP)');
+				return;
+			}
+			// Validate file size (max 5MB)
+			if (file.size > 5 * 1024 * 1024) {
+				alert('Image size must be less than 5MB');
+				return;
+			}
+			setFormData(prev => ({ ...prev, shopPhoto: file }));
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				setPhotoPreview(e.target.result);
+			};
+			reader.readAsDataURL(file);
+		}
+	};
+
+	const removePhoto = () => {
+		setFormData(prev => ({ ...prev, shopPhoto: null }));
+		setPhotoPreview(null);
+	};
+
+	const handleSubmit = (e) => {
+		e.preventDefault();
+		setIsSubmitting(true);
+		// Validate PAN
+		const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+		if (!panRegex.test(formData.panCard)) {
+			alert('Please enter a valid PAN card number (format: ABCDE1234F)');
+			setIsSubmitting(false);
+			return;
+		}
+		// Validate Aadhaar
+		const aadhaarRegex = /^[0-9]{12}$/;
+		if (!aadhaarRegex.test(formData.aadhaarNumber)) {
+			alert('Please enter a valid 12-digit Aadhaar number');
+			setIsSubmitting(false);
+			return;
+		}
+		setTimeout(() => {
+			setIsSubmitting(false);
+			alert('Shop registration submitted successfully!');
+			if (formData.category === 'Grocery') {
+				navigate('/grocery/dashboard');
+			} else if (formData.category === 'Restaurant') {
+				navigate('/restaurant/dashboard');
+			} else {
+				navigate('/dashboard');
+			}
+		}, 1500);
+	};
+
+	return (
+		<div className="register-container">
+			<header className="register-header">
+				<div className="register-header-content">
+					<div className="register-header-inner">
+						<div className="register-header-left">
+							<h1 className="register-title">Shop Registration</h1>
+						</div>
+					</div>
+				</div>
+			</header>
+			<div className="register-main">
+				{isLoading ? (
+					<div style={{textAlign: 'center', padding: '50px'}}>
+						<p>Loading shop data...</p>
+					</div>
+				) : (
+					<div className="register-card">
+						<form onSubmit={handleSubmit} className="register-form">
+							{/* Basic Information */}
+							<div className="register-section">
+								<h3 className="register-section-title">Basic Information</h3>
+								<div className="register-grid-2">
+									<div className="register-form-group">
+										<label className="register-label">Shop Name *</label>
+										<input type="text" name="shopName" value={formData.shopName} onChange={handleInputChange} required className="register-input" placeholder="Enter your shop name" />
+									</div>
+									<div className="register-form-group">
+										<label className="register-label">Owner Name *</label>
+										<input type="text" name="ownerName" value={formData.ownerName} onChange={handleInputChange} required className="register-input" placeholder="Enter owner's full name" />
+									</div>
+									<div className="register-form-group">
+										<label className="register-label">Email *</label>
+										<input type="email" name="email" value={formData.email} onChange={handleInputChange} required className="register-input" placeholder="Enter email address" />
+									</div>
+									<div className="register-form-group">
+										<label className="register-label">Phone *</label>
+										<input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} required className="register-input" placeholder="Enter phone number" />
+									</div>
+									<div className="register-form-group">
+										<label className="register-label">Category *</label>
+										<select name="category" value={formData.category} onChange={handleInputChange} required className="register-select">
+											<option value="">Select a category</option>
+											{categories.map(category => (
+												<option key={category} value={category}>{category}</option>
+											))}
+										</select>
+									</div>
+									<div className="register-form-group">
+										<label className="register-label">Sub Category *</label>
+										<select name="subcategory" value={formData.subcategory} onChange={handleInputChange} required disabled={!formData.category} className={`register-select ${!formData.category ? 'register-input-disabled' : ''}`}>
+											<option value="">Select a sub category</option>
+											{formData.category && subcategories[formData.category]?.map(subcat => (
+												<option key={subcat} value={subcat}>{subcat}</option>
+											))}
+										</select>
+									</div>
+									<div className="register-form-group register-grid-span-2">
+										<label className="register-label">Description</label>
+										<textarea name="description" value={formData.description} onChange={handleInputChange} rows={3} className="register-textarea" placeholder="Describe your shop and what you sell" />
+									</div>
+									<div className="register-form-group register-grid-span-2">
+										<label className="register-label">Shop Photo</label>
+										<div className="photo-upload-container">
+											{!photoPreview ? (
+												<div>
+													<input type="file" id="shopPhoto" name="shopPhoto" accept="image/*" onChange={handlePhotoChange} className="photo-upload-input" />
+													<label htmlFor="shopPhoto" className="photo-upload-label">
+														<div className="photo-upload-icon">
+															<svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+															</svg>
+														</div>
+														<div className="photo-upload-text">Click to upload shop photo</div>
+														<div className="photo-upload-subtext">PNG, JPG, WebP up to 5MB</div>
+													</label>
+												</div>
+											) : (
+												<div>
+													<img src={photoPreview} alt="Shop preview" className="photo-preview" />
+													<button type="button" onClick={removePhoto} className="register-submit-button" style={{ marginTop: '1rem', background: '#ef4444' }}>Remove Photo</button>
+												</div>
+											)}
+										</div>
+									</div>
+								</div>
+							</div>
+							{/* Address Information */}
+							<div className="register-section">
+								<h3 className="register-section-title">Address Information</h3>
+								<div className="register-grid-2">
+									<div className="register-form-group register-grid-span-2">
+										<label className="register-label">Street Address *</label>
+										<input type="text" name="address" value={formData.address} onChange={handleInputChange} required className="register-input" placeholder="Enter street address" />
+									</div>
+									<div className="register-form-group">
+										<label className="register-label">City *</label>
+										<input type="text" name="city" value="Latehar" readOnly required className="register-input register-input-disabled" placeholder="City is fixed to Latehar" />
+									</div>
+									<div className="register-form-group">
+										<label className="register-label">State *</label>
+										<input type="text" name="state" value="Jharkhand" readOnly required className="register-input register-input-disabled" placeholder="State is fixed to Jharkhand" />
+									</div>
+									<div className="register-form-group">
+										<label className="register-label">PIN Code *</label>
+										<input type="text" name="PINCode" value="829206" readOnly required className="register-input register-input-disabled" placeholder="PIN code is fixed to 829206" />
+									</div>
+								</div>
+							</div>
+							{/* Business Information */}
+							<div className="register-section">
+								<h3 className="register-section-title">Business Information</h3>
+								<div className="register-grid-2">
+									<div className="register-form-group">
+										<label className="register-label">PAN Card Number *</label>
+										<input type="text" name="panCard" value={formData.panCard} onChange={handleInputChange} required className="register-input" placeholder="Enter PAN card number (e.g., ABCDE1234F)" maxLength="10" pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" title="PAN format: 5 letters, 4 digits, 1 letter (e.g., ABCDE1234F)" />
+									</div>
+									<div className="register-form-group">
+										<label className="register-label">Aadhaar Number *</label>
+										<input type="text" name="aadhaarNumber" value={formData.aadhaarNumber} onChange={handleInputChange} required className="register-input" placeholder="Enter 12-digit Aadhaar number" maxLength="12" pattern="[0-9]{12}" title="Aadhaar should be 12 digits" />
+									</div>
+									<div className="register-form-group">
+										<label className="register-label">Business License Number</label>
+										<input type="text" name="businessLicense" value={formData.businessLicense} onChange={handleInputChange} className="register-input" placeholder="Enter license number" />
+									</div>
+									<div className="register-form-group">
+										<label className="register-label">Tax ID</label>
+										<input type="text" name="taxId" value={formData.taxId} onChange={handleInputChange} className="register-input" placeholder="Enter tax ID" />
+									</div>
+								</div>
+							</div>
+							{/* Submit Button */}
+							<div className="register-submit-section">
+								<div className="register-submit-row">
+									<button type="button" className="register-cancel-link" onClick={() => navigate('/')}>Cancel</button>
+									<button type="submit" disabled={isSubmitting} className={`register-submit-button ${isSubmitting ? 'register-loading' : ''}`}>
+										{isSubmitting ? (isExistingShop ? 'Updating...' : 'Registering...') : (isExistingShop ? 'Update Shop' : 'Register Shop')}
+									</button>
+								</div>
+							</div>
+						</form>
+					</div>
+				)}
+			</div>
+			<style>{`.register-input-disabled { background-color: #f0f0f0; cursor: not-allowed; color: #555; }`}</style>
+		</div>
+	);
 }
+

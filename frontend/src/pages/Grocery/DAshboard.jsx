@@ -42,7 +42,7 @@ const Dashboard = () => {
 	}, []);
 
 	const handleTab = (tabName) => setTab(tabName);
-	const handleManageProducts = () => navigate('/products');
+	const handleManageProducts = () => navigate('/grocery/products');
 	const handleViewAllOrders = () => navigate('/orders');
 	const handleReRegister = () => navigate('/onboarding/shop-setup');
 	const handleSignOut = () => {
@@ -72,7 +72,19 @@ const Dashboard = () => {
 			</section>
 			<nav className="dashboard-tabs">
 				{['overview', 'orders', 'products', 'analytics', 'settings'].map(t => (
-					<span key={t} className={tab === t ? 'active' : ''} onClick={() => handleTab(t)}>{t.charAt(0).toUpperCase() + t.slice(1)}</span>
+					<span
+						key={t}
+						className={tab === t ? 'active' : ''}
+						onClick={() => {
+							if (t === 'products') {
+								navigate('/grocery/products');
+							} else {
+								handleTab(t);
+							}
+						}}
+					>
+						{t.charAt(0).toUpperCase() + t.slice(1)}
+					</span>
 				))}
 			</nav>
 			{tab === 'overview' && (

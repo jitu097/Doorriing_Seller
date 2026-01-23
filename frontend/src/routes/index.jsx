@@ -16,6 +16,8 @@ const Discounts = lazy(() => import('../pages/discounts/Discounts'));
 const Analytics = lazy(() => import('../pages/analytics/Analytics'));
 const MainLayout = lazy(() => import('../components/layout/MainLayout'));
 const LandingPage = lazy(() => import('../pages/landing/LandingPage'));
+const RestaurantDashboard = lazy(() => import('../pages/Restaurant/Dashboard'));
+const GroceryProducts = lazy(() => import('../pages/Grocery/Products'));
 
 // --- Route Guards (Consolidated) ---
 
@@ -66,12 +68,13 @@ const AppRoutes = () => {
                 {/* Protected Routes */}
                 <Route element={<ProtectedRoute />}> 
                     <Route path="/registration" element={React.createElement(lazy(() => import('../pages/onboarding/Registration')))} />
-                    <Route path="/restaurant/dashboard" element={React.createElement(lazy(() => import('../pages/Restaurant/Dashboard')))} />
+                    <Route path="/restaurant/dashboard" element={<RestaurantDashboard />} />
                     <Route path="/restaurant/menu" element={React.createElement(lazy(() => import('../pages/Restaurant/Menu')))} />
                     <Route path="/admin/orders" element={React.createElement(lazy(() => import('../pages/Restaurant/Orders')))} />
                     <Route element={<MainLayout />}> 
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/grocery/dashboard" element={<GroceryDashboard />} />
+                        <Route path="/grocery/products" element={<GroceryProducts />} />
                         <Route path="/orders" element={<Orders />} />
                         <Route path="/items" element={<Items />} />
                         <Route path="/discounts" element={<Discounts />} />

@@ -1,9 +1,9 @@
-body, .registration-bg {
+body, .register-container {
 	background: #f7f8fa;
 	min-height: 100vh;
 }
 
-.registration-container {
+.register-container {
 	max-width: 700px;
 	margin: 40px auto;
 	background: #fff;
@@ -12,47 +12,48 @@ body, .registration-bg {
 	padding: 32px 40px;
 }
 
-.registration-header {
+.register-header {
 	text-align: center;
 	margin-bottom: 32px;
 }
-.registration-header h1 {
+.register-header h1, .register-title {
 	font-size: 2.2rem;
 	font-weight: 700;
 	margin-bottom: 8px;
 	color: #ff6600;
 }
-.registration-header p {
+.register-header p {
 	color: #444;
 	font-size: 1.1rem;
 }
 
-.registration-form section {
+.register-form section, .register-section {
 	margin-bottom: 32px;
 }
-.registration-form h2 {
+.register-section-title {
 	font-size: 1.2rem;
 	font-weight: 600;
 	margin-bottom: 16px;
 	color: #222;
 }
-.registration-grid {
+.register-grid-2 {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: 20px;
 }
-.registration-grid .full-width {
+.register-grid-span-2 {
 	grid-column: 1 / -1;
 }
-.registration-form label {
+.register-form-group {
+	display: flex;
+	flex-direction: column;
+}
+.register-label {
 	font-weight: 500;
 	margin-bottom: 6px;
-	display: block;
 	color: #333;
 }
-.registration-form input,
-.registration-form select,
-.registration-form textarea {
+.register-input, .register-select, .register-textarea {
 	width: 100%;
 	padding: 10px 12px;
 	border: 1px solid #e0e0e0;
@@ -62,17 +63,25 @@ body, .registration-bg {
 	margin-bottom: 10px;
 	transition: border 0.2s;
 }
-.registration-form input:focus,
-.registration-form select:focus,
-.registration-form textarea:focus {
+.register-input:focus, .register-select:focus, .register-textarea:focus {
 	border-color: #ff6600;
 	outline: none;
 }
-.registration-actions {
+.register-input-disabled {
+	background-color: #f0f0f0;
+	cursor: not-allowed;
+	color: #555;
+}
+.register-submit-section {
 	text-align: right;
 	margin-top: 24px;
 }
-.registration-submit {
+.register-submit-row {
+	display: flex;
+	justify-content: flex-end;
+	gap: 1rem;
+}
+.register-submit-button {
 	background: #ff6600;
 	color: #fff;
 	font-weight: 600;
@@ -84,7 +93,56 @@ body, .registration-bg {
 	box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 	transition: background 0.2s;
 }
-.registration-submit:disabled {
+.register-submit-button:disabled {
 	background: #ffb380;
 	cursor: not-allowed;
+}
+.register-cancel-link {
+	background: #f3f4f6;
+	color: #333;
+	font-weight: 500;
+	padding: 12px 24px;
+	border: none;
+	border-radius: 8px;
+	font-size: 1.05rem;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+.register-cancel-link:hover {
+	background: #e5e7eb;
+}
+.photo-upload-container {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+.photo-upload-label {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	cursor: pointer;
+	margin-top: 0.5rem;
+}
+.photo-upload-icon {
+	color: #ff6600;
+	margin-bottom: 0.3rem;
+}
+.photo-upload-text {
+	font-size: 1rem;
+	color: #333;
+}
+.photo-upload-subtext {
+	font-size: 0.9rem;
+	color: #888;
+}
+.photo-preview {
+	width: 80px;
+	height: 80px;
+	object-fit: cover;
+	border-radius: 8px;
+	border: 1px solid #eee;
+}
+.register-textarea {
+	min-height: 60px;
+	resize: vertical;
 }
