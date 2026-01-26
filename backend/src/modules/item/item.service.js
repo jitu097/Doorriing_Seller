@@ -1,75 +1,172 @@
 const supabase = require('../../config/supabaseClient');
-const cache = require('../../utils/cache');
-const { NotFoundError, ForbiddenError } = require('../../utils/errors');
-
-const CACHE_PREFIX = 'items:';
-
-const getItems = async (shopId, categoryId) => {
-    // Validate category belongs to shop might be needed, but for Read it's implicitly handled if we query by shopId + categoryId
-    // Actually, standard practice: get by categoryId, but DB row has shop_id, so we filter by both.
-
-    const cacheKey = `${CACHE_PREFIX}${categoryId}`;
-    const cached = await cache.get(cacheKey);
-    if (cached) return cached;
-
-    const { data, error } = await supabase
-        .from('items')
-        .select('*')
-        .eq('shop_id', shopId)
-        .eq('category_id', categoryId);
-
-    if (error) throw error;
-
-    await cache.set(cacheKey, data);
-    return data;
-};
 
 const createItem = async (shopId, itemData) => {
     const { data, error } = await supabase
         .from('items')
-        .insert([{ shop_id: shopId, ...itemData }])
+        .insert({
+            shop_id: shopId,
+            category_id: itemData.category_id,
+            name: itemData.name,
+            description: itemData.description,
+            price: itemData.price,
+            half_portion_price: itemData.half_portion_price,
+            stock_quantity: itemData.stock_quantity || 0,
+            unit: itemData.unit,
+            image_url: itemData.image_url,
+            is_available: itemData.is_available !== undefined ? itemData.is_available : true
+        })
         .select()
         .single();
-
+    
     if (error) throw error;
+    
+    if (itemData.stock_quantity) {
+        await logInventoryChange(data.id, shopId, 'purchase', 0, itemData.stock_quantity, 'Initial stock');
+    }
+    
+    return data;
+};
 
-    // Invalidate cache
-    await cache.del(`${CACHE_PREFIX}${itemData.category_id}`);
+const getItems = async (shopId, categoryId = null) => {
+    let query = supabase
+        .from('items')
+        .select(`
+            id,
+            name,
+            description,
+            price,
+            half_portion_price,
+            stock_quantity,
+            unit,
+            image_url,
+            is_available,
+            created_at,
+            categories (id, name)
+        `)
+        .eq('shop_id', shopId);
+    
+    if (categoryId) {
+        query = query.eq('category_id', categoryId);
+    }
+    
+    const { data, error } = await query.order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    return data || [];
+};
 
+const getItem = async (itemId, shopId) => {
+    const { data, error } = await supabase
+        .from('items')
+        .select(`
+            *,
+            categories (id, name)
+        `)
+        .eq('id', itemId)
+        .eq('shop_id', shopId)
+        .single();
+    
+    if (error) throw error;
+    
     return data;
 };
 
 const updateItem = async (itemId, shopId, updates) => {
-    // Need to fetch item first to check ownership and get category_id for invalidation
-    const { data: existing, error: fetchError } = await supabase
-        .from('items')
-        .select('shop_id, category_id')
-        .eq('id', itemId)
-        .single();
-
-    if (fetchError || !existing) throw new NotFoundError('Item not found');
-    if (existing.shop_id !== shopId) throw new ForbiddenError('Access denied');
-
+    const allowedFields = [
+        'name', 'description', 'price', 'half_portion_price',
+        'unit', 'image_url', 'category_id'
+    ];
+    
+    const filteredUpdates = {};
+    Object.keys(updates).forEach(key => {
+        if (allowedFields.includes(key) && updates[key] !== undefined) {
+            filteredUpdates[key] = updates[key];
+        }
+    });
+    
     const { data, error } = await supabase
         .from('items')
-        .update(updates)
+        .update(filteredUpdates)
         .eq('id', itemId)
+        .eq('shop_id', shopId)
         .select()
         .single();
-
+    
     if (error) throw error;
-
-    // Invalidate cache
-    await cache.del(`${CACHE_PREFIX}${existing.category_id}`);
-    if (updates.category_id && updates.category_id !== existing.category_id) {
-        await cache.del(`${CACHE_PREFIX}${updates.category_id}`);
-    }
-
+    
     return data;
 };
 
+const updateStock = async (itemId, shopId, newQuantity, changeType = 'adjustment', notes = null) => {
+    const { data: currentItem } = await supabase
+        .from('items')
+        .select('stock_quantity')
+        .eq('id', itemId)
+        .eq('shop_id', shopId)
+        .single();
+    
+    if (!currentItem) {
+        throw new Error('Item not found');
+    }
+    
+    const oldQuantity = currentItem.stock_quantity || 0;
+    const quantityChange = newQuantity - oldQuantity;
+    
+    if (quantityChange === 0) {
+        return currentItem;
+    }
+    
+    const { data, error } = await supabase
+        .from('items')
+        .update({ stock_quantity: newQuantity })
+        .eq('id', itemId)
+        .eq('shop_id', shopId)
+        .select()
+        .single();
+    
+    if (error) throw error;
+    
+    await logInventoryChange(itemId, shopId, changeType, oldQuantity, quantityChange, notes);
+    
+    return data;
+};
+
+const toggleAvailability = async (itemId, shopId, isAvailable) => {
+    const { data, error } = await supabase
+        .from('items')
+        .update({ is_available: isAvailable })
+        .eq('id', itemId)
+        .eq('shop_id', shopId)
+        .select('id, name, is_available')
+        .single();
+    
+    if (error) throw error;
+    
+    return data;
+};
+
+const logInventoryChange = async (itemId, shopId, changeType, quantityBefore, quantityChange, notes = null) => {
+    const quantityAfter = quantityBefore + quantityChange;
+    
+    await supabase
+        .from('inventory_logs')
+        .insert({
+            item_id: itemId,
+            shop_id: shopId,
+            change_type: changeType,
+            quantity_before: quantityBefore,
+            quantity_change: quantityChange,
+            quantity_after: quantityAfter,
+            notes: notes
+        });
+};
+
 module.exports = {
-    getItems,
     createItem,
-    updateItem
+    getItems,
+    getItem,
+    updateItem,
+    updateStock,
+    toggleAvailability
 };

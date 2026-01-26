@@ -1,17 +1,12 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Menu.css';
 import Navbar from './Navbar';
-
-const initialCategories = [
-	{ name: 'kuo', items: 5, hidden: true, active: false },
-	{ name: 'rolls', items: 1, hidden: true, active: true },
-	{ name: 'chinese', items: 1, hidden: true, active: true },
-	{ name: 'how', items: 1, hidden: false, active: true },
-];
+import categoryService from '../../services/categoryService';
+import itemService from '../../services/itemService';
 
 const Menu = () => {
-	const [categories, setCategories] = useState(initialCategories);
+	const [categories, setCategories] = useState([]);
+	const [loading, setLoading] = useState(true);
 	const [openIndex, setOpenIndex] = useState(null);
 	const [items, setItems] = useState([]);
 
@@ -27,6 +22,24 @@ const Menu = () => {
 		price: '',
 		active: true,
 	});
+
+	useEffect(() => {
+		fetchCategories();
+	}, []);
+
+	const fetchCategories = async () => {
+		try {
+			setLoading(true);
+			const data = await categoryService.getCategories();
+			setCategories(data || []);
+		} catch (error) {
+			console.error('Failed to fetch categories:', error);
+			// Set empty array on error - backend may not be running
+			setCategories([]);
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	const handleAccordion = (idx) => {
 		setOpenIndex(openIndex === idx ? null : idx);
@@ -54,48 +67,104 @@ const Menu = () => {
 	const handleCategoryModalOpen = () => setShowCategoryModal(true);
 	const handleCategoryModalClose = () => setShowCategoryModal(false);
 
-	const handleCreateItem = (e) => {
+	const handleCreateItem = async (e) => {
 		e.preventDefault();
-		// Add item to items array
-		setItems(prev => [
-			...prev,
-			{
+		try {
+			const itemData = {
 				name: newItem.name,
 				description: newItem.description,
-				category: newItem.category,
-				image: newItem.image ? URL.createObjectURL(newItem.image) : '',
-				halfPortion: newItem.halfPortion,
-				priceHalf: newItem.halfPortion ? (newItem.priceHalf || 80) : null,
-				priceFull: newItem.price,
-				active: newItem.active
+				category_id: newItem.category,
+				price: parseFloat(newItem.price),
+				half_portion_price: newItem.halfPortion ? parseFloat(newItem.priceHalf || 0) : null,
+				is_active: newItem.active
+			};
+			
+			const created = await itemService.createItem(itemData);
+			
+			// If image is provided, upload it
+			if (newItem.image && created.id) {
+				await itemService.uploadItemImage(created.id, newItem.image);
 			}
-		]);
-		handleModalClose();
-	};
-
-	const handleAddCategory = (e) => {
-		e.preventDefault();
-		if (newCategory.trim()) {
-			setCategories([...categories, { name: newCategory, items: 0, hidden: false, active: true }]);
-			setNewCategory('');
+			
+			// Refresh categories to get updated items
+			fetchCategories();
+			handleModalClose();
+		} catch (error) {
+			console.error('Failed to create item:', error);
+			alert('Failed to create item. Please try again.');
 		}
 	};
 
-	const handleCategoryToggle = (idx) => {
-		setCategories(categories => categories.map((cat, i) =>
-			i === idx ? { ...cat, active: !cat.active } : cat
-		));
+	const handleAddCategory = async (e) => {
+		e.preventDefault();
+		if (newCategory.trim()) {
+			try {
+				await categoryService.createCategory({ 
+					name: newCategory,
+					display_order: categories.length 
+				});
+				fetchCategories();
+				setNewCategory('');
+				handleCategoryModalClose();
+			} catch (error) {
+				console.error('Failed to create category:', error);
+				alert('Failed to create category. Please try again.');
+			}
+		}
 	};
 
-	const handleDeleteCategory = (idx) => {
-		setCategories(categories => categories.filter((_, i) => i !== idx));
+	const handleDeleteCategory = async (categoryId) => {
+		if (window.confirm('Are you sure you want to delete this category? All items in this category will also be deleted.')) {
+			try {
+				await categoryService.deleteCategory(categoryId);
+				fetchCategories();
+			} catch (error) {
+				console.error('Failed to delete category:', error);
+				alert('Failed to delete category. Please try again.');
+			}
+		}
 	};
 
-	const handleToggleActive = (idx) => {
-		setCategories(categories => categories.map((cat, i) =>
-			i === idx ? { ...cat, active: !cat.active } : cat
-		));
+	const handleToggleCategory = async (categoryId) => {
+		try {
+			await categoryService.toggleCategory(categoryId);
+			fetchCategories();
+		} catch (error) {
+			console.error('Failed to toggle category:', error);
+			alert('Failed to toggle category. Please try again.');
+		}
 	};
+
+	const handleToggleItem = async (itemId) => {
+		try {
+			await itemService.toggleItem(itemId);
+			fetchCategories();
+		} catch (error) {
+			console.error('Failed to toggle item:', error);
+			alert('Failed to toggle item. Please try again.');
+		}
+	};
+
+	const handleDeleteItem = async (itemId) => {
+		if (window.confirm('Are you sure you want to delete this item?')) {
+			try {
+				await itemService.deleteItem(itemId);
+				fetchCategories();
+			} catch (error) {
+				console.error('Failed to delete item:', error);
+				alert('Failed to delete item. Please try again.');
+			}
+		}
+	};
+
+	if (loading) {
+		return (
+			<>
+				<Navbar />
+				<div className="loading">Loading menu...</div>
+			</>
+		);
+	}
 
 	return (
 		<>
@@ -105,7 +174,9 @@ const Menu = () => {
 					<span className="menu-emoji" role="img" aria-label="menu">🍽️</span>
 					<div>
 						<h1 className="menu-title">Manage Menu</h1>
-						<div className="menu-overview">Overview: <b>{items.length} Items</b> | <b>{items.filter(i => i.active).length} Active</b> | <b>{categories.length} Categories</b></div>
+						<div className="menu-overview">
+							Overview: <b>{categories.reduce((sum, cat) => sum + (cat.items?.length || 0), 0)} Items</b> | <b>{categories.length} Categories</b>
+						</div>
 					</div>
 				</div>
 				<div className="menu-actions">
@@ -115,41 +186,50 @@ const Menu = () => {
 				</div>
 
 				<div className="menu-categories">
-					{categories.map((cat, idx) => {
-						const catItems = items.filter(item => item.category === cat.name);
-						return (
-							<div className="category-accordion" key={cat.name}>
+					{categories.length === 0 ? (
+						<div className="no-categories">No categories found. Add a category to get started.</div>
+					) : (
+						categories.map((cat, idx) => (
+							<div className="category-accordion" key={cat.id}>
 								<div className="category-header">
 									<span className="category-arrow" onClick={() => handleAccordion(idx)}>{openIndex === idx ? '▼' : '▶'}</span>
 									<span className="category-name" onClick={() => handleAccordion(idx)}>{cat.name}</span>
-									<span className="category-items">{catItems.length} items</span>
-									{cat.hidden && <span className="category-badge hidden">Hidden</span>}
+									<span className="category-items">{cat.items?.length || 0} items</span>
+									{!cat.is_active && <span className="category-badge hidden">Hidden</span>}
 									<span className="category-toggle">
 										<label className="switch">
-											<input type="checkbox" checked={cat.active} onChange={() => handleToggleActive(idx)} />
+											<input type="checkbox" checked={cat.is_active} onChange={() => handleToggleCategory(cat.id)} />
 											<span className="slider round"></span>
 										</label>
 									</span>
 								</div>
 								{openIndex === idx && (
 									<div className="category-content">
-										{catItems.length === 0 ? (
+										{!cat.items || cat.items.length === 0 ? (
 											<div className="empty-items">No items to display.</div>
 										) : (
 											<div className="item-card-list">
-												{catItems.map((item, i) => (
-													<div className="item-card" key={item.name + i}>
-														{item.image && <img src={item.image} alt={item.name} className="item-card-img" />}
+												{cat.items.map((item) => (
+													<div className="item-card" key={item.id}>
+														{item.image_url && <img src={item.image_url} alt={item.name} className="item-card-img" />}
 														<div className="item-card-body">
 															<div className="item-card-header">
 																<span className="item-card-title">{item.name}</span>
-																{item.active && <span className="item-card-active">ACTIVE</span>}
+																{item.is_active && <span className="item-card-active">ACTIVE</span>}
+																<div className="item-card-actions">
+																	<button onClick={() => handleToggleItem(item.id)} className="btn-ghost" style={{fontSize: '0.8rem', padding: '4px 8px'}}>
+																		{item.is_active ? 'Deactivate' : 'Activate'}
+																	</button>
+																	<button onClick={() => handleDeleteItem(item.id)} className="btn-ghost" style={{fontSize: '0.8rem', padding: '4px 8px', color: '#dc2626'}}>
+																		Delete
+																	</button>
+																</div>
 															</div>
-															<div className="item-card-category">{item.category}</div>
+															<div className="item-card-category">{cat.name}</div>
 															<div className="item-card-desc">{item.description}</div>
 															<div className="item-card-prices">
-																{item.halfPortion && <span className="item-card-price half">Half: ₹{item.priceHalf}</span>}
-																<span className="item-card-price full">Full: ₹{item.priceFull}</span>
+																{item.half_portion_price && <span className="item-card-price half">Half: ₹{item.half_portion_price}</span>}
+																<span className="item-card-price full">Full: ₹{item.price}</span>
 															</div>
 														</div>
 													</div>
@@ -159,8 +239,8 @@ const Menu = () => {
 									</div>
 								)}
 							</div>
-						);
-					})}
+						))
+					)}
 				</div>
 			</div>
 
@@ -181,7 +261,7 @@ const Menu = () => {
 									<select name="category" value={newItem.category} onChange={handleInputChange} required>
 										<option value="">Select Category</option>
 										{categories.map((cat) => (
-											<option key={cat.name} value={cat.name}>{cat.name}</option>
+											<option key={cat.id} value={cat.id}>{cat.name}</option>
 										))}
 									</select>
 								</label>
@@ -230,17 +310,17 @@ const Menu = () => {
 						<hr style={{ margin: '18px 0 10px 0', border: 'none', borderTop: '1.5px solid #f3f4f6' }} />
 						<div style={{ fontWeight: 700, fontSize: '1.15rem', marginBottom: 12 }}>Existing Categories</div>
 						<div className="category-list-modal">
-							{categories.map((cat, idx) => (
-								<div className="category-modal-row" key={cat.name}>
+							{categories.map((cat) => (
+								<div className="category-modal-row" key={cat.id}>
 									<span style={{ fontWeight: 700, textTransform: 'lowercase', minWidth: 80 }}>{cat.name}</span>
-									<span style={{ color: '#6b7280', fontSize: '0.98rem', marginLeft: 8 }}>({cat.items} items)</span>
+									<span style={{ color: '#6b7280', fontSize: '0.98rem', marginLeft: 8 }}>({cat.items?.length || 0} items)</span>
 									<span className="category-toggle">
 										<label className="switch">
-											<input type="checkbox" checked={cat.active} onChange={() => handleCategoryToggle(idx)} />
+											<input type="checkbox" checked={cat.is_active} onChange={() => handleToggleCategory(cat.id)} />
 											<span className="slider round"></span>
 										</label>
 									</span>
-									<button className="delete-category-btn" type="button" onClick={() => handleDeleteCategory(idx)} title="Delete">
+									<button className="delete-category-btn" type="button" onClick={() => handleDeleteCategory(cat.id)} title="Delete">
 										<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="5.5" y="9.5" width="1.5" height="6" rx="0.75" fill="#bbb"/><rect x="10.25" y="9.5" width="1.5" height="6" rx="0.75" fill="#bbb"/><rect x="15" y="9.5" width="1.5" height="6" rx="0.75" fill="#bbb"/><rect x="4" y="6" width="14" height="2" rx="1" fill="#eee"/><rect x="7" y="4" width="8" height="2" rx="1" fill="#eee"/></svg>
 									</button>
 								</div>

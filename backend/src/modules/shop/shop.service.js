@@ -1,103 +1,127 @@
 const supabase = require('../../config/supabaseClient');
 const cache = require('../../utils/cache');
-const { BadRequestError, NotFoundError } = require('../../utils/errors');
+const { ConflictError, NotFoundError } = require('../../utils/errors');
 
-const CACHE_PREFIX = 'shop:';
-
-const getShopByOwnerId = async (ownerId) => {
-    const cacheKey = `${CACHE_PREFIX}${ownerId}`;
-    const cached = await cache.get(cacheKey);
-    if (cached) return cached;
-
-    const { data, error } = await supabase
+const createShop = async (sellerId, shopData) => {
+    // Check for existing shop using correct column 'seller_id'
+    const { data: existingShop } = await supabase
         .from('shops')
-        .select('*, business_types(id, name)')
-        .eq('owner_id', ownerId)
+        .select('id')
+        .eq('seller_id', sellerId)
+        .maybeSingle();
+
+    if (existingShop) {
+        throw new ConflictError('Shop already exists for this seller');
+    }
+
+
+    // Speculative fix for business_type_id constraint
+    let businessTypeId = null;
+    try {
+        const { data: bType } = await supabase
+            .from('business_types')
+            .select('id')
+            .ilike('name', shopData.category || shopData.business_type)
+            .maybeSingle();
+        if (bType) businessTypeId = bType.id;
+    } catch (ignore) { }
+
+    // Map camelCase inputs (from frontend) or snake_case inputs to DB columns
+    const { data: shop, error } = await supabase
+        .from('shops')
+        .insert({
+            seller_id: sellerId, // CORRECTED: owner_id -> seller_id
+            shop_name: shopData.shopName || shopData.shop_name,
+            owner_name: shopData.ownerName || shopData.owner_name,
+            name: shopData.shopName || shopData.shop_name,
+            phone: shopData.phone,
+            address: shopData.address,
+            city: shopData.city || 'Latehar',
+            state: shopData.state || 'Jharkhand',
+            pincode: shopData.pincode || shopData.PINCode || '829206',
+            business_type: (shopData.category || shopData.business_type)?.toLowerCase(),
+            business_type_id: businessTypeId, // Added likely required FK
+            subcategory: shopData.subcategory,
+            description: shopData.description || '',
+            shop_image_url: null, // Image upload requires separate flow, setting null for now
+            delivery_enabled: true,
+            delivery_charge: 0,
+            min_order_amount: 0,
+            is_open: true,
+            is_active: true,
+            is_verified: false
+        })
+        .select()
         .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 is no rows returned
+    if (error) {
+        console.error('Supabase Create Shop Error:', error);
         throw error;
     }
 
-    if (data) {
-        await cache.set(cacheKey, data);
-    }
+    cache.delete(`shop:seller:${sellerId}`);
 
-    return data;
+    return shop;
 };
 
-const createShop = async (ownerId, shopData) => {
-    const { business_type_id, ...rest } = shopData;
-
-    if (!business_type_id) {
-        throw new BadRequestError('Business type is required');
-    }
-
-    // Check if shop already exists
-    const existingShop = await getShopByOwnerId(ownerId);
-    if (existingShop) {
-        throw new BadRequestError('Shop already exists for this seller');
-    }
-
-    // Validate business_type_id
-    const { data: bt, error: btError } = await supabase
-        .from('business_types')
-        .select('id')
-        .eq('id', business_type_id)
-        .single();
-
-    if (btError || !bt) {
-        throw new BadRequestError('Invalid business type');
-    }
-
+const getShop = async (sellerId) => {
     const { data, error } = await supabase
         .from('shops')
-        .insert([{ owner_id: ownerId, business_type_id, ...rest }])
-        .select('*, business_types(id, name)')
+        .select('*')
+        .eq('seller_id', sellerId)
         .single();
 
-    if (error) throw error;
+    if (error) throw new NotFoundError('Shop not found');
+
     return data;
 };
 
-const updateShop = async (ownerId, updates) => {
-    // Validate business_type_id if being updated
-    if (updates.business_type_id) {
-        const { data: bt, error: btError } = await supabase
-            .from('business_types')
-            .select('id')
-            .eq('id', updates.business_type_id)
-            .single();
+const updateShop = async (sellerId, updates) => {
+    const allowedFields = [
+        'shop_name', 'description', 'phone', 'email', 'website',
+        'address', 'shop_photo_url', 'operating_hours',
+        'delivery_enabled', 'delivery_charge', 'min_order_amount'
+    ];
 
-        if (btError || !bt) {
-            throw new BadRequestError('Invalid business type');
+    const filteredUpdates = {};
+    Object.keys(updates).forEach(key => {
+        if (allowedFields.includes(key)) {
+            filteredUpdates[key] = updates[key];
         }
-    }
+    });
 
     const { data, error } = await supabase
         .from('shops')
-        .update(updates)
-        .eq('owner_id', ownerId)
-        .select('*, business_types(id, name)')
+        .update(filteredUpdates)
+        .eq('seller_id', sellerId)
+        .select()
         .single();
 
     if (error) throw error;
-    if (!data) throw new NotFoundError('Shop not found');
 
-    // Invalidate cache
-    await cache.del(`${CACHE_PREFIX}${ownerId}`);
+    cache.delete(`shop:seller:${sellerId}`);
 
     return data;
 };
 
-// Kept for backward compatibility if needed, but proxied to updateShop
-const updateShopStatus = async (ownerId, status) => {
-    return updateShop(ownerId, { status });
+const toggleShopStatus = async (sellerId, isOpen) => {
+    const { data, error } = await supabase
+        .from('shops')
+        .update({ is_open: isOpen })
+        .eq('seller_id', sellerId)
+        .select('id, shop_name, is_open')
+        .single();
+
+    if (error) throw error;
+
+    cache.delete(`shop:seller:${sellerId}`);
+
+    return data;
 };
 
 module.exports = {
-    getShopByOwnerId,
     createShop,
+    getShop,
     updateShop,
-    updateShopStatus
+    toggleShopStatus
 };

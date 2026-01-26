@@ -1,29 +1,42 @@
-class CacheService {
+class InMemoryCache {
     constructor() {
-        this.cache = new Map();
+        this.store = new Map();
     }
 
-    async get(key) {
-        return this.cache.get(key);
-    }
-
-    async set(key, value, ttlSeconds = 300) {
-        this.cache.set(key, value);
-        if (ttlSeconds) {
-            setTimeout(() => {
-                this.cache.delete(key);
-            }, ttlSeconds * 1000);
+    get(key) {
+        const item = this.store.get(key);
+        if (!item) return null;
+        
+        if (item.expiry && Date.now() > item.expiry) {
+            this.store.delete(key);
+            return null;
         }
+        
+        return item.value;
     }
 
-    async del(key) {
-        this.cache.delete(key);
+    set(key, value, ttlSeconds = 300) {
+        this.store.set(key, {
+            value,
+            expiry: ttlSeconds ? Date.now() + (ttlSeconds * 1000) : null
+        });
     }
 
-    async flush() {
-        this.cache.clear();
+    delete(key) {
+        this.store.delete(key);
+    }
+
+    clear() {
+        this.store.clear();
+    }
+
+    deletePattern(pattern) {
+        for (const key of this.store.keys()) {
+            if (key.includes(pattern)) {
+                this.store.delete(key);
+            }
+        }
     }
 }
 
-// Singleton instance
-module.exports = new CacheService();
+module.exports = new InMemoryCache();

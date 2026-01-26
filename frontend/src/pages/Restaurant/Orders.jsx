@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './Navbar';
+import orderService from '../../services/orderService';
 import './Orders.css';
 
 const orderTabs = [
@@ -10,53 +11,6 @@ const orderTabs = [
 	{ label: 'Out for Delivery', key: 'out' },
 	{ label: 'Delivered', key: 'delivered' },
 	{ label: 'Cancelled', key: 'cancelled' },
-];
-
-const sampleOrders = [
-	{
-		id: 'jn7c0vnj...',
-		status: 'preparing',
-		customer: {
-			name: 'Kushal Priya',
-			phone: '6205315518',
-			email: 'kushkriti06@gmail.com',
-			address: 'kqklq, qawer, Floor: , qwer, qwr, Mobile: 6205315518',
-		},
-		payment: 'Online',
-		items: [
-			{ name: 'kakdma', qty: 3, type: 'Full', price: 90, img: '' },
-			{ name: 'Noodles', qty: 1, type: 'Full', price: 70, img: '' },
-			{ name: 'chicken', qty: 1, type: 'Half', price: 120, img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=facearea&w=256&h=256' },
-		],
-		subtotal: 1319,
-		delivery: 50,
-		total: 1369,
-		driver: '',
-		created: '12/1/2026, 9:35:35 pm',
-		actions: ['Assign Driver'],
-	},
-	{
-		id: 'jn71g7qr...',
-		status: 'pending',
-		customer: {
-			name: 'Kushal Priya',
-			phone: '6205315518',
-			email: 'kushkriti06@gmail.com',
-			address: 'kqklq, qawer, Floor: , qwer, qwr, Mobile: 6205315518',
-		},
-		payment: 'Online',
-		items: [
-			{ name: 'nkjk', qty: 4, type: 'Full', price: 78, img: '' },
-			{ name: 'JKNAknkSDN', qty: 1, type: 'Half', price: 87, img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=facearea&w=256&h=256' },
-			{ name: 'JKNAknkSDN', qty: 1, type: 'Full', price: 99, img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=facearea&w=256&h=256' },
-		],
-		subtotal: 582,
-		delivery: 50,
-		total: 632,
-		driver: '',
-		created: '13/1/2026, 12:26:45 pm',
-		actions: ['Accept', 'Reject'],
-	},
 ];
 
 const statusColors = {
@@ -78,8 +32,49 @@ const statusLabels = {
 };
 
 export default function Orders() {
+	const [orders, setOrders] = useState([]);
+	const [loading, setLoading] = useState(true);
 	const [tab, setTab] = useState('all');
-	const orders = tab === 'all' ? sampleOrders : sampleOrders.filter(o => o.status === tab);
+
+	useEffect(() => {
+		fetchOrders();
+	}, []);
+
+	const fetchOrders = async () => {
+		try {
+			setLoading(true);
+			const data = await orderService.getOrders();
+			setOrders(data || []);
+		} catch (error) {
+			console.error('Failed to fetch orders:', error);
+			// Set empty array on error - backend may not be running
+			setOrders([]);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleStatusChange = async (orderId, newStatus) => {
+		try {
+			await orderService.updateOrderStatus(orderId, newStatus);
+			// Refresh orders after status update
+			fetchOrders();
+		} catch (error) {
+			console.error('Failed to update order status:', error);
+			alert('Failed to update order status. Please try again.');
+		}
+	};
+
+	if (loading) {
+		return (
+			<>
+				<Navbar />
+				<div className="loading">Loading orders...</div>
+			</>
+		);
+	}
+
+	const filteredOrders = tab === 'all' ? orders : orders.filter(o => o.status === tab);
 
 	return (
 		<>
@@ -89,7 +84,10 @@ export default function Orders() {
 					<span className="orders-emoji">📦</span>
 					<div>
 						<h1 className="orders-title">Manage Orders</h1>
-						<div className="orders-overview">Overview: <b>2 Total</b> | <b>1 Pending Action</b></div>
+						<div className="orders-overview">
+							Overview: <b>{orders.length} Total</b> | 
+							<b> {orders.filter(o => o.status === 'pending').length} Pending Action</b>
+						</div>
 					</div>
 				</div>
 				<div className="orders-tabs">
@@ -104,46 +102,92 @@ export default function Orders() {
 					))}
 				</div>
 				<div className="orders-list">
-					{orders.map((order, i) => (
-						<div className="order-card" key={order.id}>
-							<div className="order-card-header">
-								<span className="order-id">#{order.id}</span>
-								<span className="order-status" style={{ background: statusColors[order.status] + '22', color: statusColors[order.status] }}>{statusLabels[order.status]}</span>
+					{filteredOrders.length === 0 ? (
+						<div className="no-orders">No orders found</div>
+					) : (
+						filteredOrders.map((order) => (
+							<div className="order-card" key={order.id}>
+								<div className="order-card-header">
+									<span className="order-id">#{order.order_number || order.id}</span>
+									<span className="order-status" style={{ 
+										background: statusColors[order.status] + '22', 
+										color: statusColors[order.status] 
+									}}>
+										{statusLabels[order.status] || order.status?.toUpperCase()}
+									</span>
+								</div>
+								<div className="order-customer">
+									<div><span role="img" aria-label="user">👤</span> {order.customer_name || 'N/A'}</div>
+									<div><span role="img" aria-label="phone">📞</span> {order.customer_phone || 'N/A'}</div>
+									{order.customer_email && <div><span role="img" aria-label="email">📧</span> {order.customer_email}</div>}
+									{order.delivery_address && <div><span role="img" aria-label="address">📍</span> {order.delivery_address}</div>}
+									<div>Payment: {order.payment_method || 'COD'}</div>
+								</div>
+								<div className="order-items">
+									{order.items?.map((item, idx) => (
+										<div className="order-item" key={idx}>
+											{item.image_url && <img src={item.image_url} alt={item.name} className="order-item-img" />}
+											<span className="order-item-qty">{item.quantity}x</span>
+											<span className="order-item-name">{item.name}</span>
+											{item.portion && <span className="order-item-type">({item.portion})</span>}
+											<span className="order-item-price">₹{item.price}</span>
+										</div>
+									))}
+								</div>
+								<div className="order-summary">
+									<div>Subtotal <b>₹{order.subtotal || order.total_amount}</b></div>
+									{order.delivery_charge && <div>Delivery Charge <b>₹{order.delivery_charge}</b></div>}
+									<div>Total Amount <b>₹{order.total_amount}</b></div>
+									{order.delivery_partner && <div>Delivery Partner: <span className="order-driver">{order.delivery_partner}</span></div>}
+								</div>
+								<div className="order-actions">
+									{order.status === 'pending' && (
+										<>
+											<button 
+												className="order-action-btn confirm"
+												onClick={() => handleStatusChange(order.id, 'confirmed')}
+											>
+												Confirm
+											</button>
+											<button 
+												className="order-action-btn reject"
+												onClick={() => handleStatusChange(order.id, 'cancelled')}
+											>
+												Cancel
+											</button>
+										</>
+									)}
+									{order.status === 'confirmed' && (
+										<button 
+											className="order-action-btn preparing"
+											onClick={() => handleStatusChange(order.id, 'preparing')}
+										>
+											Start Preparing
+										</button>
+									)}
+									{order.status === 'preparing' && (
+										<button 
+											className="order-action-btn ready"
+											onClick={() => handleStatusChange(order.id, 'out_for_delivery')}
+										>
+											Mark Ready
+										</button>
+									)}
+									{order.status === 'out_for_delivery' && (
+										<button 
+											className="order-action-btn deliver"
+											onClick={() => handleStatusChange(order.id, 'delivered')}
+										>
+											Mark Delivered
+										</button>
+									)}
+								</div>
+								<div className="order-footer">
+									<span>{new Date(order.created_at).toLocaleString()}</span>
+								</div>
 							</div>
-							<div className="order-customer">
-								<div><span role="img" aria-label="user">👤</span> {order.customer.name}</div>
-								<div><span role="img" aria-label="phone">📞</span> {order.customer.phone}</div>
-								<div><span role="img" aria-label="email">📧</span> {order.customer.email}</div>
-								<div><span role="img" aria-label="address">📍</span> {order.customer.address}</div>
-								<div>Payment: {order.payment}</div>
-							</div>
-							<div className="order-items">
-								{order.items.map((item, idx) => (
-									<div className="order-item" key={item.name + idx}>
-										{item.img && <img src={item.img} alt={item.name} className="order-item-img" />}
-										<span className="order-item-qty">{item.qty}x</span>
-										<span className="order-item-name">{item.name}</span>
-										<span className="order-item-type">({item.type})</span>
-										<span className="order-item-price">₹{item.price}</span>
-									</div>
-								))}
-							</div>
-							<div className="order-summary">
-								<div>Subtotal <b>₹{order.subtotal}</b></div>
-								<div>Delivery Charge <b>₹{order.delivery}</b></div>
-								<div>Total Amount <b>₹{order.total}</b></div>
-								<div>Delivery Partner: <span className="order-driver">{order.driver || 'Not Assigned'}</span></div>
-							</div>
-							<div className="order-actions">
-								{order.actions.map(action => (
-									<button key={action} className={"order-action-btn " + action.toLowerCase().replace(/ /g, '-')}>{action}</button>
-								))}
-							</div>
-							<div className="order-footer">
-								<span>{order.created}</span>
-							</div>
-						</div>
-					))}
+						))
+					)}
 				</div>
 			</div>
 		</>

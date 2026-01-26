@@ -1,87 +1,86 @@
 const supabase = require('../../config/supabaseClient');
-const cache = require('../../utils/cache');
-const { NotFoundError, ForbiddenError, BadRequestError } = require('../../utils/errors');
-const { DISCOUNT_SCOPE } = require('../../utils/constants');
+const { ConflictError } = require('../../utils/errors');
 
-const CACHE_PREFIX = 'discounts:';
+const createDiscount = async (shopId, discountData) => {
+    const { data: existing } = await supabase
+        .from('discounts')
+        .select('id')
+        .eq('shop_id', shopId)
+        .eq('code', discountData.code)
+        .single();
+    
+    if (existing) {
+        throw new ConflictError('Discount code already exists');
+    }
+    
+    const { data, error } = await supabase
+        .from('discounts')
+        .insert({
+            shop_id: shopId,
+            code: discountData.code.toUpperCase(),
+            name: discountData.name,
+            description: discountData.description,
+            discount_type: discountData.discount_type,
+            discount_value: discountData.discount_value,
+            min_order_amount: discountData.min_order_amount || 0,
+            max_discount_amount: discountData.max_discount_amount,
+            usage_limit: discountData.usage_limit,
+            usage_per_customer: discountData.usage_per_customer || 1,
+            valid_from: discountData.valid_from,
+            valid_until: discountData.valid_until,
+            is_active: discountData.is_active !== undefined ? discountData.is_active : true
+        })
+        .select()
+        .single();
+    
+    if (error) throw error;
+    
+    return data;
+};
 
 const getDiscounts = async (shopId) => {
-    const cacheKey = `${CACHE_PREFIX}${shopId}`;
-    const cached = await cache.get(cacheKey);
-    if (cached) return cached;
-
     const { data, error } = await supabase
         .from('discounts')
         .select('*')
-        .eq('shop_id', shopId);
-
+        .eq('shop_id', shopId)
+        .order('created_at', { ascending: false });
+    
     if (error) throw error;
-
-    await cache.set(cacheKey, data);
-    return data;
-};
-
-const createDiscount = async (shopId, discountData) => {
-    // Validate dates
-    if (new Date(discountData.valid_from) >= new Date(discountData.valid_until)) {
-        throw new BadRequestError('Valid until must be after valid from');
-    }
-
-    // Validate scope
-    if (discountData.scope === DISCOUNT_SCOPE.CATEGORY && !discountData.category_id) {
-        throw new BadRequestError('Category ID required for category scope');
-    }
-    if (discountData.scope === DISCOUNT_SCOPE.ITEM && !discountData.item_id) {
-        throw new BadRequestError('Item ID required for item scope');
-    }
-
-    // TODO: Validate that category_id or item_id actually belongs to the shop (omitted for brevity but recommended)
-
-    const { data, error } = await supabase
-        .from('discounts')
-        .insert([{ shop_id: shopId, ...discountData }])
-        .select()
-        .single();
-
-    if (error) throw error;
-
-    await cache.del(`${CACHE_PREFIX}${shopId}`);
-    return data;
+    
+    return data || [];
 };
 
 const updateDiscount = async (discountId, shopId, updates) => {
-    const { data: existing, error: fetchError } = await supabase
-        .from('discounts')
-        .select('shop_id')
-        .eq('id', discountId)
-        .single();
-
-    if (fetchError || !existing) throw new NotFoundError('Discount not found');
-    if (existing.shop_id !== shopId) throw new ForbiddenError('Access denied');
-
-    // Validate dates if updated
-    if (updates.valid_from && updates.valid_until) {
-        if (new Date(updates.valid_from) >= new Date(updates.valid_until)) {
-            throw new BadRequestError('Valid until must be after valid from');
-        }
-    }
-
     const { data, error } = await supabase
         .from('discounts')
         .update(updates)
         .eq('id', discountId)
+        .eq('shop_id', shopId)
         .select()
         .single();
-
+    
     if (error) throw error;
+    
+    return data;
+};
 
-    await cache.del(`${CACHE_PREFIX}${shopId}`);
-
+const toggleDiscount = async (discountId, shopId, isActive) => {
+    const { data, error } = await supabase
+        .from('discounts')
+        .update({ is_active: isActive })
+        .eq('id', discountId)
+        .eq('shop_id', shopId)
+        .select()
+        .single();
+    
+    if (error) throw error;
+    
     return data;
 };
 
 module.exports = {
-    getDiscounts,
     createDiscount,
-    updateDiscount
+    getDiscounts,
+    updateDiscount,
+    toggleDiscount
 };

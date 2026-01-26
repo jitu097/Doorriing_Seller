@@ -1,27 +1,22 @@
 const categoryService = require('./category.service');
-const shopService = require('../shop/shop.service');
 const { successResponse } = require('../../utils/response');
-const { BadRequestError } = require('../../utils/errors');
+const { validateRequired } = require('../../utils/validators');
 
-const getCategories = async (req, res, next) => {
+const createCategory = async (req, res, next) => {
     try {
-        const shop = await shopService.getShopByOwnerId(req.user.id);
-        if (!shop) throw new BadRequestError('Shop not found for this seller');
-
-        const categories = await categoryService.getCategories(shop.id);
-        successResponse(res, categories);
+        validateRequired(['name'], req.body);
+        
+        const category = await categoryService.createCategory(req.shop.id, req.body);
+        successResponse(res, category, 'Category created successfully', 201);
     } catch (error) {
         next(error);
     }
 };
 
-const createCategory = async (req, res, next) => {
+const getCategories = async (req, res, next) => {
     try {
-        const shop = await shopService.getShopByOwnerId(req.user.id);
-        if (!shop) throw new BadRequestError('Shop not found for this seller');
-
-        const category = await categoryService.createCategory(shop.id, req.body);
-        successResponse(res, category, 'Category created', 201);
+        const categories = await categoryService.getCategories(req.shop.id);
+        successResponse(res, categories);
     } catch (error) {
         next(error);
     }
@@ -29,19 +24,28 @@ const createCategory = async (req, res, next) => {
 
 const updateCategory = async (req, res, next) => {
     try {
-        const shop = await shopService.getShopByOwnerId(req.user.id);
-        if (!shop) throw new BadRequestError('Shop not found for this seller');
-
         const { id } = req.params;
-        const category = await categoryService.updateCategory(id, shop.id, req.body);
-        successResponse(res, category, 'Category updated');
+        const category = await categoryService.updateCategory(id, req.shop.id, req.body);
+        successResponse(res, category, 'Category updated successfully');
+    } catch (error) {
+        next(error);
+    }
+};
+
+const toggleVisibility = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { is_hidden } = req.body;
+        const category = await categoryService.toggleCategoryVisibility(id, req.shop.id, is_hidden);
+        successResponse(res, category, 'Category visibility updated');
     } catch (error) {
         next(error);
     }
 };
 
 module.exports = {
-    getCategories,
     createCategory,
-    updateCategory
+    getCategories,
+    updateCategory,
+    toggleVisibility
 };

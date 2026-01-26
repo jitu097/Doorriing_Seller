@@ -338,6 +338,14 @@ input:checked + .slider:before {
 	font-style: italic;
 }
 
+.loading,
+.no-categories {
+	text-align: center;
+	padding: 3rem;
+	font-size: 1.125rem;
+	color: #666;
+}
+
 @media (max-width: 700px) {
 	.menu-container {
 		padding: 16px 4px 24px 4px;

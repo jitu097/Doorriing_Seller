@@ -169,6 +169,14 @@
 	font-size: 0.92rem;
 	text-align: right;
 }
+
+.loading, .no-orders {
+	text-align: center;
+	padding: 3rem;
+	font-size: 1.125rem;
+	color: #666;
+}
+
 @media (max-width: 900px) {
 	.orders-list {
 		flex-direction: column;

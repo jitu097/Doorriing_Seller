@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../../config/firebase';
+import { shopService } from '../../services/shopService';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import './Login.css';
 
@@ -13,6 +14,39 @@ const Login = () => {
 
     const navigate = useNavigate();
 
+    /**
+     * CRITICAL: LOGIN REDIRECT LOGIC
+     * Call backend to check shop status, then decide where to route
+     */
+    const handleLoginSuccess = async () => {
+        try {
+            setLoading(true);
+            const response = await shopService.getShop();
+
+            if (response.hasShop) {
+                // Shop exists - go to dashboard
+                const category = response.shop.business_type?.toLowerCase() || 'restaurant';
+                const dashboardRoute = category === 'grocery' ? '/grocery/dashboard' : '/restaurant/dashboard';
+                navigate(dashboardRoute, { replace: true });
+            } else {
+                // No shop - must register
+                navigate('/registration', { replace: true });
+            }
+        } catch (err) {
+            console.error('Shop check failed:', err);
+            // Only redirect to registration if we are sure it's not a network/server error
+            // If the error implies the user wasn't found or has no shop (404), that's fine.
+            // But if the server is down, we should show an error message.
+            if (err.message && (err.message.includes('404') || err.message.includes('not found'))) {
+                navigate('/registration', { replace: true });
+            } else {
+                setError('Unable to verify account status. Please check your connection or try again.');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleEmailLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -20,11 +54,10 @@ const Login = () => {
 
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            navigate('/dashboard');
+            await handleLoginSuccess();
         } catch (err) {
             setError('Invalid email or password');
             console.error(err);
-        } finally {
             setLoading(false);
         }
     };
@@ -35,11 +68,10 @@ const Login = () => {
 
         try {
             await signInWithPopup(auth, googleProvider);
-            navigate('/dashboard');
+            await handleLoginSuccess();
         } catch (err) {
             setError('Google Sign-In Failed');
             console.error(err);
-        } finally {
             setLoading(false);
         }
     };

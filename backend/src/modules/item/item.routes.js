@@ -1,13 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const itemController = require('./item.controller');
-const { authenticate } = require('../../middlewares/auth.middleware');
-const { requireSeller } = require('../../middlewares/seller.middleware');
+const { verifyToken } = require('../../middlewares/auth.middleware');
+const { loadSeller, loadShop } = require('../../middlewares/seller.middleware');
 
-router.use(authenticate, requireSeller);
+router.use(verifyToken, loadSeller, loadShop);
 
-router.get('/', itemController.getItems);
 router.post('/', itemController.createItem);
+router.get('/', itemController.getItems);
+router.get('/:id', itemController.getItem);
 router.patch('/:id', itemController.updateItem);
+router.patch('/:id/stock', itemController.updateStock);
+router.patch('/:id/availability', itemController.toggleAvailability);
 
 module.exports = router;

@@ -1,27 +1,34 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
+import { shopService } from '../services/shopService';
 import Loader from '../components/common/Loader';
 
 // Lazy load pages
 const Login = lazy(() => import('../pages/auth/Login'));
 const Register = lazy(() => import('../pages/auth/Register'));
-const ShopSetup = lazy(() => import('../pages/onboarding/ShopSetup'));
-const Dashboard = lazy(() => import('../pages/dashboard/Dashboard'));
-const GroceryDashboard = lazy(() => import('../pages/Grocery/DAshboard'));
-const Orders = lazy(() => import('../pages/orders/Orders'));
-const Items = lazy(() => import('../pages/items/Items'));
-const Discounts = lazy(() => import('../pages/discounts/Discounts'));
-const Analytics = lazy(() => import('../pages/analytics/Analytics'));
-const MainLayout = lazy(() => import('../components/layout/MainLayout'));
+const Registration = lazy(() => import('../pages/onboarding/Registration'));
 const LandingPage = lazy(() => import('../pages/landing/LandingPage'));
-const RestaurantDashboard = lazy(() => import('../pages/Restaurant/Dashboard'));
+
+// Grocery Pages
+const GroceryDashboard = lazy(() => import('../pages/Grocery/DAshboard'));
 const GroceryProducts = lazy(() => import('../pages/Grocery/Products'));
 const GroceryOrders = lazy(() => import('../pages/Grocery/Orders'));
 
-// --- Route Guards (Consolidated) ---
+// Restaurant Pages
+const RestaurantDashboard = lazy(() => import('../pages/Restaurant/Dashboard'));
+const RestaurantMenu = lazy(() => import('../pages/Restaurant/Menu'));
+const RestaurantOrders = lazy(() => import('../pages/Restaurant/Orders'));
+const RestaurantBooking = lazy(() => import('../pages/Restaurant/Booking'));
+const RestaurantOffers = lazy(() => import('../pages/Restaurant/offers'));
+const RestaurantReports = lazy(() => import('../pages/Restaurant/Reports'));
+const RestaurantProfile = lazy(() => import('../pages/Restaurant/Profile'));
 
+/**
+ * ROUTE GUARD: Basic Authentication
+ * Checks if user is logged in
+ */
 const ProtectedRoute = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(null);
 
@@ -36,18 +43,41 @@ const ProtectedRoute = () => {
     return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
-const PublicRoute = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState(null);
+/**
+ * ROUTE GUARD: Shop Required
+ * Checks if user has created shop
+ * Redirects to /registration if not
+ */
+const RequireShop = () => {
+    const [loading, setLoading] = useState(true);
+    const [hasShop, setHasShop] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            setIsAuthenticated(!!user);
-        });
-        return () => unsubscribe();
-    }, []);
+        const checkShop = async () => {
+            try {
+                const response = await shopService.getShop();
+                if (!response.hasShop) {
+                    navigate('/registration', { replace: true });
+                } else {
+                    setHasShop(true);
+                }
+            } catch (error) {
+                console.error('Shop check failed:', error);
+                navigate('/registration', { replace: true });
+            } finally {
+                setLoading(false);
+            }
+        };
+        checkShop();
+    }, [navigate]);
 
-    if (isAuthenticated === null) return <Loader variant="fullscreen" message="Loading..." />;
-    return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Outlet />;
+    if (loading) return <Loader variant="fullscreen" message="Checking shop status..." />;
+    return hasShop ? <Outlet /> : null;
+};
+
+const PublicRoute = () => {
+    return <Outlet />;
 };
 
 // --- Main Routes ---
@@ -56,7 +86,6 @@ const AppRoutes = () => {
     return (
         <Suspense fallback={<Loader variant="fullscreen" message="Loading App..." />}>
             <Routes>
-
                 {/* Landing Page */}
                 <Route path="/" element={<LandingPage />} />
 
@@ -66,26 +95,31 @@ const AppRoutes = () => {
                     <Route path="/register" element={<Register />} />
                 </Route>
 
-                {/* Protected Routes */}
-                <Route element={<ProtectedRoute />}> 
-                    <Route path="/registration" element={React.createElement(lazy(() => import('../pages/onboarding/Registration')))} />
-                    <Route path="/restaurant/dashboard" element={<RestaurantDashboard />} />
-                    <Route path="/restaurant/menu" element={React.createElement(lazy(() => import('../pages/Restaurant/Menu')))} />
-                    <Route path="/admin/orders" element={React.createElement(lazy(() => import('../pages/Restaurant/Orders')))} />
-                    <Route element={<MainLayout />}> 
-                        <Route path="/dashboard" element={<Dashboard />} />
+                {/* Protected Routes - Authentication Required */}
+                <Route element={<ProtectedRoute />}>
+                    {/* Registration - No shop required */}
+                    <Route path="/registration" element={<Registration />} />
+                    
+                    {/* Shop Required Routes */}
+                    <Route element={<RequireShop />}>
+                        {/* Grocery Dashboard & Pages */}
                         <Route path="/grocery/dashboard" element={<GroceryDashboard />} />
                         <Route path="/grocery/products" element={<GroceryProducts />} />
                         <Route path="/grocery/orders" element={<GroceryOrders />} />
-                        <Route path="/orders" element={<Orders />} />
-                        <Route path="/items" element={<Items />} />
-                        <Route path="/discounts" element={<Discounts />} />
-                        <Route path="/analytics" element={<Analytics />} />
+                        
+                        {/* Restaurant Dashboard & Pages */}
+                        <Route path="/restaurant/dashboard" element={<RestaurantDashboard />} />
+                        <Route path="/restaurant/menu" element={<RestaurantMenu />} />
+                        <Route path="/restaurant/orders" element={<RestaurantOrders />} />
+                        <Route path="/restaurant/bookings" element={<RestaurantBooking />} />
+                        <Route path="/restaurant/offers" element={<RestaurantOffers />} />
+                        <Route path="/restaurant/reports" element={<RestaurantReports />} />
+                        <Route path="/restaurant/profile" element={<RestaurantProfile />} />
                     </Route>
                 </Route>
 
+                {/* Redirect any unknown routes to landing */}
                 <Route path="*" element={<Navigate to="/" replace />} />
-
             </Routes>
         </Suspense>
     );

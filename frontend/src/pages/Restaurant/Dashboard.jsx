@@ -1,31 +1,46 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import '../Restaurant/Dashboard.css';
-
-// Dummy data for demonstration (replace with real API calls as needed)
-const stats = {
-	totalOrders: 1200,
-	totalRevenue: 450000,
-	pendingOrders: 8,
-	confirmedOrders: 12,
-	preparingOrders: 5,
-	outForDelivery: 3,
-	deliveredOrders: 1100,
-	cancelledOrders: 72
-};
-
-const recentOrders = [
-	{ _id: 'ORD1234567890', status: 'Pending', totalAmount: 1200, createdAt: new Date() },
-	{ _id: 'ORD1234567891', status: 'Delivered', totalAmount: 800, createdAt: new Date() },
-	{ _id: 'ORD1234567892', status: 'Preparing', totalAmount: 650, createdAt: new Date() },
-	{ _id: 'ORD1234567893', status: 'OutForDelivery', totalAmount: 900, createdAt: new Date() },
-	{ _id: 'ORD1234567894', status: 'Cancelled', totalAmount: 500, createdAt: new Date() }
-];
-
-const activeOrdersCount = (stats.pendingOrders || 0) + (stats.confirmedOrders || 0) + (stats.preparingOrders || 0) + (stats.outForDelivery || 0);
+import { analyticsService } from '../../services/analyticsService';
 
 function Dashboard() {
+	const [stats, setStats] = useState(null);
+	const [recentOrders, setRecentOrders] = useState([]);
+	const [loading, setLoading] = useState(true);
+
+	useEffect(() => {
+		fetchDashboardData();
+	}, []);
+
+	const fetchDashboardData = async () => {
+		try {
+			setLoading(true);
+			const data = await analyticsService.getSummary(7);
+			setStats(data);
+			// You can add an order service call here if you have recent orders endpoint
+		} catch (error) {
+			console.error('Failed to fetch dashboard data:', error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	if (loading) {
+		return (
+			<>
+				<Navbar />
+				<div className="admin-container">
+					<div className="loading">Loading dashboard...</div>
+				</div>
+			</>
+		);
+	}
+
+	const activeOrdersCount = (stats?.pending_orders || 0);
+	const totalRevenue = stats?.total_revenue || 0;
+	const deliveredOrders = stats?.completed_orders || 0;
+	const cancelledOrders = stats?.cancelled_orders || 0;
 	return (
 		<>
 			<Navbar />
@@ -46,8 +61,8 @@ function Dashboard() {
 					<div className="stat-icon revenue-icon">💰</div>
 					<div className="stat-info">
 						<h3>Total Revenue</h3>
-						<p className="stat-value">₹{stats.totalRevenue.toLocaleString()}</p>
-						<span className="stat-hint">Lifetime earnings</span>
+						<p className="stat-value">₹{totalRevenue.toLocaleString()}</p>
+						<span className="stat-hint">Last 7 days</span>
 					</div>
 				</div>
 
@@ -56,7 +71,7 @@ function Dashboard() {
 					<div className="stat-info">
 						<h3>Active Orders</h3>
 						<p className="stat-value">{activeOrdersCount}</p>
-						<span className="stat-hint">In preparation or delivery</span>
+						<span className="stat-hint">Pending orders</span>
 					</div>
 				</div>
 
@@ -64,7 +79,7 @@ function Dashboard() {
 					<div className="stat-icon success-icon">✅</div>
 					<div className="stat-info">
 						<h3>Delivered</h3>
-						<p className="stat-value">{stats.deliveredOrders}</p>
+						<p className="stat-value">{deliveredOrders}</p>
 						<span className="stat-hint">Successfully served</span>
 					</div>
 				</div>
@@ -73,7 +88,7 @@ function Dashboard() {
 					<div className="stat-icon cancel-icon">❌</div>
 					<div className="stat-info">
 						<h3>Cancelled</h3>
-						<p className="stat-value">{stats.cancelledOrders}</p>
+						<p className="stat-value">{cancelledOrders}</p>
 						<span className="stat-hint">Total cancellations</span>
 					</div>
 				</div>
@@ -84,7 +99,7 @@ function Dashboard() {
 				<div className="dashboard-panel recent-orders">
 					<div className="panel-header">
 						<h2>Recent Orders</h2>
-						<Link to="/admin/orders" className="view-all-link">View All Orders</Link>
+						<Link to="/restaurant/orders" className="view-all-link">View All Orders</Link>
 					</div>
 					<div className="table-responsive">
 						<table className="admin-table">

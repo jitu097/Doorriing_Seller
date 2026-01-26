@@ -1,27 +1,25 @@
 const discountService = require('./discount.service');
-const shopService = require('../shop/shop.service');
 const { successResponse } = require('../../utils/response');
-const { BadRequestError } = require('../../utils/errors');
+const { validateRequired, validatePositiveNumber } = require('../../utils/validators');
 
-const getDiscounts = async (req, res, next) => {
+const createDiscount = async (req, res, next) => {
     try {
-        const shop = await shopService.getShopByOwnerId(req.user.id);
-        if (!shop) throw new BadRequestError('Shop not found');
-
-        const discounts = await discountService.getDiscounts(shop.id);
-        successResponse(res, discounts);
+        validateRequired(['code', 'name', 'discount_type', 'discount_value'], req.body);
+        
+        const validatedValue = validatePositiveNumber(req.body.discount_value, 'Discount value');
+        req.body.discount_value = validatedValue;
+        
+        const discount = await discountService.createDiscount(req.shop.id, req.body);
+        successResponse(res, discount, 'Discount created successfully', 201);
     } catch (error) {
         next(error);
     }
 };
 
-const createDiscount = async (req, res, next) => {
+const getDiscounts = async (req, res, next) => {
     try {
-        const shop = await shopService.getShopByOwnerId(req.user.id);
-        if (!shop) throw new BadRequestError('Shop not found');
-
-        const discount = await discountService.createDiscount(shop.id, req.body);
-        successResponse(res, discount, 'Discount created', 201);
+        const discounts = await discountService.getDiscounts(req.shop.id);
+        successResponse(res, discounts);
     } catch (error) {
         next(error);
     }
@@ -29,19 +27,29 @@ const createDiscount = async (req, res, next) => {
 
 const updateDiscount = async (req, res, next) => {
     try {
-        const shop = await shopService.getShopByOwnerId(req.user.id);
-        if (!shop) throw new BadRequestError('Shop not found');
-
         const { id } = req.params;
-        const discount = await discountService.updateDiscount(id, shop.id, req.body);
-        successResponse(res, discount, 'Discount updated');
+        const discount = await discountService.updateDiscount(id, req.shop.id, req.body);
+        successResponse(res, discount, 'Discount updated successfully');
+    } catch (error) {
+        next(error);
+    }
+};
+
+const toggleDiscount = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { is_active } = req.body;
+        
+        const discount = await discountService.toggleDiscount(id, req.shop.id, is_active);
+        successResponse(res, discount, 'Discount status updated');
     } catch (error) {
         next(error);
     }
 };
 
 module.exports = {
-    getDiscounts,
     createDiscount,
-    updateDiscount
+    getDiscounts,
+    updateDiscount,
+    toggleDiscount
 };

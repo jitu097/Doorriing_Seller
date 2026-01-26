@@ -200,3 +200,10 @@ body, .admin-container {
 	color: #888;
 	font-size: 0.97rem;
 }
+
+.loading {
+	text-align: center;
+	padding: 3rem;
+	font-size: 1.125rem;
+	color: #666;
+}

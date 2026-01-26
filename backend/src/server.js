@@ -1,24 +1,27 @@
 const app = require('./app');
 const config = require('./config/env');
 
-const PORT = config.PORT;
+const PORT = config.port;
 
 const server = app.listen(PORT, () => {
-    console.log(`Server running in ${config.NODE_ENV} mode on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${config.nodeEnv}`);
 });
 
-// Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-    console.log('UNHANDLED REJECTION! 💥 Shutting down...');
-    console.log(err.name, err.message);
+    console.error('Unhandled Rejection:', err);
     server.close(() => {
         process.exit(1);
     });
 });
 
-// Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-    console.log('UNCAUGHT EXCEPTION! 💥 Shutting down...');
-    console.log(err.name, err.message);
+    console.error('Uncaught Exception:', err);
     process.exit(1);
+});
+
+process.on('SIGTERM', () => {
+    server.close(() => {
+        process.exit(0);
+    });
 });

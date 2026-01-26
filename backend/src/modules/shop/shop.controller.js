@@ -1,20 +1,11 @@
 const shopService = require('./shop.service');
 const { successResponse } = require('../../utils/response');
-const { SHOP_STATUS } = require('../../utils/constants');
-const { BadRequestError } = require('../../utils/errors');
-
-const getMyShop = async (req, res, next) => {
-    try {
-        const shop = await shopService.getShopByOwnerId(req.user.id);
-        successResponse(res, shop);
-    } catch (error) {
-        next(error);
-    }
-};
+const { validateRequired } = require('../../utils/validators');
 
 const createShop = async (req, res, next) => {
     try {
-        // business_type_id validation happens in service
+        validateRequired(['shop_name', 'owner_name', 'phone', 'category', 'subcategory', 'address'], req.body);
+        
         const shop = await shopService.createShop(req.user.id, req.body);
         successResponse(res, shop, 'Shop created successfully', 201);
     } catch (error) {
@@ -22,31 +13,38 @@ const createShop = async (req, res, next) => {
     }
 };
 
-// General update handler
+/**
+ * GET /api/shop
+ * Returns shop status - SINGLE SOURCE OF TRUTH for frontend
+ */
+const getShop = async (req, res, next) => {
+    try {
+        res.json({
+            success: true,
+            data: {
+                user: req.user,
+                shop: req.shop,
+                hasShop: !!req.shop
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 const updateShop = async (req, res, next) => {
     try {
-        const updates = req.body;
-
-        // Validate status if present
-        if (updates.status && !Object.values(SHOP_STATUS).includes(updates.status)) {
-            throw new BadRequestError('Invalid status');
-        }
-
-        const shop = await shopService.updateShop(req.user.id, updates);
+        const shop = await shopService.updateShop(req.seller.id, req.body);
         successResponse(res, shop, 'Shop updated successfully');
     } catch (error) {
         next(error);
     }
 };
 
-// Deprecated but kept for backward compatibility if routes use it specificly
-const updateShopStatus = async (req, res, next) => {
+const toggleStatus = async (req, res, next) => {
     try {
-        const { status } = req.body;
-        if (!Object.values(SHOP_STATUS).includes(status)) {
-            throw new BadRequestError('Invalid status');
-        }
-        const shop = await shopService.updateShopStatus(req.user.id, status);
+        const { is_open } = req.body;
+        const shop = await shopService.toggleShopStatus(req.seller.id, is_open);
         successResponse(res, shop, 'Shop status updated');
     } catch (error) {
         next(error);
@@ -54,8 +52,8 @@ const updateShopStatus = async (req, res, next) => {
 };
 
 module.exports = {
-    getMyShop,
     createShop,
+    getShop,
     updateShop,
-    updateShopStatus
+    toggleStatus
 };

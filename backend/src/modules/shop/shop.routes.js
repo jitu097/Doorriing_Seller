@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const shopController = require('./shop.controller');
-const { authenticate } = require('../../middlewares/auth.middleware');
-const { requireSeller } = require('../../middlewares/seller.middleware');
+const { verifyToken } = require('../../middlewares/auth.middleware');
+const { loadSellerContext, requireShop } = require('../../middlewares/seller.middleware');
 
-router.use(authenticate, requireSeller);
+router.use(verifyToken, loadSellerContext);
 
-router.get('/', shopController.getMyShop);
 router.post('/', shopController.createShop);
-router.patch('/', shopController.updateShop);         // General update (includes business_type)
-router.patch('/status', shopController.updateShopStatus); // Kept for backward compatibility
+router.get('/', shopController.getShop);
+router.patch('/', shopController.updateShop);
+router.patch('/status', shopController.toggleStatus);
 
 module.exports = router;

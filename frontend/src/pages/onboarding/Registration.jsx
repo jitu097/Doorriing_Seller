@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { shopService } from '../../services/shopService';
 import './Registration.css';
 
 export default function Registration() {
@@ -28,6 +29,7 @@ export default function Registration() {
 	const [photoPreview, setPhotoPreview] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isExistingShop, setIsExistingShop] = useState(false);
+	const [successMessage, setSuccessMessage] = useState('');
 
 	const categories = [
 		'Grocery',
@@ -58,6 +60,8 @@ export default function Registration() {
 		const { name, value } = e.target;
 		if (name === 'category') {
 			setFormData(prev => ({ ...prev, [name]: value, subcategory: '' }));
+			// Store category selection for routing after registration
+			localStorage.setItem('selectedCategory', value);
 			return;
 		}
 		if (name === 'panCard') {
@@ -99,9 +103,10 @@ export default function Registration() {
 		setPhotoPreview(null);
 	};
 
-	const handleSubmit = (e) => {
+	const handleSubmit = async (e) => {
 		e.preventDefault();
 		setIsSubmitting(true);
+
 		// Validate PAN
 		const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 		if (!panRegex.test(formData.panCard)) {
@@ -109,6 +114,7 @@ export default function Registration() {
 			setIsSubmitting(false);
 			return;
 		}
+
 		// Validate Aadhaar
 		const aadhaarRegex = /^[0-9]{12}$/;
 		if (!aadhaarRegex.test(formData.aadhaarNumber)) {
@@ -116,17 +122,93 @@ export default function Registration() {
 			setIsSubmitting(false);
 			return;
 		}
-		setTimeout(() => {
+
+		// Submit to backend
+		try {
+			// Prepare payload with snake_case keys for backend validation
+			const payload = {
+				shop_name: formData.shopName,
+				owner_name: formData.ownerName,
+				phone: formData.phone,
+				email: formData.email,
+				address: formData.address,
+				category: formData.category,
+				subcategory: formData.subcategory,
+				description: formData.description,
+				city: formData.city,
+				state: formData.state,
+				pincode: formData.PINCode,
+				// business_type handles category mapping in backend if needed, but validator checks 'category'
+				shop_image_url: null // consistent with current logic
+			};
+
+			// Call API to create shop
+			await shopService.createShop(payload);
+
+			// Determine route
+			const category = formData.category.toLowerCase();
+			const dashboardRoutes = {
+				grocery: '/grocery/dashboard',
+				restaurant: '/restaurant/dashboard'
+			};
+			const targetRoute = dashboardRoutes[category] || '/dashboard';
+
+			// Success Popup Logic
+			const popup = document.createElement('div');
+			popup.style.cssText = `
+				position: fixed;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				background: white;
+				padding: 40px;
+				border-radius: 16px;
+				box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+				z-index: 10000;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				min-width: 320px;
+				font-family: 'Outfit', sans-serif;
+			`;
+
+			popup.innerHTML = `
+				<div style="font-size: 60px; margin-bottom: 16px; animation: bounce 1s infinite;">🎉</div>
+				<h2 style="margin: 0 0 8px 0; color: #1f2937; font-size: 24px;">Success!</h2>
+				<p style="margin: 8px 0 24px 0; color: #6b7280; font-size: 16px;">Shop created successfully.</p>
+				<div style="width: 100%; text-align: center; color: #f59e0b; font-weight: 500;">
+					Taking you to Dashboard...
+				</div>
+			`;
+
+			const overlay = document.createElement('div');
+			overlay.style.cssText = `
+				position: fixed;
+				inset: 0;
+				background: rgba(0,0,0,0.5);
+				backdrop-filter: blur(4px);
+				z-index: 9999;
+			`;
+
+			document.body.appendChild(overlay);
+			document.body.appendChild(popup);
+
+			// Navigate after delay
+			setTimeout(() => {
+				navigate(targetRoute, { replace: true });
+				// Cleanup elements after navigation
+				setTimeout(() => {
+					if (document.body.contains(popup)) document.body.removeChild(popup);
+					if (document.body.contains(overlay)) document.body.removeChild(overlay);
+				}, 500);
+			}, 2500);
+
+		} catch (error) {
+			console.error('Registration failed:', error);
+			alert('Failed to register shop. Please try again. ' + (error.message || ''));
+		} finally {
 			setIsSubmitting(false);
-			alert('Shop registration submitted successfully!');
-			if (formData.category === 'Grocery') {
-				navigate('/grocery/dashboard');
-			} else if (formData.category === 'Restaurant') {
-				navigate('/restaurant/dashboard');
-			} else {
-				navigate('/dashboard');
-			}
-		}, 1500);
+		}
 	};
 
 	return (
@@ -142,11 +224,26 @@ export default function Registration() {
 			</header>
 			<div className="register-main">
 				{isLoading ? (
-					<div style={{textAlign: 'center', padding: '50px'}}>
+					<div style={{ textAlign: 'center', padding: '50px' }}>
 						<p>Loading shop data...</p>
 					</div>
 				) : (
 					<div className="register-card">
+						{successMessage && (
+							<div style={{
+								padding: '16px',
+								marginBottom: '20px',
+								backgroundColor: '#4caf50',
+								color: 'white',
+								borderRadius: '8px',
+								textAlign: 'center',
+								fontWeight: '500',
+								fontSize: '1rem',
+								animation: 'slideIn 0.3s ease-out'
+							}}>
+								{successMessage}
+							</div>
+						)}
 						<form onSubmit={handleSubmit} className="register-form">
 							{/* Basic Information */}
 							<div className="register-section">

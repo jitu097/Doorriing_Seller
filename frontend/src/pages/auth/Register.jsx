@@ -20,7 +20,8 @@ const Register = () => {
 
         try {
             await createUserWithEmailAndPassword(auth, email, password);
-                navigate('/registration'); // Redirect to registration form after successful registration
+            // Redirect to registration form after successful account creation
+            navigate('/registration', { replace: true });
         } catch (err) {
             setError(err.message.replace('Firebase: ', ''));
             console.error(err);
@@ -35,7 +36,8 @@ const Register = () => {
 
         try {
             await signInWithPopup(auth, googleProvider);
-            navigate('/setup-shop');
+            // Redirect to registration form for shop setup
+            navigate('/registration', { replace: true });
         } catch (err) {
             setError('Google Sign-In Failed');
             console.error(err);

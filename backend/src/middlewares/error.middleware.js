@@ -1,25 +1,21 @@
 const { AppError } = require('../utils/errors');
 const { errorResponse } = require('../utils/response');
 
-// eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
-    if (process.env.NODE_ENV === 'development') {
-        console.error(err);
-    }
-
     if (err instanceof AppError) {
-        return res.status(err.statusCode).json({
-            status: err.status,
-            message: err.message,
-        });
+        return errorResponse(res, err.message, err.statusCode);
     }
 
-    // Handle Supabase/Database errors (optional refinement)
-    if (err.code && err.details) {
-        return errorResponse(res, 'Database Error', 500);
+    if (err.name === 'ValidationError') {
+        return errorResponse(res, 'Validation failed', 400, err.errors);
     }
 
-    return errorResponse(res, 'Something went wrong', 500);
+    // Development: Return actual error message
+    if (process.env.NODE_ENV === 'development') {
+        return errorResponse(res, err.message, 500, err);
+    }
+
+    return errorResponse(res, 'Internal server error', 500);
 };
 
 module.exports = errorHandler;

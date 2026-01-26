@@ -1,69 +1,81 @@
 const supabase = require('../../config/supabaseClient');
-const cache = require('../../utils/cache');
-const { NotFoundError, ForbiddenError } = require('../../utils/errors');
+const { ConflictError } = require('../../utils/errors');
 
-const CACHE_PREFIX = 'categories:';
-
-const getCategories = async (shopId) => {
-    const cacheKey = `${CACHE_PREFIX}${shopId}`;
-    const cached = await cache.get(cacheKey);
-    if (cached) return cached;
-
+const createCategory = async (shopId, categoryData) => {
+    const { data: existing } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('shop_id', shopId)
+        .eq('name', categoryData.name)
+        .single();
+    
+    if (existing) {
+        throw new ConflictError('Category with this name already exists');
+    }
+    
     const { data, error } = await supabase
         .from('categories')
-        .select('*')
-        .eq('shop_id', shopId)
-        .order('sort_order', { ascending: true });
-
+        .insert({
+            shop_id: shopId,
+            name: categoryData.name,
+            display_order: categoryData.display_order || 0,
+            is_hidden: categoryData.is_hidden || false
+        })
+        .select()
+        .single();
+    
     if (error) throw error;
-
-    await cache.set(cacheKey, data);
+    
     return data;
 };
 
-const createCategory = async (shopId, categoryData) => {
+const getCategories = async (shopId) => {
     const { data, error } = await supabase
         .from('categories')
-        .insert([{ shop_id: shopId, ...categoryData }])
-        .select()
-        .single();
-
+        .select('id, name, display_order, is_hidden, created_at')
+        .eq('shop_id', shopId)
+        .order('display_order', { ascending: true });
+    
     if (error) throw error;
-
-    // Invalidate cache
-    await cache.del(`${CACHE_PREFIX}${shopId}`);
-
-    return data;
+    
+    return data || [];
 };
 
 const updateCategory = async (categoryId, shopId, updates) => {
-    // Verify category belongs to shop
-    const { data: existing, error: fetchError } = await supabase
-        .from('categories')
-        .select('shop_id')
-        .eq('id', categoryId)
-        .single();
-
-    if (fetchError || !existing) throw new NotFoundError('Category not found');
-    if (existing.shop_id !== shopId) throw new ForbiddenError('Access denied');
-
     const { data, error } = await supabase
         .from('categories')
-        .update(updates)
+        .update({
+            name: updates.name,
+            display_order: updates.display_order,
+            is_hidden: updates.is_hidden
+        })
         .eq('id', categoryId)
+        .eq('shop_id', shopId)
         .select()
         .single();
-
+    
     if (error) throw error;
+    
+    return data;
+};
 
-    // Invalidate cache
-    await cache.del(`${CACHE_PREFIX}${shopId}`);
-
+const toggleCategoryVisibility = async (categoryId, shopId, isHidden) => {
+    const { data, error } = await supabase
+        .from('categories')
+        .update({ is_hidden: isHidden })
+        .eq('id', categoryId)
+        .eq('shop_id', shopId)
+        .select('id, name, is_hidden')
+        .single();
+    
+    if (error) throw error;
+    
     return data;
 };
 
 module.exports = {
-    getCategories,
     createCategory,
-    updateCategory
+    getCategories,
+    updateCategory,
+    toggleCategoryVisibility
 };
