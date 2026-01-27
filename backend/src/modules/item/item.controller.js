@@ -5,7 +5,7 @@ const { validateRequired, validatePositiveNumber } = require('../../utils/valida
 const createItem = async (req, res, next) => {
     try {
         validateRequired(['name', 'price'], req.body);
-        
+
         const item = await itemService.createItem(req.shop.id, req.body);
         successResponse(res, item, 'Item created successfully', 201);
     } catch (error) {
@@ -47,10 +47,10 @@ const updateStock = async (req, res, next) => {
     try {
         const { id } = req.params;
         const { stock_quantity, change_type, notes } = req.body;
-        
+
         validateRequired(['stock_quantity'], req.body);
         const validatedStock = validatePositiveNumber(new_stock_quantity, 'Stock quantity');
-        
+
         const item = await itemService.updateStock(id, req.shop.id, validatedStock, reason);
         successResponse(res, item, 'Stock updated successfully');
     } catch (error) {
@@ -62,9 +62,24 @@ const toggleAvailability = async (req, res, next) => {
     try {
         const { id } = req.params;
         const { is_available } = req.body;
-        
+
         const item = await itemService.toggleAvailability(id, req.shop.id, is_available);
         successResponse(res, item, 'Item availability updated');
+    } catch (error) {
+        next(error);
+    }
+};
+
+const uploadImage = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        if (!req.file) {
+            throw new Error('No image file provided');
+        }
+
+        const item = await itemService.uploadItemImage(id, req.shop.id, req.file);
+        successResponse(res, item, 'Item image uploaded successfully');
     } catch (error) {
         next(error);
     }
@@ -76,5 +91,6 @@ module.exports = {
     getItem,
     updateItem,
     updateStock,
-    toggleAvailability
+    toggleAvailability,
+    uploadImage
 };

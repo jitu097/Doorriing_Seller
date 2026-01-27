@@ -5,7 +5,7 @@ const { validateRequired } = require('../../utils/validators');
 const createCategory = async (req, res, next) => {
     try {
         validateRequired(['name'], req.body);
-        
+
         const category = await categoryService.createCategory(req.shop.id, req.body);
         successResponse(res, category, 'Category created successfully', 201);
     } catch (error) {
@@ -35,8 +35,7 @@ const updateCategory = async (req, res, next) => {
 const toggleVisibility = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { is_hidden } = req.body;
-        const category = await categoryService.toggleCategoryVisibility(id, req.shop.id, is_hidden);
+        const category = await categoryService.toggleCategoryVisibility(id, req.shop.id);
         successResponse(res, category, 'Category visibility updated');
     } catch (error) {
         next(error);

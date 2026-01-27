@@ -9,7 +9,7 @@ import api from './api';
  * @returns {Promise<Array>} Array of category objects
  */
 export const getCategories = async () => {
-  return api.apiCall('/categories', {
+  return api('/categories', {
     method: 'GET'
   });
 };
@@ -20,7 +20,7 @@ export const getCategories = async () => {
  * @returns {Promise<Object>} Category object
  */
 export const getCategoryById = async (categoryId) => {
-  return api.apiCall(`/categories/${categoryId}`, {
+  return api(`/categories/${categoryId}`, {
     method: 'GET'
   });
 };
@@ -31,7 +31,7 @@ export const getCategoryById = async (categoryId) => {
  * @returns {Promise<Object>} Created category object
  */
 export const createCategory = async (categoryData) => {
-  return api.apiCall('/categories', {
+  return api('/categories', {
     method: 'POST',
     body: JSON.stringify(categoryData)
   });
@@ -44,7 +44,7 @@ export const createCategory = async (categoryData) => {
  * @returns {Promise<Object>} Updated category object
  */
 export const updateCategory = async (categoryId, categoryData) => {
-  return api.apiCall(`/categories/${categoryId}`, {
+  return api(`/categories/${categoryId}`, {
     method: 'PATCH',
     body: JSON.stringify(categoryData)
   });
@@ -56,7 +56,7 @@ export const updateCategory = async (categoryId, categoryData) => {
  * @returns {Promise<Object>} Deletion confirmation
  */
 export const deleteCategory = async (categoryId) => {
-  return api.apiCall(`/categories/${categoryId}`, {
+  return api(`/categories/${categoryId}`, {
     method: 'DELETE'
   });
 };
@@ -67,7 +67,7 @@ export const deleteCategory = async (categoryId) => {
  * @returns {Promise<Object>} Updated category object
  */
 export const toggleCategory = async (categoryId) => {
-  return api.apiCall(`/categories/${categoryId}/toggle`, {
+  return api(`/categories/${categoryId}/toggle`, {
     method: 'PATCH'
   });
 };

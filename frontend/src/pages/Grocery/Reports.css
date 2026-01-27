@@ -1,0 +1,191 @@
+.reports-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.metric-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+    border: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.2s;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.05);
+}
+
+.metric-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background: #f8f9fa;
+}
+
+.metric-card.revenue .metric-icon {
+    background: rgba(255, 159, 67, 0.1);
+}
+
+.metric-card.orders .metric-icon {
+    background: rgba(40, 199, 111, 0.1);
+}
+
+.metric-card.aov .metric-icon {
+    background: rgba(0, 207, 232, 0.1);
+}
+
+.metric-card.cancelled .metric-icon {
+    background: rgba(234, 84, 85, 0.1);
+}
+
+.metric-content h3 {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #888;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0.25rem 0;
+}
+
+.metric-change {
+    font-size: 0.75rem;
+    margin: 0;
+    font-weight: 500;
+}
+
+.metric-change.positive {
+    color: #28c76f;
+}
+
+.metric-change.negative {
+    color: #ea5455;
+}
+
+.metric-change.neutral {
+    color: #888;
+}
+
+.chart-section,
+.table-section {
+    grid-column: 1 / -1;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+}
+
+.chart-section h2,
+.table-section h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+    color: #444;
+}
+
+/* Simple CSS Bar Chart */
+.bar-chart {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    height: 250px;
+    padding-top: 2rem;
+    border-bottom: 1px solid #eee;
+}
+
+.chart-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.bar {
+    width: 30%;
+    background: linear-gradient(180deg, var(--primary-color) 0%, rgba(255, 159, 67, 0.6) 100%);
+    border-radius: 4px 4px 0 0;
+    transition: height 0.5s ease-out;
+    position: relative;
+    min-height: 4px;
+    /* Ensure visibility even if value is low */
+}
+
+.bar:hover {
+    opacity: 0.9;
+}
+
+.bar:hover::after {
+    content: attr(data-value);
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.chk-label {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.date-range-select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-right: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.export-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.text-success {
+    color: #28c76f;
+    font-weight: 600;
+}
+
+.text-danger {
+    color: #ea5455;
+    font-weight: 600;
+}
+
+@media (max-width: 1100px) {
+    .reports-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .reports-grid {
+        grid-template-columns: 1fr;
+    }
+}

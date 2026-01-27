@@ -10,7 +10,7 @@ import api from './api';
  * @returns {Promise<Array>} Array of item objects
  */
 export const getItemsByCategory = async (categoryId) => {
-  return api.apiCall(`/categories/${categoryId}/items`, {
+  return api(`/categories/${categoryId}/items`, {
     method: 'GET'
   });
 };
@@ -20,7 +20,7 @@ export const getItemsByCategory = async (categoryId) => {
  * @returns {Promise<Array>} Array of all items
  */
 export const getAllItems = async () => {
-  return api.apiCall('/items', {
+  return api('/items', {
     method: 'GET'
   });
 };
@@ -31,7 +31,7 @@ export const getAllItems = async () => {
  * @returns {Promise<Object>} Item object
  */
 export const getItemById = async (itemId) => {
-  return api.apiCall(`/items/${itemId}`, {
+  return api(`/items/${itemId}`, {
     method: 'GET'
   });
 };
@@ -42,7 +42,7 @@ export const getItemById = async (itemId) => {
  * @returns {Promise<Object>} Created item object
  */
 export const createItem = async (itemData) => {
-  return api.apiCall('/items', {
+  return api('/items', {
     method: 'POST',
     body: JSON.stringify(itemData)
   });
@@ -55,7 +55,7 @@ export const createItem = async (itemData) => {
  * @returns {Promise<Object>} Updated item object
  */
 export const updateItem = async (itemId, itemData) => {
-  return api.apiCall(`/items/${itemId}`, {
+  return api(`/items/${itemId}`, {
     method: 'PATCH',
     body: JSON.stringify(itemData)
   });
@@ -67,7 +67,7 @@ export const updateItem = async (itemId, itemData) => {
  * @returns {Promise<Object>} Deletion confirmation
  */
 export const deleteItem = async (itemId) => {
-  return api.apiCall(`/items/${itemId}`, {
+  return api(`/items/${itemId}`, {
     method: 'DELETE'
   });
 };
@@ -78,7 +78,7 @@ export const deleteItem = async (itemId) => {
  * @returns {Promise<Object>} Updated item object
  */
 export const toggleItem = async (itemId) => {
-  return api.apiCall(`/items/${itemId}/toggle`, {
+  return api(`/items/${itemId}/toggle`, {
     method: 'PATCH'
   });
 };
@@ -92,8 +92,8 @@ export const toggleItem = async (itemId) => {
 export const uploadItemImage = async (itemId, imageFile) => {
   const formData = new FormData();
   formData.append('image', imageFile);
-  
-  return api.apiCall(`/items/${itemId}/image`, {
+
+  return api(`/items/${itemId}/image`, {
     method: 'POST',
     body: formData,
     headers: {} // Let browser set Content-Type for FormData

@@ -11,15 +11,15 @@ import api from './api';
  */
 export const getOrders = async (filters = {}) => {
   const queryParams = new URLSearchParams();
-  
+
   if (filters.status) queryParams.append('status', filters.status);
   if (filters.startDate) queryParams.append('startDate', filters.startDate);
   if (filters.endDate) queryParams.append('endDate', filters.endDate);
-  
+
   const queryString = queryParams.toString();
   const endpoint = queryString ? `/orders?${queryString}` : '/orders';
-  
-  return api.apiCall(endpoint, {
+
+  return api(endpoint, {
     method: 'GET'
   });
 };
@@ -30,7 +30,7 @@ export const getOrders = async (filters = {}) => {
  * @returns {Promise<Object>} Order object
  */
 export const getOrderById = async (orderId) => {
-  return api.apiCall(`/orders/${orderId}`, {
+  return api(`/orders/${orderId}`, {
     method: 'GET'
   });
 };
@@ -42,7 +42,7 @@ export const getOrderById = async (orderId) => {
  * @returns {Promise<Object>} Updated order object
  */
 export const updateOrderStatus = async (orderId, status) => {
-  return api.apiCall(`/orders/${orderId}/status`, {
+  return api(`/orders/${orderId}/status`, {
     method: 'PATCH',
     body: JSON.stringify({ status })
   });
@@ -53,7 +53,7 @@ export const updateOrderStatus = async (orderId, status) => {
  * @returns {Promise<Array>} Array of today's orders
  */
 export const getTodayOrders = async () => {
-  return api.apiCall('/orders/today', {
+  return api('/orders/today', {
     method: 'GET'
   });
 };
@@ -64,7 +64,7 @@ export const getTodayOrders = async () => {
  * @returns {Promise<Object>} Order statistics
  */
 export const getOrderStats = async (days = 7) => {
-  return api.apiCall(`/orders/stats?days=${days}`, {
+  return api(`/orders/stats?days=${days}`, {
     method: 'GET'
   });
 };

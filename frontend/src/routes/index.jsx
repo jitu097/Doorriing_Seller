@@ -15,6 +15,9 @@ const LandingPage = lazy(() => import('../pages/landing/LandingPage'));
 const GroceryDashboard = lazy(() => import('../pages/Grocery/DAshboard'));
 const GroceryProducts = lazy(() => import('../pages/Grocery/Products'));
 const GroceryOrders = lazy(() => import('../pages/Grocery/Orders'));
+const GroceryOffers = lazy(() => import('../pages/Grocery/Offers'));
+const GroceryReports = lazy(() => import('../pages/Grocery/Reports'));
+const GroceryProfile = lazy(() => import('../pages/Grocery/Profile'));
 
 // Restaurant Pages
 const RestaurantDashboard = lazy(() => import('../pages/Restaurant/Dashboard'));
@@ -99,14 +102,17 @@ const AppRoutes = () => {
                 <Route element={<ProtectedRoute />}>
                     {/* Registration - No shop required */}
                     <Route path="/registration" element={<Registration />} />
-                    
+
                     {/* Shop Required Routes */}
                     <Route element={<RequireShop />}>
                         {/* Grocery Dashboard & Pages */}
                         <Route path="/grocery/dashboard" element={<GroceryDashboard />} />
                         <Route path="/grocery/products" element={<GroceryProducts />} />
                         <Route path="/grocery/orders" element={<GroceryOrders />} />
-                        
+                        <Route path="/grocery/offers" element={<GroceryOffers />} />
+                        <Route path="/grocery/reports" element={<GroceryReports />} />
+                        <Route path="/grocery/profile" element={<GroceryProfile />} />
+
                         {/* Restaurant Dashboard & Pages */}
                         <Route path="/restaurant/dashboard" element={<RestaurantDashboard />} />
                         <Route path="/restaurant/menu" element={<RestaurantMenu />} />

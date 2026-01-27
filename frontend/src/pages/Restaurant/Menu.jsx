@@ -20,6 +20,8 @@ const Menu = () => {
 		image: null,
 		halfPortion: false,
 		price: '',
+		priceHalf: '',
+		unit: 'plate',
 		active: true,
 	});
 
@@ -59,7 +61,7 @@ const Menu = () => {
 	const handleModalClose = () => {
 		setShowModal(false);
 		setNewItem({
-			name: '', description: '', category: '', image: null, halfPortion: false, price: '', active: true
+			name: '', description: '', category: '', image: null, halfPortion: false, price: '', priceHalf: '', unit: 'plate', active: true
 		});
 	};
 
@@ -76,16 +78,24 @@ const Menu = () => {
 				category_id: newItem.category,
 				price: parseFloat(newItem.price),
 				half_portion_price: newItem.halfPortion ? parseFloat(newItem.priceHalf || 0) : null,
-				is_active: newItem.active
+				unit: newItem.unit,
+				is_available: newItem.active
 			};
-			
+
 			const created = await itemService.createItem(itemData);
-			
-			// If image is provided, upload it
-			if (newItem.image && created.id) {
-				await itemService.uploadItemImage(created.id, newItem.image);
-			}
-			
+
+			// 4. Update Item record with new URL
+			// const { data: updatedItem, error: updateError } = await supabase
+			// 	.from('items')
+			// 	.update({ image_url: publicUrl })
+			// 	.eq('id', itemId)
+			// 	.select()
+			// 	.single();
+
+			// if (newItem.image && created.id) {
+			// 	await itemService.uploadItemImage(created.id, newItem.image);
+			// }
+
 			// Refresh categories to get updated items
 			fetchCategories();
 			handleModalClose();
@@ -99,9 +109,9 @@ const Menu = () => {
 		e.preventDefault();
 		if (newCategory.trim()) {
 			try {
-				await categoryService.createCategory({ 
+				await categoryService.createCategory({
 					name: newCategory,
-					display_order: categories.length 
+					display_order: categories.length
 				});
 				fetchCategories();
 				setNewCategory('');
@@ -217,10 +227,10 @@ const Menu = () => {
 																<span className="item-card-title">{item.name}</span>
 																{item.is_active && <span className="item-card-active">ACTIVE</span>}
 																<div className="item-card-actions">
-																	<button onClick={() => handleToggleItem(item.id)} className="btn-ghost" style={{fontSize: '0.8rem', padding: '4px 8px'}}>
+																	<button onClick={() => handleToggleItem(item.id)} className="btn-ghost" style={{ fontSize: '0.8rem', padding: '4px 8px' }}>
 																		{item.is_active ? 'Deactivate' : 'Activate'}
 																	</button>
-																	<button onClick={() => handleDeleteItem(item.id)} className="btn-ghost" style={{fontSize: '0.8rem', padding: '4px 8px', color: '#dc2626'}}>
+																	<button onClick={() => handleDeleteItem(item.id)} className="btn-ghost" style={{ fontSize: '0.8rem', padding: '4px 8px', color: '#dc2626' }}>
 																		Delete
 																	</button>
 																</div>
@@ -269,6 +279,11 @@ const Menu = () => {
 									<input type="checkbox" name="halfPortion" checked={newItem.halfPortion} onChange={handleInputChange} /> Enable Half Portion
 								</label>
 							</div>
+							{newItem.halfPortion && (
+								<label>Half Portion Price (₹)
+									<input type="number" name="priceHalf" value={newItem.priceHalf} onChange={handleInputChange} required={newItem.halfPortion} />
+								</label>
+							)}
 							<label>Image
 								<div className="image-upload-box">
 									<input type="file" name="image" accept="image/*" onChange={handleInputChange} />
@@ -277,6 +292,16 @@ const Menu = () => {
 							</label>
 							<label>Full Price (₹)
 								<input type="number" name="price" value={newItem.price} onChange={handleInputChange} required />
+							</label>
+							<label>Unit
+								<select name="unit" value={newItem.unit} onChange={handleInputChange} required>
+									<option value="plate">Plate</option>
+									<option value="piece">Piece</option>
+									<option value="kg">Kg</option>
+									<option value="gm">Gm</option>
+									<option value="ltr">Ltr</option>
+									<option value="ml">Ml</option>
+								</select>
 							</label>
 							<div className="form-row">
 								<label className="active-checkbox">
@@ -321,7 +346,7 @@ const Menu = () => {
 										</label>
 									</span>
 									<button className="delete-category-btn" type="button" onClick={() => handleDeleteCategory(cat.id)} title="Delete">
-										<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="5.5" y="9.5" width="1.5" height="6" rx="0.75" fill="#bbb"/><rect x="10.25" y="9.5" width="1.5" height="6" rx="0.75" fill="#bbb"/><rect x="15" y="9.5" width="1.5" height="6" rx="0.75" fill="#bbb"/><rect x="4" y="6" width="14" height="2" rx="1" fill="#eee"/><rect x="7" y="4" width="8" height="2" rx="1" fill="#eee"/></svg>
+										<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="5.5" y="9.5" width="1.5" height="6" rx="0.75" fill="#bbb" /><rect x="10.25" y="9.5" width="1.5" height="6" rx="0.75" fill="#bbb" /><rect x="15" y="9.5" width="1.5" height="6" rx="0.75" fill="#bbb" /><rect x="4" y="6" width="14" height="2" rx="1" fill="#eee" /><rect x="7" y="4" width="8" height="2" rx="1" fill="#eee" /></svg>
 									</button>
 								</div>
 							))}

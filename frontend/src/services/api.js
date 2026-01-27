@@ -16,10 +16,14 @@ const apiCall = async (endpoint, options = {}) => {
   try {
     const token = await getAuthToken();
     const headers = {
-      'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
       ...options.headers,
     };
+
+    // Only set Content-Type to application/json if it's not already set and body is not FormData
+    if (!headers['Content-Type'] && !(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
