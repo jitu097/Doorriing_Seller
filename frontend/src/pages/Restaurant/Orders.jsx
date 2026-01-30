@@ -44,7 +44,10 @@ export default function Orders() {
 		try {
 			setLoading(true);
 			const data = await orderService.getOrders();
-			setOrders(data || []);
+			// Backend returns { orders: [], pagination: {} } - extract the orders array
+			const ordersData = data?.orders || data || [];
+			// Ensure ordersData is always an array
+			setOrders(Array.isArray(ordersData) ? ordersData : []);
 		} catch (error) {
 			console.error('Failed to fetch orders:', error);
 			// Set empty array on error - backend may not be running
@@ -74,7 +77,9 @@ export default function Orders() {
 		);
 	}
 
-	const filteredOrders = tab === 'all' ? orders : orders.filter(o => o.status === tab);
+	// Ensure orders is always treated as an array before filtering
+	const safeOrders = Array.isArray(orders) ? orders : [];
+	const filteredOrders = tab === 'all' ? safeOrders : safeOrders.filter(o => o.status === tab);
 
 	return (
 		<>
@@ -85,8 +90,8 @@ export default function Orders() {
 					<div>
 						<h1 className="orders-title">Manage Orders</h1>
 						<div className="orders-overview">
-							Overview: <b>{orders.length} Total</b> | 
-							<b> {orders.filter(o => o.status === 'pending').length} Pending Action</b>
+						Overview: <b>{safeOrders.length} Total</b> | 
+						<b> {safeOrders.filter(o => o.status === 'pending').length} Pending Action</b>
 						</div>
 					</div>
 				</div>

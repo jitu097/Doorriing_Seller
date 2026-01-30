@@ -1,4 +1,6 @@
 const supabase = require('../../config/supabaseClient');
+const { uploadToCloudinary, deleteFromCloudinary, extractPublicId } = require('../../config/cloudinary');
+const notificationService = require('../notification/notification.service');
 
 const createItem = async (shopId, itemData) => {
     const { data, error } = await supabase
@@ -101,7 +103,7 @@ const updateItem = async (itemId, shopId, updates) => {
 const updateStock = async (itemId, shopId, newQuantity, changeType = 'adjustment', notes = null) => {
     const { data: currentItem } = await supabase
         .from('items')
-        .select('stock_quantity')
+        .select('stock_quantity, name, unit')
         .eq('id', itemId)
         .eq('shop_id', shopId)
         .single();
@@ -128,6 +130,25 @@ const updateStock = async (itemId, shopId, newQuantity, changeType = 'adjustment
     if (error) throw error;
 
     await logInventoryChange(itemId, shopId, changeType, oldQuantity, quantityChange, notes);
+
+    // Low stock notification (Grocery only)
+    if (newQuantity <= 10) { // Threshold: 10
+        try {
+            const hasUnread = await notificationService.hasUnreadNotification(shopId, 'stock', itemId);
+            if (!hasUnread) {
+                await notificationService.createNotification(
+                    shopId,
+                    'Low Stock Alert',
+                    `${currentItem.name} is running low (${newQuantity} ${currentItem.unit || 'units'} left)`,
+                    'stock',
+                    itemId,
+                    'item'
+                );
+            }
+        } catch (err) {
+            console.error('Failed to send stock notification', err);
+        }
+    }
 
     return data;
 };
@@ -159,29 +180,24 @@ const uploadItemImage = async (itemId, shopId, file) => {
         throw new Error('Item not found or access denied');
     }
 
-    // 2. Upload to Supabase Storage
-    const fileExt = file.originalname.split('.').pop();
-    const fileName = `${shopId}/${itemId}_${Date.now()}.${fileExt}`;
-    const filePath = `${fileName}`;
+    // 2. Upload to Cloudinary
+    const folder = 'bazarse/items';
+    const publicId = `shop_${shopId}_item_${itemId}_${Date.now()}`;
 
-    const { error: uploadError } = await supabase.storage
-        .from('menu-items') // Ensure this bucket exists in Supabase
-        .upload(filePath, file.buffer, {
-            contentType: file.mimetype,
-            upsert: true
-        });
+    const { secure_url, public_id } = await uploadToCloudinary(file.buffer, folder, publicId);
 
-    if (uploadError) throw uploadError;
+    // 3. Delete old image from Cloudinary (if exists)
+    if (item.image_url) {
+        const oldPublicId = extractPublicId(item.image_url);
+        if (oldPublicId) {
+            await deleteFromCloudinary(oldPublicId);
+        }
+    }
 
-    // 3. Get Public URL
-    const { data: { publicUrl } } = supabase.storage
-        .from('menu-items')
-        .getPublicUrl(filePath);
-
-    // 4. Update Item record with new URL
+    // 4. Update Item record with new Cloudinary URL
     const { data: updatedItem, error: updateError } = await supabase
         .from('items')
-        .update({ image_url: publicUrl })
+        .update({ image_url: secure_url })
         .eq('id', itemId)
         .select()
         .single();

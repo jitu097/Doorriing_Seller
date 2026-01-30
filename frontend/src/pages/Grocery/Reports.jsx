@@ -1,38 +1,63 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import './Reports.css';
+import groceryService from '../../services/groceryService';
 
 const Reports = () => {
     const [dateRange, setDateRange] = useState('7days');
+    const [summaryStats, setSummaryStats] = useState({
+        totalRevenue: 0,
+        totalOrders: 0,
+        avgOrderValue: 0,
+        cancelledOrders: 0
+    });
+    const [salesTrend, setSalesTrend] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Mock Data for Reports
-    const summaryStats = {
-        totalRevenue: 25400,
-        totalOrders: 85,
-        avgOrderValue: 298,
-        cancelledOrders: 2
-    };
+    const maxTrendValue = Math.max(...salesTrend.map(d => d.value), 100);
 
-    const topProducts = [
-        { id: 1, name: 'Fresh Organic Tomatoes', sales: 120, revenue: 4800, growth: '+12%' },
-        { id: 2, name: 'Aashirvaad Whole Wheat Atta', sales: 85, revenue: 34000, growth: '+5%' },
-        { id: 3, name: 'Amul Butter 500g', sales: 60, revenue: 16200, growth: '-2%' },
-        { id: 4, name: 'Tata Salt 1kg', sales: 55, revenue: 1650, growth: '+8%' },
-        { id: 5, name: 'Fortune Sun Lite Oil', sales: 40, revenue: 6400, growth: '+15%' },
-    ];
+    useEffect(() => {
+        const fetchReports = async () => {
+            setLoading(true);
+            try {
+                // Fetch summary
+                const stats = await groceryService.getDashboardStats('weekly'); // 'weekly' maps to 7 days usually in backend
 
-    const salesTrend = [
-        { day: 'Mon', value: 40 },
-        { day: 'Tue', value: 65 },
-        { day: 'Wed', value: 35 },
-        { day: 'Thu', value: 50 },
-        { day: 'Fri', value: 80 },
-        { day: 'Sat', value: 95 },
-        { day: 'Sun', value: 70 },
-    ];
+                // Fetch chart data
+                // Calculate date range for chart
+                const end = new Date();
+                const start = new Date();
+                start.setDate(start.getDate() - 7);
+                const chartData = await groceryService.getAnalyticsChartData(start.toISOString(), end.toISOString());
+                // chartData is array of { date, total_revenue, ... } from daily analytics
 
-    const maxTrendValue = 100; // For scaling bars
+                // Transform for chart
+                const formattedTrend = (chartData || []).map(day => ({
+                    day: new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' }),
+                    value: parseFloat(day.total_revenue || 0)
+                })).reverse(); // API returns descending, we want ascending for chart usually
+
+                setSummaryStats({
+                    totalRevenue: stats.totalRevenue || 0,
+                    totalOrders: stats.totalOrders || 0,
+                    avgOrderValue: stats.averageOrderValue || 0,
+                    cancelledOrders: 0 // Backend summary might not return cancelled count in getSummary, check stats
+                    // Actually getSummary in analytics.service.js returns totalOrders, totalRevenue, completedOrders.
+                    // It does NOT return cancelled items.
+                });
+
+                setSalesTrend(formattedTrend);
+
+            } catch (error) {
+                console.error("Failed to load reports", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchReports();
+    }, [dateRange]);
 
     return (
         <>
@@ -66,7 +91,7 @@ const Reports = () => {
                         <div className="metric-content">
                             <h3>Total Revenue</h3>
                             <p className="metric-value">₹{summaryStats.totalRevenue.toLocaleString()}</p>
-                            <p className="metric-change positive">↑ 14% vs last period</p>
+                            <p className="metric-change positive">--</p>
                         </div>
                     </div>
 
@@ -75,7 +100,7 @@ const Reports = () => {
                         <div className="metric-content">
                             <h3>Total Orders</h3>
                             <p className="metric-value">{summaryStats.totalOrders}</p>
-                            <p className="metric-change positive">↑ 8% vs last period</p>
+                            <p className="metric-change positive">--</p>
                         </div>
                     </div>
 
@@ -84,7 +109,7 @@ const Reports = () => {
                         <div className="metric-content">
                             <h3>Avg. Order Value</h3>
                             <p className="metric-value">₹{summaryStats.avgOrderValue}</p>
-                            <p className="metric-change neutral">− 0% stable</p>
+                            <p className="metric-change neutral">--</p>
                         </div>
                     </div>
 
@@ -93,30 +118,34 @@ const Reports = () => {
                         <div className="metric-content">
                             <h3>Cancelled</h3>
                             <p className="metric-value">{summaryStats.cancelledOrders}</p>
-                            <p className="metric-change negative">↓ 1 less than last period</p>
+                            <p className="metric-change negative">--</p>
                         </div>
                     </div>
 
                     {/* Sales Chart (CSS Bar Chart) */}
                     <div className="chart-section">
-                        <h2>Sales Trend (Last 7 Days)</h2>
+                        <h2>Sales Trend (Revenue)</h2>
                         <div className="bar-chart">
-                            {salesTrend.map((item, index) => (
-                                <div key={index} className="chart-column">
-                                    <div
-                                        className="bar"
-                                        style={{ height: `${(item.value / maxTrendValue) * 100}%` }}
-                                        data-value={item.value}
-                                    ></div>
-                                    <span className="chk-label">{item.day}</span>
-                                </div>
-                            ))}
+                            {salesTrend.length === 0 ? (
+                                <div style={{ width: '100%', textAlign: 'center', padding: '20px' }}>No data for this period</div>
+                            ) : (
+                                salesTrend.map((item, index) => (
+                                    <div key={index} className="chart-column">
+                                        <div
+                                            className="bar"
+                                            style={{ height: `${(item.value / maxTrendValue) * 100}%` }}
+                                            data-value={item.value}
+                                        ></div>
+                                        <span className="chk-label">{item.day}</span>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
 
-                    {/* Top Products Table */}
+                    {/* Top Products Table - Hidden if no data or keep mock/empty? Let's hide for now as we don't have per-product analytics endpoint ready. */}
                     <div className="table-section">
-                        <h2>Top Selling Products</h2>
+                        <h2>Top Selling Products (Coming Soon)</h2>
                         <div className="table-responsive">
                             <table className="admin-table">
                                 <thead>
@@ -129,17 +158,9 @@ const Reports = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {topProducts.map((product, index) => (
-                                        <tr key={product.id}>
-                                            <td>#{index + 1}</td>
-                                            <td>{product.name}</td>
-                                            <td>{product.sales}</td>
-                                            <td>₹{product.revenue.toLocaleString()}</td>
-                                            <td className={product.growth.startsWith('+') ? 'text-success' : 'text-danger'}>
-                                                {product.growth}
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    <tr>
+                                        <td colSpan="5" className="text-center">Analytics for individual products is being calculated.</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>

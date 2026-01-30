@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { auth } from '../../config/firebase';
 import { signOut } from 'firebase/auth';
 import { shopService } from '../../services/shopService';
+import NotificationBell from '../../components/common/NotificationBell';
 import './Navbar.css';
 
 
@@ -12,7 +13,7 @@ export default function Navbar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(true);
   const [loadingStatus, setLoadingStatus] = useState(false);
-  
+
   useEffect(() => {
     fetchShopStatus();
   }, []);
@@ -39,7 +40,7 @@ export default function Navbar() {
       setLoadingStatus(false);
     }
   };
-  
+
   const navLinks = [
     { label: 'Dashboard', path: '/restaurant/dashboard' },
     { label: 'Menu', path: '/restaurant/menu' },
@@ -72,12 +73,12 @@ export default function Navbar() {
       <nav className="rest-navbar">
         <div className="rest-navbar-left">
           <img src="/logo.png" alt="Logo" className="rest-navbar-logo" />
-          <button 
+          <button
             className={`admin-panel-btn ${isShopOpen ? 'open' : 'closed'}`}
             onClick={toggleShopStatus}
             disabled={loadingStatus}
           >
-            <span className={isShopOpen ? 'dot-green' : 'dot-red'} /> 
+            <span className={isShopOpen ? 'dot-green' : 'dot-red'} />
             Admin Panel<br />
             <span className="open-label">{isShopOpen ? 'OPEN' : 'CLOSED'}</span>
           </button>
@@ -97,8 +98,9 @@ export default function Navbar() {
           ))}
         </div>
         <div className="rest-navbar-right">
-          <button 
-            className="hamburger-btn" 
+          <NotificationBell />
+          <button
+            className="hamburger-btn"
             onClick={() => setSidebarOpen(!sidebarOpen)}
             aria-label="Menu"
           >

@@ -1,34 +1,95 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import './Profile.css';
+import groceryService from '../../services/groceryService';
 
 const Profile = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [activeSection, setActiveSection] = useState('shop');
+    const [loading, setLoading] = useState(true);
 
-    // Mock Data
     const [shopData, setShopData] = useState({
-        shopName: 'Green Valley Grocery',
-        description: 'Premium organic grocery store providing fresh farm produce daily.',
-        address: '123 Market Street, Civil Lines',
-        city: 'Jaipur',
-        pincode: '302006',
-        contact: '+91 98765 43210',
-        email: 'contact@greenvalley.com',
-        gstin: '29ABCDE1234F1Z5',
-        fssai: '12345678901234',
-        ownerName: 'Rajesh Kumar',
-        category: 'Grocery & Staples',
-        openingTime: '08:00',
-        closingTime: '22:00',
-        isOpen: true
+        shopName: '',
+        description: '',
+        address: '',
+        city: '',
+        pincode: '',
+        contact: '',
+        email: '',
+        gstin: '',
+        fssai: '',
+        ownerName: '',
+        category: '',
+        openingTime: '',
+        closingTime: '',
+        isOpen: false
     });
 
-    const handleSave = () => {
-        setIsEditing(false);
-        // Save logic here
+    // Helper to ensure we never render an object
+    const ensureString = (val) => {
+        if (val === null || val === undefined) return '';
+        if (typeof val === 'object') return JSON.stringify(val); // Fallback debug
+        return String(val);
     };
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const response = await groceryService.getShopProfile();
+                const data = response.data?.shop || response.shop || {};
+                const userData = response.data?.user || response.user || {};
+
+                // Use optional chaining and OR checks to ensure primitives
+                setShopData({
+                    shopName: ensureString(data.shop_name),
+                    description: ensureString(data.description),
+                    address: ensureString(data.address),
+                    city: ensureString(data.city),
+                    pincode: ensureString(data.pincode),
+                    contact: ensureString(data.phone || userData.phone),
+                    email: ensureString(data.email || userData.email),
+                    gstin: ensureString(data.tax_id),
+                    fssai: ensureString(data.business_license),
+                    ownerName: ensureString(data.owner_name || userData.owner_name),
+                    category: ensureString(data.subcategory || data.category),
+                    openingTime: ensureString(data.operating_hours?.monday?.open || '09:00'),
+                    closingTime: ensureString(data.operating_hours?.monday?.close || '21:00'),
+                    isOpen: !!data.is_open // Force boolean
+                });
+            } catch (error) {
+                console.error("Failed to fetch profile", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProfile();
+    }, []);
+
+    const handleSave = async () => {
+        try {
+            const updates = {
+                shop_name: shopData.shopName,
+                description: shopData.description,
+                address: shopData.address,
+                phone: shopData.contact,
+                email: shopData.email,
+                city: shopData.city,
+                pincode: shopData.pincode
+            };
+
+            await groceryService.updateShopProfile(updates);
+
+            // Note: Toggle isOpen might need separate API call if not handled by update
+            setIsEditing(false);
+            alert("Profile updated successfully!");
+        } catch (error) {
+            alert("Failed to update profile: " + error.message);
+        }
+    };
+
+    if (loading) return <div>Loading Profile...</div>;
 
     return (
         <>
@@ -182,6 +243,7 @@ const Profile = () => {
                                             type="text"
                                             value={shopData.gstin}
                                             disabled={!isEditing}
+                                            onChange={(e) => setShopData({ ...shopData, gstin: e.target.value })}
                                         />
                                     </div>
                                     <div className="form-group">
@@ -190,6 +252,7 @@ const Profile = () => {
                                             type="text"
                                             value={shopData.fssai}
                                             disabled={!isEditing}
+                                            onChange={(e) => setShopData({ ...shopData, fssai: e.target.value })}
                                         />
                                     </div>
                                 </div>
@@ -225,13 +288,13 @@ const Profile = () => {
                                                 <input
                                                     type="checkbox"
                                                     checked={shopData.isOpen}
-                                                    disabled={!isEditing}
-                                                    onChange={(e) => setShopData({ ...shopData, isOpen: e.target.checked })}
+                                                    disabled={true}
                                                 />
                                                 <span className="slider round"></span>
                                             </div>
                                             <span className="status-text">{shopData.isOpen ? 'Open for Orders' : 'Temporarily Closed'}</span>
                                         </label>
+                                        <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '5px' }}>To toggle store status, use the main dashboard toggle (if available) or contact support.</p>
                                     </div>
                                 </div>
                             </div>

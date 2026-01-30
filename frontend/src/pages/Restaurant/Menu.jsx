@@ -84,17 +84,10 @@ const Menu = () => {
 
 			const created = await itemService.createItem(itemData);
 
-			// 4. Update Item record with new URL
-			// const { data: updatedItem, error: updateError } = await supabase
-			// 	.from('items')
-			// 	.update({ image_url: publicUrl })
-			// 	.eq('id', itemId)
-			// 	.select()
-			// 	.single();
-
-			// if (newItem.image && created.id) {
-			// 	await itemService.uploadItemImage(created.id, newItem.image);
-			// }
+			// Upload image if provided
+			if (newItem.image && created.id) {
+				await itemService.uploadItemImage(created.id, newItem.image);
+			}
 
 			// Refresh categories to get updated items
 			fetchCategories();

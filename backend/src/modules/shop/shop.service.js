@@ -1,6 +1,7 @@
 const supabase = require('../../config/supabaseClient');
 const cache = require('../../utils/cache');
 const { ConflictError, NotFoundError } = require('../../utils/errors');
+const { uploadToCloudinary, deleteFromCloudinary, extractPublicId } = require('../../config/cloudinary');
 
 const createShop = async (sellerId, shopData) => {
     // Check for existing shop using correct column 'seller_id'
@@ -119,9 +120,51 @@ const toggleShopStatus = async (sellerId, isOpen) => {
     return data;
 };
 
+const uploadShopImage = async (sellerId, file) => {
+    // 1. Get current shop to check for existing image
+    const { data: shop, error: shopError } = await supabase
+        .from('shops')
+        .select('id, shop_image_url')
+        .eq('seller_id', sellerId)
+        .single();
+
+    if (shopError || !shop) {
+        throw new NotFoundError('Shop not found');
+    }
+
+    // 2. Upload to Cloudinary
+    const folder = 'bazarse/shops';
+    const publicId = `shop_${shop.id}_${Date.now()}`;
+
+    const { secure_url, public_id } = await uploadToCloudinary(file.buffer, folder, publicId);
+
+    // 3. Delete old image from Cloudinary (if exists)
+    if (shop.shop_image_url) {
+        const oldPublicId = extractPublicId(shop.shop_image_url);
+        if (oldPublicId) {
+            await deleteFromCloudinary(oldPublicId);
+        }
+    }
+
+    // 4. Update shop record with new Cloudinary URL
+    const { data: updatedShop, error: updateError } = await supabase
+        .from('shops')
+        .update({ shop_image_url: secure_url })
+        .eq('seller_id', sellerId)
+        .select()
+        .single();
+
+    if (updateError) throw updateError;
+
+    cache.delete(`shop:seller:${sellerId}`);
+
+    return updatedShop;
+};
+
 module.exports = {
     createShop,
     getShop,
     updateShop,
-    toggleShopStatus
+    toggleShopStatus,
+    uploadShopImage
 };

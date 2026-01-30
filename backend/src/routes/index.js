@@ -11,11 +11,13 @@ const reviewRoutes = require('../modules/review/review.routes');
 const bookingRoutes = require('../modules/booking/booking.routes');
 const notificationRoutes = require('../modules/notification/notification.routes');
 const analyticsRoutes = require('../modules/analytics/analytics.routes');
+const groceryRoutes = require('../modules/grocery/grocery.routes');
 
 router.use('/auth', authRoutes);
 router.use('/shop', shopRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/items', itemRoutes);
+router.use('/grocery', groceryRoutes); // Grocery specific namespace
 router.use('/orders', orderRoutes);
 router.use('/discounts', discountRoutes);
 router.use('/reviews', reviewRoutes);

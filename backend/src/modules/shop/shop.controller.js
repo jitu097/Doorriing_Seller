@@ -51,9 +51,23 @@ const toggleStatus = async (req, res, next) => {
     }
 };
 
+const uploadShopImage = async (req, res, next) => {
+    try {
+        if (!req.file) {
+            throw new Error('No image file provided');
+        }
+
+        const shop = await shopService.uploadShopImage(req.seller.id, req.file);
+        successResponse(res, shop, 'Shop image uploaded successfully');
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createShop,
     getShop,
     updateShop,
-    toggleStatus
+    toggleStatus,
+    uploadShopImage
 };

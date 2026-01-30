@@ -1,85 +1,94 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import './Orders.css';
+import groceryService from '../../services/groceryService';
 
 const orderTabs = [
 	{ label: 'All', key: 'all' },
-	{ label: 'Pending', key: 'pending' },
-	{ label: 'Confirmed', key: 'confirmed' },
-	{ label: 'Preparing', key: 'preparing' },
-	{ label: 'Out for Delivery', key: 'out' },
-	{ label: 'Delivered', key: 'delivered' },
-	{ label: 'Cancelled', key: 'cancelled' },
-];
-
-const sampleOrders = [
-	{
-		id: 'grc1a2b3...',
-		status: 'preparing',
-		customer: {
-			name: 'Amit Kumar',
-			phone: '9876543210',
-			email: 'amitkumar@email.com',
-			address: '123 Main St, City, State, Mobile: 9876543210',
-		},
-		payment: 'Online',
-		items: [
-			{ name: 'Rice', qty: 2, type: 'Kg', price: 80, img: '' },
-			{ name: 'Wheat', qty: 1, type: 'Kg', price: 50, img: '' },
-			{ name: 'Oil', qty: 1, type: 'Litre', price: 120, img: '' },
-		],
-		subtotal: 230,
-		delivery: 30,
-		total: 260,
-		driver: '',
-		created: '23/1/2026, 10:15:00 am',
-		actions: ['Assign Driver'],
-	},
-	{
-		id: 'grc4d5e6...',
-		status: 'pending',
-		customer: {
-			name: 'Priya Sharma',
-			phone: '9123456780',
-			email: 'priyasharma@email.com',
-			address: '456 Market Rd, City, State, Mobile: 9123456780',
-		},
-		payment: 'COD',
-		items: [
-			{ name: 'Sugar', qty: 3, type: 'Kg', price: 40, img: '' },
-			{ name: 'Salt', qty: 2, type: 'Kg', price: 20, img: '' },
-		],
-		subtotal: 160,
-		delivery: 20,
-		total: 180,
-		driver: '',
-		created: '22/1/2026, 4:45:00 pm',
-		actions: ['Accept', 'Reject'],
-	},
+	{ label: 'Pending', key: 'Pending' },
+	{ label: 'Confirmed', key: 'Confirmed' },
+	{ label: 'Preparing', key: 'Preparing' },
+	{ label: 'Out for Delivery', key: 'OutForDelivery' },
+	{ label: 'Delivered', key: 'Delivered' },
+	{ label: 'Cancelled', key: 'Cancelled' },
 ];
 
 const statusColors = {
-	preparing: '#22d06a',
-	pending: '#3b82f6',
-	confirmed: '#f59e42',
-	out: '#f7931e',
-	delivered: '#22d06a',
-	cancelled: '#dc2626',
+	Preparing: '#22d06a',
+	Pending: '#3b82f6',
+	Confirmed: '#f59e42',
+	OutForDelivery: '#f7931e',
+	Delivered: '#22d06a',
+	Cancelled: '#dc2626',
 };
 
 const statusLabels = {
-	preparing: 'PREPARING',
-	pending: 'PENDING',
-	confirmed: 'CONFIRMED',
-	out: 'OUT FOR DELIVERY',
-	delivered: 'DELIVERED',
-	cancelled: 'CANCELLED',
+	Preparing: 'PREPARING',
+	Pending: 'PENDING',
+	Confirmed: 'CONFIRMED',
+	OutForDelivery: 'OUT FOR DELIVERY',
+	Delivered: 'DELIVERED',
+	Cancelled: 'CANCELLED',
 };
 
 export default function Orders() {
 	const [tab, setTab] = useState('all');
-	const orders = tab === 'all' ? sampleOrders : sampleOrders.filter(o => o.status === tab);
+	const [orders, setOrders] = useState([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
+	const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+	useEffect(() => {
+		const fetchOrders = async () => {
+			setLoading(true);
+			try {
+				const filters = {};
+				if (tab !== 'all') {
+					filters.status = tab;
+				}
+				const response = await groceryService.getOrders(filters);
+				// Handle both structure types if response wraps data differently
+				// service returns "api(...)" which usually returns json.
+				// backend order.service.js returns { orders: [], pagination: {} }
+
+				const ordersData = response.data?.orders || response.orders || [];
+				setOrders(ordersData);
+			} catch (err) {
+				console.error("Failed to fetch orders:", err);
+				setError("Failed to load orders");
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchOrders();
+	}, [tab, refreshTrigger]);
+
+	const handleStatusUpdate = async (orderId, newStatus) => {
+		try {
+			// Optimistic update could be done here, but safe to just refresh
+			await groceryService.updateOrderStatus(orderId, newStatus);
+			setRefreshTrigger(prev => prev + 1);
+		} catch (err) {
+			alert("Failed to update status: " + err.message);
+		}
+	};
+
+	// Determine available actions based on status
+	const getActions = (order) => {
+		const status = order.status;
+		if (status === 'Pending') return ['Confirmed', 'Cancelled'];
+		if (status === 'Confirmed') return ['Preparing', 'Cancelled'];
+		if (status === 'Preparing') return ['OutForDelivery'];
+		if (status === 'OutForDelivery') return ['Delivered'];
+		return [];
+	};
+
+	const formatDate = (dateString) => {
+		if (!dateString) return '';
+		return new Date(dateString).toLocaleString('en-IN');
+	};
 
 	return (
 		<>
@@ -89,9 +98,14 @@ export default function Orders() {
 					<span className="orders-emoji">🛒</span>
 					<div>
 						<h1 className="orders-title">Manage Orders</h1>
-						<div className="orders-overview">Overview: <b>{sampleOrders.length} Total</b> | <b>{sampleOrders.filter(o => o.status === 'pending').length} Pending Action</b></div>
+						<div className="orders-overview">
+							{/* Note: This count is only for current tab/page unless we fetch separate stats */}
+							<b>{orders.length} Orders</b> in current view
+						</div>
 					</div>
 				</div>
+				{error && <div className="error-message">{error}</div>}
+
 				<div className="orders-tabs">
 					{orderTabs.map(t => (
 						<button
@@ -103,47 +117,61 @@ export default function Orders() {
 						</button>
 					))}
 				</div>
+
 				<div className="orders-list">
-					{orders.map((order, i) => (
-						<div className="order-card" key={order.id}>
-							<div className="order-card-header">
-								<span className="order-id">#{order.id}</span>
-								<span className="order-status" style={{ background: statusColors[order.status] + '22', color: statusColors[order.status] }}>{statusLabels[order.status]}</span>
+					{loading ? (
+						<div className="loading-state">Loading orders...</div>
+					) : orders.length === 0 ? (
+						<div className="empty-state">No orders found in this category.</div>
+					) : (
+						orders.map((order) => (
+							<div className="order-card" key={order.id}>
+								<div className="order-card-header">
+									<span className="order-id">#{order.order_number}</span>
+									<span className="order-status" style={{ background: (statusColors[order.status] || '#ccc') + '22', color: (statusColors[order.status] || '#666') }}>
+										{statusLabels[order.status] || order.status.toUpperCase()}
+									</span>
+								</div>
+
+								<div className="order-customer">
+									<div><span role="img" aria-label="user">👤</span> {order.customer_name}</div>
+									<div><span role="img" aria-label="phone">📞</span> {order.customer_phone}</div>
+									<div><span role="img" aria-label="address">📍</span> {order.delivery_address}</div>
+									<div>Payment: {order.payment_method || 'COD'} ({order.payment_status})</div>
+									{order.customer_notes && <div>Has Notes 📝</div>}
+								</div>
+
+								{/* Order Items would ideally be fetched in detail or if standard list includes summary */}
+								{/* The 'getOrders' list usually returns summary. Detailed items need getOrderDetails or special expand.*/}
+								{/* For MVP list view, if items are not in list response, we might just show total items or fetch on expand.*/}
+								{/* order.service.js getOrders returns basic info but NOT items array. */}
+								{/* We will show a "View Details" button or generic summary if items are missing. */}
+								{/* Ideally we want to see items. Let's assume we need to click to view or fetch details.*/}
+								{/* MODIFY: For this MVP, let's just show total items count and price as the list doesn't return items array.*/}
+
+								<div className="order-summary">
+									<div>Total Amount <b>₹{order.total_amount}</b></div>
+									<div>Delivery Charge <b>₹{order.delivery_charge}</b></div>
+								</div>
+
+								<div className="order-actions">
+									{getActions(order).map(action => (
+										<button
+											key={action}
+											className={"order-action-btn " + action.toLowerCase()}
+											onClick={() => handleStatusUpdate(order.id, action)}
+										>
+											{action === 'OutForDelivery' ? 'Out for Delivery' : action}
+										</button>
+									))}
+								</div>
+
+								<div className="order-footer">
+									<span>{formatDate(order.created_at)}</span>
+								</div>
 							</div>
-							<div className="order-customer">
-								<div><span role="img" aria-label="user">👤</span> {order.customer.name}</div>
-								<div><span role="img" aria-label="phone">📞</span> {order.customer.phone}</div>
-								<div><span role="img" aria-label="email">📧</span> {order.customer.email}</div>
-								<div><span role="img" aria-label="address">📍</span> {order.customer.address}</div>
-								<div>Payment: {order.payment}</div>
-							</div>
-							<div className="order-items">
-								{order.items.map((item, idx) => (
-									<div className="order-item" key={item.name + idx}>
-										{item.img && <img src={item.img} alt={item.name} className="order-item-img" />}
-										<span className="order-item-qty">{item.qty}x</span>
-										<span className="order-item-name">{item.name}</span>
-										<span className="order-item-type">({item.type})</span>
-										<span className="order-item-price">₹{item.price}</span>
-									</div>
-								))}
-							</div>
-							<div className="order-summary">
-								<div>Subtotal <b>₹{order.subtotal}</b></div>
-								<div>Delivery Charge <b>₹{order.delivery}</b></div>
-								<div>Total Amount <b>₹{order.total}</b></div>
-								<div>Delivery Partner: <span className="order-driver">{order.driver || 'Not Assigned'}</span></div>
-							</div>
-							<div className="order-actions">
-								{order.actions.map(action => (
-									<button key={action} className={"order-action-btn " + action.toLowerCase().replace(/ /g, '-')}>{action}</button>
-								))}
-							</div>
-							<div className="order-footer">
-								<span>{order.created}</span>
-							</div>
-						</div>
-					))}
+						))
+					)}
 				</div>
 			</div>
 		</>

@@ -1,24 +1,25 @@
 ﻿const supabase = require('../../config/supabaseClient');
 const { validatePagination, validateOrderStatus } = require('../../utils/validators');
+const notificationService = require('../notification/notification.service');
 
 const getOrders = async (shopId, page = 1, limit = 20, status = null) => {
     const pagination = validatePagination(page, limit);
-    
+
     let query = supabase
         .from('orders')
-        .select('id,order_number,customer_name,customer_phone,delivery_address,items_total,delivery_charge,total_amount,status,payment_method,payment_status,customer_notes,created_at,confirmed_at,delivered_at', { count: 'exact' })
+        .select('id,order_number,customer_name,customer_phone,delivery_address,items_total,delivery_charge,total_amount,status,payment_method,payment_status,customer_notes,created_at,confirmed_at,delivered_at,cancellation_reason', { count: 'exact' })
         .eq('shop_id', shopId);
-    
+
     if (status) {
         query = query.eq('status', status);
     }
-    
+
     const { data, error, count } = await query
         .order('created_at', { ascending: false })
         .range(pagination.offset, pagination.offset + pagination.limit - 1);
-    
+
     if (error) throw error;
-    
+
     return {
         orders: data || [],
         pagination: {
@@ -37,16 +38,22 @@ const getOrderDetails = async (orderId, shopId) => {
         .eq('id', orderId)
         .eq('shop_id', shopId)
         .single();
-    
+
     if (orderError) throw orderError;
-    
+
     const { data: items, error: itemsError } = await supabase
         .from('order_items')
-        .select('*')
+        .select(`
+            *,
+            items (
+                unit,
+                image_url
+            )
+        `)
         .eq('order_id', orderId);
-    
+
     if (itemsError) throw itemsError;
-    
+
     return {
         ...order,
         items: items || []
@@ -55,9 +62,9 @@ const getOrderDetails = async (orderId, shopId) => {
 
 const updateOrderStatus = async (orderId, shopId, newStatus, cancellationReason = null) => {
     validateOrderStatus(newStatus);
-    
+
     const updates = { status: newStatus };
-    
+
     if (newStatus === 'Confirmed') {
         updates.confirmed_at = new Date().toISOString();
     } else if (newStatus === 'Delivered') {
@@ -68,17 +75,34 @@ const updateOrderStatus = async (orderId, shopId, newStatus, cancellationReason 
             updates.cancellation_reason = cancellationReason;
         }
     }
-    
-    const { data, error } = await supabase
-        .from('orders')
-        .update(updates)
-        .eq('id', orderId)
-        .eq('shop_id', shopId)
-        .select()
-        .single();
-    
-    if (error) throw error;
-    
+
+    const data = await (async () => {
+        const { data, error } = await supabase
+            .from('orders')
+            .update(updates)
+            .eq('id', orderId)
+            .eq('shop_id', shopId)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    })();
+
+    // Helper to send notification safely
+    try {
+        await notificationService.createNotification(
+            shopId,
+            'Order Updated',
+            `Order #${data.order_number} is now ${newStatus}`,
+            'order_update', // using 'order' type in general or specific 'order_update'
+            orderId,
+            'order'
+        );
+    } catch (err) {
+        console.error('Failed to send notification', err);
+    }
+
     return data;
 };
 
@@ -87,9 +111,9 @@ const getOrderStats = async (shopId) => {
         .from('orders')
         .select('status, total_amount')
         .eq('shop_id', shopId);
-    
+
     if (error) throw error;
-    
+
     const stats = {
         pending: 0,
         confirmed: 0,
@@ -99,7 +123,7 @@ const getOrderStats = async (shopId) => {
         cancelled: 0,
         totalRevenue: 0
     };
-    
+
     data.forEach(order => {
         if (order.status === 'Pending') stats.pending++;
         else if (order.status === 'Confirmed') stats.confirmed++;
@@ -111,7 +135,7 @@ const getOrderStats = async (shopId) => {
         }
         else if (order.status === 'Cancelled') stats.cancelled++;
     });
-    
+
     return stats;
 };
 

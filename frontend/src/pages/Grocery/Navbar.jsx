@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Navbar.css';
+import NotificationBell from '../../components/common/NotificationBell';
 
 export default function Navbar() {
   const location = useLocation();
@@ -37,6 +38,7 @@ export default function Navbar() {
           ))}
         </div>
         <div className="grocery-navbar-right">
+          <NotificationBell />
           <button className="logout-btn">Logout</button>
         </div>
       </nav>

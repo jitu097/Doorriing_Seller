@@ -29,4 +29,16 @@ export const shopService = {
       body: JSON.stringify({ is_open: isOpen }),
     });
   },
+
+  // Upload shop image
+  uploadShopImage: async (imageFile) => {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    
+    return await apiCall('/shop/image', {
+      method: 'POST',
+      body: formData,
+      headers: {} // Let browser set Content-Type for FormData
+    });
+  },
 };

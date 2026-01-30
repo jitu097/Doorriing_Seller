@@ -1,32 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Products.css';
 import Navbar from './Navbar';
-
-const initialCategories = [
-	{ name: 'kuo', items: 5, hidden: true, active: false },
-	{ name: 'rolls', items: 1, hidden: true, active: true },
-	{ name: 'chinese', items: 1, hidden: true, active: true },
-	{ name: 'how', items: 1, hidden: false, active: true },
-];
+import groceryService from '../../services/groceryService';
 
 const Products = () => {
-	const [categories, setCategories] = useState(initialCategories);
-	const [openIndex, setOpenIndex] = useState(null);
+	const [categories, setCategories] = useState([]);
 	const [items, setItems] = useState([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
 
+	// Accordion State
+	const [openIndex, setOpenIndex] = useState(null);
+
+	// Modals
 	const [showModal, setShowModal] = useState(false);
 	const [showCategoryModal, setShowCategoryModal] = useState(false);
+	const [isSubmitting, setIsSubmitting] = useState(false);
+
+	// Form States
 	const [newCategory, setNewCategory] = useState('');
 	const [newItem, setNewItem] = useState({
 		name: '',
 		description: '',
-		category: '',
+		category_id: '',
 		image: null,
-		quantity: '',
-		unit: '',
+		stock_quantity: '',
+		unit: 'pieces',
 		price: '',
 		active: true,
 	});
+
+	// --- Data Fetching ---
+	const fetchData = async () => {
+		try {
+			setLoading(true);
+			const [fetchedCategories, fetchedItems] = await Promise.all([
+				groceryService.getGroceryCategories(),
+				groceryService.getGroceryItems()
+			]);
+			setCategories(fetchedCategories || []);
+			setItems(fetchedItems || []);
+		} catch (err) {
+			console.error(err);
+			setError('Failed to load products');
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchData();
+	}, []);
+
+	// --- Event Handlers ---
 
 	const handleAccordion = (idx) => {
 		setOpenIndex(openIndex === idx ? null : idx);
@@ -43,59 +69,88 @@ const Products = () => {
 		}
 	};
 
+	const handleCategoryInputChange = (e) => {
+		setNewCategory(e.target.value);
+	};
+
 	const handleModalClose = () => {
 		setShowModal(false);
-		 setNewItem({
-			 name: '', description: '', category: '', image: null, quantity: '', unit: '', price: '', active: true
-		 });
+		setNewItem({
+			name: '', description: '', category_id: '', image: null, stock_quantity: '', unit: 'pieces', price: '', active: true
+		});
 	};
 
-	const handleModalOpen = () => setShowModal(true);
-	const handleCategoryModalOpen = () => setShowCategoryModal(true);
-	const handleCategoryModalClose = () => setShowCategoryModal(false);
-
-	const handleCreateItem = (e) => {
+	const handleCreateItem = async (e) => {
 		e.preventDefault();
-		// Add item to items array
-		 setItems(prev => [
-			 ...prev,
-			 {
-				 name: newItem.name,
-				 description: newItem.description,
-				 category: newItem.category,
-				 image: newItem.image ? URL.createObjectURL(newItem.image) : '',
-				 quantity: newItem.quantity,
-				 unit: newItem.unit,
-				 price: newItem.price,
-				 active: newItem.active
-			 }
-		 ]);
-		handleModalClose();
-	};
+		try {
+			setIsSubmitting(true);
+			// 1. Create Item
+			const createdItem = await groceryService.createGroceryItem({
+				...newItem,
+				category_id: newItem.category_id || null // Ensure empty string becomes null
+			});
 
-	const handleAddCategory = (e) => {
-		e.preventDefault();
-		if (newCategory.trim()) {
-			setCategories([...categories, { name: newCategory, items: 0, hidden: false, active: true }]);
-			setNewCategory('');
+			// 2. Upload Image if exists
+			if (newItem.image && createdItem.id) {
+				await groceryService.uploadItemImage(createdItem.id, newItem.image);
+			}
+
+			// 3. Refresh List
+			await fetchData();
+			handleModalClose();
+		} catch (err) {
+			console.error(err);
+			alert(err.message || 'Failed to create product');
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
-	const handleCategoryToggle = (idx) => {
-		setCategories(categories => categories.map((cat, i) =>
-			i === idx ? { ...cat, active: !cat.active } : cat
-		));
+	const handleAddCategory = async (e) => {
+		e.preventDefault();
+		if (!newCategory.trim()) return;
+		try {
+			setIsSubmitting(true);
+			await groceryService.createGroceryCategory(newCategory);
+			setNewCategory('');
+			// Refresh categories
+			const cats = await groceryService.getGroceryCategories();
+			setCategories(cats);
+		} catch (err) {
+			console.error(err);
+			alert(err.message || 'Failed to create category');
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
-	const handleDeleteCategory = (idx) => {
-		setCategories(categories => categories.filter((_, i) => i !== idx));
+	// --- Derived State for UI ---
+
+	// Group items by category for display
+	const getGroupedItems = () => {
+		const grouped = categories.map(cat => ({
+			...cat,
+			items: items.filter(i => i.category_id === cat.id)
+		}));
+
+		// Handle "Uncategorized" items
+		const uncategorizedItems = items.filter(i => !i.category_id);
+		if (uncategorizedItems.length > 0) {
+			grouped.push({
+				id: 'uncategorized',
+				name: 'Uncategorized',
+				items: uncategorizedItems,
+				active: true, // Virtual category is always active
+				hidden: false
+			});
+		}
+		return grouped;
 	};
 
-	const handleToggleActive = (idx) => {
-		setCategories(categories => categories.map((cat, i) =>
-			i === idx ? { ...cat, active: !cat.active } : cat
-		));
-	};
+	const groupedData = getGroupedItems();
+
+	if (loading) return <div className="loading-screen">Loading Marketplace...</div>;
+	if (error) return <div className="error-screen">Error: {error}</div>;
 
 	return (
 		<>
@@ -104,128 +159,129 @@ const Products = () => {
 				<div className="menu-header">
 					<span className="menu-emoji" role="img" aria-label="menu">🛒</span>
 					<div>
-						<h1 className="menu-title">Manage Products</h1>
-						<div className="menu-overview">Overview: <b>{items.length} Items</b> | <b>{items.filter(i => i.active).length} Active</b> | <b>{categories.length} Categories</b></div>
+						<h1 className="menu-title">Grocery Products</h1>
+						<div className="menu-overview">
+							Overview: <b>{items.length} Items</b> |
+							<b>{items.filter(i => i.is_available).length} Active</b> |
+							<b>{categories.length} Categories</b>
+						</div>
 					</div>
 				</div>
 				<div className="menu-actions">
-					<button className="btn btn-primary" onClick={handleModalOpen}>+ Add New Product</button>
-					<button className="btn btn-outline" onClick={handleCategoryModalOpen}>Manage Categories</button>
+					<button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Add New Product</button>
+					<button className="btn btn-outline" onClick={() => setShowCategoryModal(true)}>Manage Categories</button>
 				</div>
 
 				<div className="menu-categories">
-					{categories.map((cat, idx) => {
-						const catItems = items.filter(item => item.category === cat.name);
-						return (
-							<div className="category-accordion" key={cat.name}>
-								<div className="category-header">
-									<span className="category-arrow" onClick={() => handleAccordion(idx)}>{openIndex === idx ? '▼' : '▶'}</span>
-									<span className="category-name" onClick={() => handleAccordion(idx)}>{cat.name}</span>
-									<span className="category-items">{catItems.length} items</span>
-									{cat.hidden && <span className="category-badge hidden">Hidden</span>}
-									<span className="category-toggle">
-										<label className="switch">
-											<input type="checkbox" checked={cat.active} onChange={() => handleToggleActive(idx)} />
-											<span className="slider round"></span>
-										</label>
-									</span>
-								</div>
-								{openIndex === idx && (
-									<div className="category-content">
-										{catItems.length === 0 ? (
-											<div className="empty-items">No items to display.</div>
-										) : (
-											<div className="item-card-list">
-												{catItems.map((item, i) => (
-													<div className="item-card" key={item.name + i}>
-														{item.image && <img src={item.image} alt={item.name} className="item-card-img" />}
-														<div className="item-card-body">
-															<div className="item-card-header">
-																<span className="item-card-title">{item.name}</span>
-																{item.active && <span className="item-card-active">ACTIVE</span>}
-															</div>
-															<div className="item-card-category">{item.category}</div>
-															<div className="item-card-desc">{item.description}</div>
-															<div className="item-card-prices">
-																<span className="item-card-price full">Price: ₹{item.price}</span>
-																<span className="item-card-qty">Qty: {item.quantity} {item.unit}</span>
-															</div>
+					{groupedData.length === 0 ? (
+						<div className="empty-state">No products or categories found. Add one to get started!</div>
+					) : groupedData.map((cat, idx) => (
+						<div className="category-accordion" key={cat.id}>
+							<div className="category-header">
+								<span className="category-arrow" onClick={() => handleAccordion(idx)}>{openIndex === idx ? '▼' : '▶'}</span>
+								<span className="category-name" onClick={() => handleAccordion(idx)}>{cat.name}</span>
+								<span className="category-items">{cat.items.length} items</span>
+							</div>
+							{openIndex === idx && (
+								<div className="category-content">
+									{cat.items.length === 0 ? (
+										<div className="empty-items">No items in this category.</div>
+									) : (
+										<div className="item-card-list">
+											{cat.items.map((item) => (
+												<div className="item-card" key={item.id}>
+													{item.image_url && <img src={item.image_url} alt={item.name} className="item-card-img" />}
+													<div className="item-card-body">
+														<div className="item-card-header">
+															<span className="item-card-title">{item.name}</span>
+															{item.is_available && <span className="item-card-active">ACTIVE</span>}
+														</div>
+														<div className="item-card-desc">{item.description}</div>
+														<div className="item-card-prices">
+															<span className="item-card-price full">₹{item.price}</span>
+															<span className="item-card-qty">Qty: {item.stock_quantity} {item.unit}</span>
 														</div>
 													</div>
-												))}
-											</div>
-										)}
-									</div>
-								)}
-							</div>
-						);
-					})}
+												</div>
+											))}
+										</div>
+									)}
+								</div>
+							)}
+						</div>
+					))}
 				</div>
 			</div>
 
-			{/* Modals at the top level */}
+			{/* Create Item Modal */}
 			{showModal && (
 				<div className="modal-overlay">
 					<div className="modal-content">
 						<h2 className="modal-title">Add New Product</h2>
 						<form className="add-item-form" onSubmit={handleCreateItem}>
 							<label>Product Name
-								<input type="text" name="name" placeholder="e.g. Apple" value={newItem.name} onChange={handleInputChange} required />
+								<input type="text" name="name" value={newItem.name} onChange={handleInputChange} required />
 							</label>
-							<label>Description
-								<textarea name="description" placeholder="Short description of the product" value={newItem.description} onChange={handleInputChange} />
+
+							<label>Description (Optional)
+								<textarea name="description" value={newItem.description} onChange={handleInputChange} />
 							</label>
+
 							<div className="form-row">
-								<label>Category
-									<select name="category" value={newItem.category} onChange={handleInputChange} required>
-										<option value="">Select Category</option>
+								<label>Category (Optional)
+									<select name="category_id" value={newItem.category_id} onChange={handleInputChange}>
+										<option value="">No Category</option>
 										{categories.map((cat) => (
-											<option key={cat.name} value={cat.name}>{cat.name}</option>
+											<option key={cat.id} value={cat.id}>{cat.name}</option>
 										))}
 									</select>
 								</label>
-								<label>
-									Quantity
+
+								<label>Quantity & Unit
 									<div style={{ display: 'flex', gap: 8 }}>
-										<input type="number" name="quantity" placeholder="e.g. 10" value={newItem.quantity} onChange={handleInputChange} min="1" required style={{ width: '80px' }} />
-										<select name="unit" value={newItem.unit || ''} onChange={handleInputChange} required style={{ width: '110px' }}>
-											<option value="">Unit</option>
-											<option value="gram">Gram</option>
-											<option value="kg">Kg</option>
-											<option value="dozen">Dozen</option>
+										<input type="number" name="stock_quantity" placeholder="Qty" value={newItem.stock_quantity} onChange={handleInputChange} required style={{ width: '80px' }} />
+										<select name="unit" value={newItem.unit} onChange={handleInputChange} required style={{ width: '110px' }}>
 											<option value="pieces">Pieces</option>
+											<option value="kg">Kg</option>
+											<option value="gram">Gram</option>
 											<option value="litre">Litre</option>
 											<option value="ml">ml</option>
 											<option value="packet">Packet</option>
 											<option value="box">Box</option>
-											<option value="bottle">Bottle</option>
+											<option value="dozen">Dozen</option>
 										</select>
 									</div>
 								</label>
 							</div>
+
+							<label>Price (₹)
+								<input type="number" name="price" value={newItem.price} onChange={handleInputChange} required />
+							</label>
+
 							<label>Image
 								<div className="image-upload-box">
 									<input type="file" name="image" accept="image/*" onChange={handleInputChange} />
-									<span>Click to Upload Image</span>
+									<span>{newItem.image ? newItem.image.name : 'Click to Upload Image'}</span>
 								</div>
 							</label>
-							<label>Full Price (₹)
-								<input type="number" name="price" value={newItem.price} onChange={handleInputChange} required />
+
+							<label className="active-checkbox">
+								<input type="checkbox" name="active" checked={newItem.active} onChange={handleInputChange} />
+								<span>Active (Visible to users)</span>
 							</label>
-							<div className="form-row">
-								<label className="active-checkbox">
-									<input type="checkbox" name="active" checked={newItem.active} onChange={handleInputChange} />
-									<span>Active (Visible to users)</span>
-								</label>
-							</div>
+
 							<div className="modal-actions">
 								<button type="button" className="btn btn-cancel" onClick={handleModalClose}>Cancel</button>
-								<button type="submit" className="btn btn-primary">Create Product</button>
+								<button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+									{isSubmitting ? 'Creating...' : 'Create Product'}
+								</button>
 							</div>
 						</form>
 					</div>
 				</div>
 			)}
+
+			{/* Manage Categories Modal */}
 			{showCategoryModal && (
 				<div className="modal-overlay">
 					<div className="modal-content">
@@ -235,33 +291,25 @@ const Products = () => {
 								type="text"
 								placeholder="New category name"
 								value={newCategory}
-								onChange={e => setNewCategory(e.target.value)}
+								onChange={handleCategoryInputChange}
 								style={{ flex: 1 }}
 								required
 							/>
-							<button type="submit" className="btn btn-primary" style={{ minWidth: 110 }}>Add</button>
+							<button type="submit" className="btn btn-primary" style={{ minWidth: 110 }} disabled={isSubmitting}>
+								{isSubmitting ? 'Adding...' : 'Add'}
+							</button>
 						</form>
-						<hr style={{ margin: '18px 0 10px 0', border: 'none', borderTop: '1.5px solid #f3f4f6' }} />
-						<div style={{ fontWeight: 700, fontSize: '1.15rem', marginBottom: 12 }}>Existing Categories</div>
+
 						<div className="category-list-modal">
-							{categories.map((cat, idx) => (
-								<div className="category-modal-row" key={cat.name}>
-									<span style={{ fontWeight: 700, textTransform: 'lowercase', minWidth: 80 }}>{cat.name}</span>
-									<span style={{ color: '#6b7280', fontSize: '0.98rem', marginLeft: 8 }}>({cat.items} items)</span>
-									<span className="category-toggle">
-										<label className="switch">
-											<input type="checkbox" checked={cat.active} onChange={() => handleCategoryToggle(idx)} />
-											<span className="slider round"></span>
-										</label>
-									</span>
-									<button className="delete-category-btn" type="button" onClick={() => handleDeleteCategory(idx)} title="Delete">
-										<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="5.5" y="9.5" width="1.5" height="6" rx="0.75" fill="#bbb"/><rect x="10.25" y="9.5" width="1.5" height="6" rx="0.75" fill="#bbb"/><rect x="15" y="9.5" width="1.5" height="6" rx="0.75" fill="#bbb"/><rect x="4" y="6" width="14" height="2" rx="1" fill="#eee"/><rect x="7" y="4" width="8" height="2" rx="1" fill="#eee"/></svg>
-									</button>
+							{categories.map((cat) => (
+								<div className="category-modal-row" key={cat.id}>
+									<span style={{ fontWeight: 700 }}>{cat.name}</span>
 								</div>
 							))}
 						</div>
+
 						<div className="modal-actions" style={{ marginTop: 24 }}>
-							<button type="button" className="btn btn-cancel" onClick={handleCategoryModalClose}>Close</button>
+							<button type="button" className="btn btn-cancel" onClick={() => setShowCategoryModal(false)}>Close</button>
 						</div>
 					</div>
 				</div>
