@@ -182,10 +182,11 @@ const Menu = () => {
 						</div>
 					</div>
 				</div>
-				<div className="menu-actions">
+				<div className="menu-actions-row">
 					<button className="btn btn-primary" onClick={handleModalOpen}>+ Add New Item</button>
-					<button className="btn btn-outline" onClick={handleCategoryModalOpen}>Manage Categories</button>
-					<button className="btn btn-ghost">⏰ Special Serving Hours</button>
+					<button className="btn btn-outline" onClick={handleCategoryModalOpen}>
+						Categories</button>
+					<button className="btn btn-ghost">⏰Prime Hours</button>
 				</div>
 
 				<div className="menu-categories">

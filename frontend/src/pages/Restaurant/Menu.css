@@ -205,7 +205,7 @@ input:checked + .slider:before {
 .menu-container {
 	max-width: 1100px;
 	margin: 32px auto;
-	background: #fff;
+	 background: #fce8d3;
 	border-radius: 16px;
 	box-shadow: 0 2px 16px rgba(0,0,0,0.06);
 	padding: 32px 32px 40px 32px;
@@ -351,8 +351,8 @@ input:checked + .slider:before {
 		padding: 16px 4px 24px 4px;
 	}
 	.menu-header {
-		flex-direction: column;
-		align-items: flex-start;
+		flex-direction: row !important;
+		align-items: center !important;
 		gap: 8px;
 	}
 	.menu-title {
@@ -369,5 +369,28 @@ input:checked + .slider:before {
 	}
 	.category-content {
 		padding: 10px 10px 10px 24px;
+	}
+	/* Add this for the row layout */
+	.menu-actions-row {
+	  display: flex;
+	  gap: 8px;
+	  flex-wrap: wrap;
+	  margin-bottom: 18px;
+	}
+
+	@media (max-width: 700px) {
+	  .menu-actions-row {
+	    gap: 4px;
+	    margin-bottom: 12px;
+	  }
+	  .btn,
+	  .btn-primary,
+	  .btn-outline,
+	  .btn-ghost {
+	    padding: 6px 10px !important;
+	    font-size: 0.95rem !important;
+	    min-width: unset !important;
+	    border-radius: 8px !important;
+	  }
 	}
 }

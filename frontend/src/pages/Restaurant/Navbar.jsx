@@ -3,7 +3,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { auth } from '../../config/firebase';
 import { signOut } from 'firebase/auth';
 import { shopService } from '../../services/shopService';
+
 import NotificationBell from '../../components/common/NotificationBell';
+import FooterMobile from './footer';
 import './Navbar.css';
 
 
@@ -50,6 +52,17 @@ export default function Navbar() {
     { label: 'Reports', path: '/restaurant/reports' }
   ];
 
+  // Utility to detect mobile view
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 700);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 700);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Only show these links on mobile
+  const mobileNavLabels = ['Dashboard', 'Menu', 'Orders']; // Bookings removed from mobile top nav
+
   const handleLogout = async () => {
     if (window.confirm('Are you sure you want to logout?')) {
       try {
@@ -73,18 +86,23 @@ export default function Navbar() {
       <nav className="rest-navbar">
         <div className="rest-navbar-left">
           <img src="/logo.png" alt="Logo" className="rest-navbar-logo" />
-          <button
-            className={`admin-panel-btn ${isShopOpen ? 'open' : 'closed'}`}
-            onClick={toggleShopStatus}
-            disabled={loadingStatus}
-          >
-            <span className={isShopOpen ? 'dot-green' : 'dot-red'} />
-            Admin Panel<br />
-            <span className="open-label">{isShopOpen ? 'OPEN' : 'CLOSED'}</span>
-          </button>
+          <div className="admin-panel-desktop">
+            <button
+              className={`admin-panel-btn ${isShopOpen ? 'open' : 'closed'}`}
+              onClick={toggleShopStatus}
+              disabled={loadingStatus}
+            >
+              <span className={isShopOpen ? 'dot-green' : 'dot-red'} />
+              Admin Panel<br />
+              <span className="open-label">{isShopOpen ? 'OPEN' : 'CLOSED'}</span>
+            </button>
+          </div>
         </div>
         <div className="rest-navbar-center">
-          {navLinks.map(link => (
+          {(isMobile
+            ? navLinks.filter(link => mobileNavLabels.includes(link.label))
+            : navLinks
+          ).map(link => (
             <Link
               key={link.label}
               to={link.path}
@@ -111,6 +129,8 @@ export default function Navbar() {
         </div>
       </nav>
       <div className="rest-navbar-spacer" />
+      {/* Mobile Footer */}
+      <FooterMobile />
 
       {/* Sidebar */}
       <div className={`sidebar-overlay ${sidebarOpen ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}></div>
@@ -120,6 +140,14 @@ export default function Navbar() {
           <button className="sidebar-close" onClick={() => setSidebarOpen(false)}>✕</button>
         </div>
         <div className="sidebar-content">
+          <Link
+            to="/restaurant/bookings"
+            className="sidebar-btn"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <span className="sidebar-icon">📅</span>
+            Bookings
+          </Link>
           <button className="sidebar-btn profile-btn" onClick={handleProfileClick}>
             <span className="sidebar-icon">👤</span>
             Profile
