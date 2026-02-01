@@ -1,19 +1,42 @@
+/* Style placeholder for add-category input */
+.add-category-form input::placeholder {
+	color: #b0b0b0;
+	font-size: 1.04rem;
+	font-weight: 400;
+	opacity: 1;
+	letter-spacing: 0.01em;
+}
+/* Ensure gap between action buttons in menu-actions-row */
+.menu-actions-row > .btn,
+.menu-actions-row > .btn-primary,
+.menu-actions-row > .btn-outline,
+.menu-actions-row > .btn-ghost {
+	margin-right: 14px;
+}
+.menu-actions-row > .btn:last-child,
+.menu-actions-row > .btn-primary:last-child,
+.menu-actions-row > .btn-outline:last-child,
+.menu-actions-row > .btn-ghost:last-child {
+	margin-right: 0;
+}
 /* Manage Categories Modal Styles */
 .category-list-modal {
 	display: flex;
 	flex-direction: column;
 	gap: 14px;
 	margin-bottom: 10px;
+	max-height: 320px;
+	overflow-y: auto;
 }
 .category-modal-row {
 	display: flex;
 	align-items: center;
 	background: #f7f7f9;
-	border-radius: 10px;
-	padding: 12px 18px;
-	margin-bottom: 2px;
-	box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-	gap: 12px;
+		border-radius: 6px;
+		padding: 6px 10px;
+		margin-bottom: 2px;
+		box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+		gap: 6px;
 }
 .delete-category-btn {
 	background: none;
@@ -43,11 +66,11 @@
 }
 .modal-content {
 	background: #fff;
-	border-radius: 22px;
-	box-shadow: 0 8px 40px rgba(44,62,80,0.18);
-	padding: 32px 36px 28px 36px;
-	min-width: 380px;
-	max-width: 420px;
+	border-radius: 14px;
+	box-shadow: 0 4px 24px rgba(44,62,80,0.13);
+	padding: 18px 18px 16px 18px;
+	min-width: 320px;
+	max-width: 370px;
 	width: 100%;
 	position: relative;
 	animation: modalPop .18s cubic-bezier(.4,1.4,.6,1) 1;
@@ -65,7 +88,7 @@
 .add-item-form label {
 	display: block;
 	font-weight: 500;
-	margin-bottom: 10px;
+	margin-bottom: 2px;
 	color: #23272f;
 }
 .add-item-form input[type="text"],
@@ -73,17 +96,17 @@
 .add-item-form textarea,
 .add-item-form select {
 	width: 100%;
-	padding: 10px 12px;
-	border-radius: 8px;
-	border: 1.5px solid #e5e7eb;
-	margin-top: 4px;
-	margin-bottom: 14px;
-	font-size: 1rem;
+	padding: 4px 7px;
+	border-radius: 5px;
+	border: 1px solid #e5e7eb;
+	margin-top: 1px;
+	margin-bottom: 4px;
+	font-size: 0.93rem;
 	background: #f9fafb;
 	transition: border 0.18s;
 }
 .add-item-form textarea {
-	min-height: 48px;
+	min-height: 20px;
 	resize: vertical;
 }
 .add-item-form input:focus,
@@ -237,8 +260,8 @@ input:checked + .slider:before {
 
 .menu-actions {
 	display: flex;
-	gap: 14px;
-	margin-bottom: 28px;
+		gap: 6px;
+		margin-bottom: 8px;
 }
 .btn {
 	font-size: 1rem;
@@ -282,7 +305,7 @@ input:checked + .slider:before {
 	gap: 18px;
 }
 .category-accordion {
-	background: #f7f7f9;
+	background: #f5ccac;
 	border-radius: 12px;
 	box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 	overflow: hidden;
@@ -372,15 +395,16 @@ input:checked + .slider:before {
 	}
 	/* Add this for the row layout */
 	.menu-actions-row {
-	  display: flex;
-	  gap: 8px;
-	  flex-wrap: wrap;
-	  margin-bottom: 18px;
+		display: flex;
+		gap: 18px;
+		flex-wrap: wrap;
+		margin-bottom: 18px;
+		position: sticky;
 	}
 
 	@media (max-width: 700px) {
 	  .menu-actions-row {
-	    gap: 4px;
+	    gap: 0px;
 	    margin-bottom: 12px;
 	  }
 	  .btn,

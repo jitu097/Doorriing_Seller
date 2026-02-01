@@ -1,4 +1,197 @@
+/* Hide/show item card variants for mobile/desktop */
+.item-card-mobile {
+	display: none;
+}
+.item-card-desktop {
+	display: flex;
+}
+@media (max-width: 700px) {
+	.item-card-mobile {
+		display: block !important;
+		width: 100%;
+	}
+	.item-card-desktop {
+		display: none !important;
+	}
+}
 
+/* Item Card Modern Styles */
+.item-card-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 18px;
+}
+
+.item-card.modern {
+	background: #f8f5ef;
+	border-radius: 16px;
+	box-shadow: 0 2px 8px rgba(44,62,80,0.06);
+	display: flex;
+	align-items: flex-start;
+	gap: 16px;
+	padding: 18px 18px 14px 18px;
+	min-width: 320px;
+	max-width: 340px;
+	position: relative;
+	flex: 1 1 320px;
+}
+
+.item-badge-active {
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	background: #22d06a;
+	color: #fff;
+	font-size: 0.78rem;
+	font-weight: 700;
+	border-radius: 5px;
+	padding: 2px 8px;
+	z-index: 2;
+	box-shadow: 0 1px 4px rgba(34,208,106,0.10);
+}
+
+.item-card-imgbox {
+	width: 64px;
+	height: 64px;
+	background: #f3e7d7;
+	border-radius: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-right: 8px;
+	flex-shrink: 0;
+	position: relative;
+}
+.item-card-img {
+	width: 56px;
+	height: 56px;
+	object-fit: cover;
+	border-radius: 10px;
+}
+.item-card-img-placeholder {
+	font-size: 2.2rem;
+	color: #b85c1c;
+}
+
+.item-card-main {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+.item-card-row {
+	display: flex;
+	align-items: center;
+	width: 100%;
+}
+.item-card-row-top {
+	justify-content: space-between;
+	gap: 8px;
+}
+.item-card-title {
+	font-size: 1.18rem;
+	font-weight: 700;
+	color: #23272f;
+	flex: 1;
+	margin-right: 8px;
+}
+.item-card-btn {
+	background: none;
+	border: none;
+	cursor: pointer;
+	padding: 4px;
+	border-radius: 6px;
+	transition: background 0.15s;
+	margin-left: 4px;
+}
+.item-card-btn-edit:hover {
+	background: #ffe5d0;
+}
+.item-card-btn-delete:hover {
+	background: #ffe5e5;
+}
+.item-card-row-prices {
+	gap: 10px;
+	margin: 6px 0 2px 0;
+}
+.item-card-price-half {
+	background: #e6f0ff;
+	color: #1c5cb8;
+	font-size: 1.05rem;
+	border-radius: 8px;
+	padding: 4px 12px;
+	font-weight: 600;
+}
+.item-card-price-full {
+	background: #ffe5d0;
+	color: #b85c1c;
+	font-size: 1.05rem;
+	border-radius: 8px;
+	padding: 4px 12px;
+	font-weight: 600;
+	margin-left: 6px;
+}
+.item-card-row-bottom {
+	justify-content: flex-start;
+	gap: 12px;
+	margin-top: 4px;
+}
+.item-card-bestseller {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	background: #fffbe5;
+	border-radius: 8px;
+	padding: 4px 10px;
+	font-weight: 600;
+	color: #b85c1c;
+	font-size: 1rem;
+}
+.item-card-bestseller input[type="checkbox"] {
+	accent-color: #f7931e;
+	width: 18px;
+	height: 18px;
+}
+.item-card-qty {
+	background: #f7f7f9;
+	color: #23272f;
+	border-radius: 8px;
+	padding: 4px 10px;
+	font-size: 0.98rem;
+	font-weight: 500;
+}
+
+@media (max-width: 700px) {
+	.item-card-list {
+		flex-direction: column;
+		gap: 12px;
+	}
+	.item-card.modern {
+		min-width: 0;
+		max-width: 100%;
+		flex: 1 1 100%;
+		padding: 12px 8px 10px 8px;
+		gap: 10px;
+	}
+	.item-card-imgbox {
+		width: 48px;
+		height: 48px;
+	}
+	.item-card-img {
+		width: 40px;
+		height: 40px;
+	}
+	.item-card-title {
+		font-size: 1rem;
+	}
+	.item-card-row-prices {
+		font-size: 0.98rem;
+	}
+}
+body {
+  background: #e4ba8e;
+  margin: 0;
+}
 /* Manage Categories Modal Styles */
 .category-list-modal {
 	display: flex;
@@ -206,7 +399,7 @@ input:checked + .slider:before {
 .menu-container {
 	max-width: 1100px;
 	margin: 32px auto;
-	background: #fff;
+	 background: #fce8d3;
 	border-radius: 16px;
 	box-shadow: 0 2px 16px rgba(0,0,0,0.06);
 	padding: 32px 32px 40px 32px;
@@ -283,7 +476,7 @@ input:checked + .slider:before {
 	gap: 18px;
 }
 .category-accordion {
-	background: #f7f7f9;
+	background: #f5ccac;
 	border-radius: 12px;
 	box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 	overflow: hidden;
@@ -344,17 +537,22 @@ input:checked + .slider:before {
 		padding: 16px 4px 24px 4px;
 	}
 	.menu-header {
-		flex-direction: column;
-		align-items: flex-start;
+		flex-direction: row;
+		align-items: center;
 		gap: 8px;
 	}
 	.menu-title {
 		font-size: 1.3rem;
 	}
 	.menu-actions {
-		flex-direction: column;
+		flex-direction: row;
 		gap: 8px;
 		margin-bottom: 18px;
+		justify-content: stretch;
+	}
+	.menu-actions .btn {
+		flex: 1 1 0;
+		min-width: 0;
 	}
 	.category-header {
 		font-size: 1rem;

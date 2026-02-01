@@ -189,20 +189,97 @@ const Products = () => {
 									) : (
 										<div className="item-card-list">
 											{cat.items.map((item) => (
-												<div className="item-card" key={item.id}>
-													{item.image_url && <img src={item.image_url} alt={item.name} className="item-card-img" />}
-													<div className="item-card-body">
-														<div className="item-card-header">
+												<>
+												{/* Desktop view: keep existing card */}
+												<div className="item-card modern item-card-desktop" key={item.id}>
+													{/* Active badge */}
+													{item.is_available && (
+														<span className="item-badge-active">ACTIVE</span>
+													)}
+													{/* Product image or icon */}
+													<div className="item-card-imgbox">
+														{item.image_url ? (
+															<img src={item.image_url} alt={item.name} className="item-card-img" />
+														) : (
+															<span className="item-card-img-placeholder">🛒</span>
+														)}
+													</div>
+													{/* Main info */}
+													<div className="item-card-main">
+														<div className="item-card-row item-card-row-top">
 															<span className="item-card-title">{item.name}</span>
-															{item.is_available && <span className="item-card-active">ACTIVE</span>}
+															<button className="item-card-btn item-card-btn-edit" title="Edit">
+																<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M14.7 2.29a1 1 0 0 1 1.42 0l1.59 1.59a1 1 0 0 1 0 1.42l-9.17 9.17-2.12.53.53-2.12 9.17-9.17z" stroke="#b85c1c" strokeWidth="1.5" fill="none"/><path d="M12.88 4.12l2.12 2.12" stroke="#b85c1c" strokeWidth="1.5"/></svg>
+															</button>
+															<button className="item-card-btn item-card-btn-delete" title="Delete">
+																<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="5.5" y="8" width="9" height="7" rx="2" stroke="#b85c1c" strokeWidth="1.5"/><path d="M8 10v3m4-3v3" stroke="#b85c1c" strokeWidth="1.5"/><rect x="8" y="4" width="4" height="2" rx="1" stroke="#b85c1c" strokeWidth="1.5"/><path d="M4 6h12" stroke="#b85c1c" strokeWidth="1.5"/></svg>
+															</button>
 														</div>
-														<div className="item-card-desc">{item.description}</div>
-														<div className="item-card-prices">
-															<span className="item-card-price full">₹{item.price}</span>
+														<div className="item-card-row item-card-row-prices">
+															<span className="item-card-price-half">Half: <b>₹{item.price_half ?? '--'}</b></span>
+															<span className="item-card-price-full">Full: <b>₹{item.price_full ?? item.price ?? '--'}</b></span>
+														</div>
+														<div className="item-card-row item-card-row-bottom">
+															<label className="item-card-bestseller">
+																<input type="checkbox" checked={item.is_best_seller || false} readOnly />
+																<span>Best Seller</span>
+															</label>
 															<span className="item-card-qty">Qty: {item.stock_quantity} {item.unit}</span>
 														</div>
 													</div>
 												</div>
+												{/* Mobile view: new card UI, hidden on desktop */}
+												<div className="item-card-mobile" key={item.id + '-mobile'}>
+													<div style={{ display: 'flex', alignItems: 'center', gap: 18, background: '#f4f0e6', borderRadius: 16, boxShadow: '0 2px 8px #0001', padding: 18, marginBottom: 18, minWidth: 0, width: '100%' }}>
+														{/* Avatar and status */}
+														<div style={{ position: 'relative', minWidth: 80, minHeight:90 }}>
+															<img
+																src={item.image_url || '/avatar-default.png'}
+																alt={item.name}
+																style={{ width: 100, height: 90, borderRadius: 16, objectFit: 'cover', position: 'relative', left: -20 }}
+															/>
+															{item.is_available && (
+																<span style={{ position: 'absolute', top: -35, left: -9, background: '#22c55e', color: '#fff', fontWeight: 700, fontSize: 13, borderRadius: 8, padding: '2px 10px', boxShadow: '0 1px 4px #0002' }}>
+																	ACTIVE
+																</span>
+															)}
+														</div>
+														{/* Main content */}
+														<div style={{ flex: 1, minWidth: 0 }}>
+															<div style={{ fontWeight: 700, fontSize: 20, marginBottom: 30 }}>{item.name}</div>
+															<div style={{ color: '#0b0d12', fontSize: 15, marginBottom: 6 }}>{item.description}</div>
+															<div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+																{item.half_portion_price && (
+																	<span style={{ background: '#e0edff', color: '#2563eb', border: 'none', borderRadius: 0, padding: '4px 16px', fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center' }}>
+																		Half: ₹{item.half_portion_price}
+																	</span>
+																)}
+																<span style={{ background: '#ffedd5', color: '#ea580c', border: 'none', borderRadius: 8, padding: '4px 16px', fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center' }}>
+																	Full: ₹{item.price}
+																</span>
+															</div>
+															<div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+																<label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+																	<input type="checkbox" checked={item.is_best_seller || false} readOnly style={{ width: 22, height: 22, marginRight: -3, marginLeft: -8 }} />
+																	<span style={{ background: '#fbbf24', color: '#fff', borderRadius: 6, padding: '2px 7px', fontWeight: 700, fontSize: 15, marginRight: 2 }}>Best Seller</span>
+																</label>
+															</div>
+														</div>
+														{/* Actions */}
+														<div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-end' }}>
+															<button style={{ background: '#e0f2fe', border: 'none', borderRadius: 8, padding: 6, marginBottom: 2, cursor: 'pointer' }} title={item.is_active ? 'Deactivate' : 'Activate'}>
+																<svg width="22" height="22" fill="none" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="2" rx="1" fill="#2563eb"/></svg>
+															</button>
+															<button style={{ background: '#e0e7ff', border: 'none', borderRadius: 8, padding: 6, marginBottom: 2, cursor: 'pointer' }} title="Edit">
+																<img src="/edit.png" alt="Edit" style={{ width: 22, height: 22 }} />
+															</button>
+															<button style={{ background: '#fee2e2', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer' }} title="Delete">
+																<img src="/delete.png" alt="Delete" style={{ width: 22, height: 22 }} />
+															</button>
+														</div>
+													</div>
+												</div>
+												</>
 											))}
 										</div>
 									)}

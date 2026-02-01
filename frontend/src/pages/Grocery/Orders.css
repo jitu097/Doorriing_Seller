@@ -17,10 +17,31 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 1.5rem;
+	gap: 6px;
+	background: #fff;
+	border: 2px solid #ff6b35;
+	color: #ff6b35;
+	padding: 0.5rem 1.3rem 0.5rem 1.1rem;
+	border-radius: 999px;
+	font-weight: 700;
+	font-size: 1.08rem;
+	cursor: pointer;
+	transition: background 0.18s, color 0.18s, border 0.18s;
+	box-shadow: none;
+	position: relative;
 }
-.orders-header-row h2 {
-	font-size: 1.5rem;
+.orders-tab.active {
+	background: linear-gradient(90deg, #ff6b35 0%, #f97316 100%);
+	color: #fff;
+	border: 2px solid #ff6b35;
+	box-shadow: 0 2px 8px rgba(255,107,53,0.10);
+}
+.tab-count {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	color: #0a0503;
 	font-weight: 700;
 	margin: 0;
 }
@@ -148,25 +169,59 @@
 	color: #222;
 }
 
+
 body {
-	background: #f8fafc;
+	background: #e6bb8a;
+}
+
+
+.orders-page {
+	max-width: 1200px;
+	margin: 24px auto;
+	padding: 20px;
 }
 
 .orders-container {
-	max-width: 900px;
-	margin: 2.5rem auto;
-	background: #fff7ed;
-	border-radius: 22px;
-	box-shadow: 0 8px 32px 0 rgba(0,0,0,0.10);
-	padding: 2.5rem 2rem 2rem 2rem;
-	font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+	background: none;
+	box-shadow: none;
+	border-radius: 0;
+	padding: 0;
+	margin: 0;
 }
 
 .orders-header {
+	margin-bottom: 18px;
+}
+
+.orders-title-box {
 	display: flex;
-	align-items: flex-end;
-	gap: 1.2rem;
-	margin-bottom: 1.5rem;
+	gap: 14px;
+	align-items: center;
+}
+
+.orders-icon {
+	font-size: 2.4rem;
+	background: none !important;
+	padding: 0 !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+}
+
+.orders-emoji {
+	background: none !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	padding: 0 !important;
+}
+
+.orders-title-box h1 {
+	margin: 0;
+	font-size: 2rem;
+}
+
+.orders-title-box p {
+	margin: 4px 0 0;
+	color: #6b7280;
 }
 .orders-emoji {
 	font-size: 2.2rem;
@@ -196,16 +251,17 @@ body {
 	border: none;
 	font-size: 1.08rem;
 	font-weight: 600;
-	color: #888;
+	color: #fb5b21;
+	background: rgb(252, 244, 244);
 	cursor: pointer;
 	padding: 0.3rem 0.7rem;
 	border-radius: 8px 8px 0 0;
 	transition: color 0.2s, background 0.2s;
 }
 .orders-tab.active {
-	color: #ea580c;
-	background: #fff1e6;
-	border-bottom: 3px solid #ea580c;
+	color: #f3eeeb;
+	background:  #ea580c;
+	border-bottom: 3px solid #f9f0ec;
 }
 
 .orders-list {
@@ -348,5 +404,10 @@ body {
 	}
 	.order-card {
 		padding: 1rem 0.5rem;
+	}
+	.orders-tabs {
+		flex-wrap: wrap;
+		gap: 8px;
+		justify-content: flex-start;
 	}
 }

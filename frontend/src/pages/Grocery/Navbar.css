@@ -1,80 +1,163 @@
-/* Grocery Navbar Styles (mirroring Restaurant) */
-.grocery-navbar {
+
+/* GLOBAL SAFETY */
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* NAVBAR */
+.rest-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 72px;
+  background: #fce8d3;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #fff7ed;
-  padding: 0.5rem 2rem;
-  border-bottom: 1px solid #eee;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  padding: 0 16px;
+  z-index: 1200;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
-.grocery-navbar-left {
+
+.rest-navbar-spacer {
+  height: 72px;
+}
+
+.rest-navbar-left {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 8px;
 }
-.grocery-navbar-logo {
-  height: 38px;
-}
-.admin-panel-btn {
-  background: #fff;
-  border: 1.5px solid #10b981;
-  color: #10b981;
-  border-radius: 8px;
-  font-weight: 600;
-  padding: 0.3rem 1.1rem;
-  font-size: 1rem;
-  margin-left: 0.5rem;
-}
-.dot-green {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  background: #10b981;
+
+.rest-navbar-logo {
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  margin-right: 6px;
+  background: white;
 }
-.open-label {
-  font-size: 0.8rem;
-  color: #10b981;
-}
-.grocery-navbar-center {
+
+/* CENTER LINKS */
+.rest-navbar-center {
   display: flex;
-  gap: 1.2rem;
+  gap: 12px;
 }
-.grocery-navbar-link {
-  color: #ea580c;
-  font-weight: 600;
+
+.rest-navbar-link {
+  padding: 6px 14px;
+  border-radius: 20px;
   text-decoration: none;
-  font-size: 1.08rem;
-  padding: 0.2rem 0.7rem;
-  border-radius: 6px;
-  transition: background 0.18s, color 0.18s;
+  color: #222;
+  font-weight: 500;
+  font-size: 0.95rem;
 }
-.grocery-navbar-link.active, .grocery-navbar-link:hover {
-  background: #ffe5b4;
-  color: #fff;
+
+.rest-navbar-link.active {
+  background: #6d1d1d;
+  color: white;
 }
-.grocery-navbar-right {
+
+/* RIGHT */
+.rest-navbar-right {
   display: flex;
   align-items: center;
+  gap: 8px;
 }
-.logout-btn {
-  background: #f87171;
-  color: #fff;
+
+/* ADMIN BUTTON */
+.admin-panel-btn {
+  background: #22c55e;
   border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  padding: 0.4rem 1.2rem;
-  font-size: 1rem;
+  border-radius: 20px;
+  color: white;
+  padding: 6px 12px;
+  font-size: 0.8rem;
   cursor: pointer;
-  transition: background 0.18s;
 }
-.logout-btn:hover {
+
+.admin-panel-btn.closed {
   background: #dc2626;
 }
-.grocery-navbar-spacer {
-  height: 60px;
+
+/* DOTS */
+.dot-green, .dot-red {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 6px;
+}
+.dot-green { background: #22c55e; }
+.dot-red { background: #dc2626; }
+
+/* HAMBURGER */
+.hamburger-btn {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.hamburger-btn span {
+  width: 22px;
+  height: 2px;
+  background: #333;
+}
+
+/* SIDEBAR */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.3s;
+  z-index: 1299;
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: min(85vw, 320px);
+  height: 100vh;
+  background: white;
+  z-index: 1300;
+  transition: 0.3s;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar.active {
+  right: 0;
+}
+
+.sidebar-header {
+  padding: 16px;
+  font-size: 1.2rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.sidebar-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* MOBILE */
+@media (max-width: 700px) {
+  .rest-navbar-link {
+    font-size: 0.85rem;
+    padding: 6px 10px;
+  }
 }

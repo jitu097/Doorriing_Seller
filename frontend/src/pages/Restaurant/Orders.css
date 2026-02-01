@@ -1,189 +1,198 @@
-/* Orders Page Modern Styles */
-.orders-container {
-	max-width: 98vw;
-	margin: 32px auto;
-	background: #f7f7f9;
-	border-radius: 16px;
-	min-height: 80vh;
-	padding: 24px 18px 40px 18px;
+/* PAGE */
+.orders-page {
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 20px;
 }
+
+/* HEADER */
 .orders-header {
-	display: flex;
-	align-items: center;
-	gap: 18px;
-	margin-bottom: 18px;
+  margin-bottom: 18px;
 }
+
+.orders-title-box {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.orders-icon {
+  font-size: 2.4rem;
+  background: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
 .orders-emoji {
-	font-size: 2.2rem;
-	background: #f9fafb;
-	border-radius: 12px;
-	padding: 10px;
-	box-shadow: 0 1px 4px rgba(255,107,53,0.08);
+  background: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
 }
-.orders-title {
-	font-size: 2rem;
-	font-weight: 800;
-	margin: 0 0 2px 0;
-	color: #23272f;
+
+.orders-title-box h1 {
+  margin: 0;
+  font-size: 2rem;
 }
-.orders-overview {
-	color: #6b7280;
-	font-size: 1.05rem;
+
+.orders-title-box p {
+  margin: 4px 0 0;
+  color: #6b7280;
 }
+
+/* TABS */
 .orders-tabs {
-	display: flex;
-	gap: 10px;
-	margin-bottom: 18px;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 20px;
 }
+
 .orders-tab {
-	background: #fff;
-	color: #ff6b35;
-	border: 2px solid #ff6b35;
-	border-radius: 8px 8px 0 0;
-	font-weight: 600;
-	font-size: 1rem;
-	padding: 8px 22px;
-	cursor: pointer;
-	transition: background 0.18s, color 0.18s;
+  border: 2px solid #ff6b35;
+  background: #fff;
+  color: #ff6b35;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
 }
+
 .orders-tab.active {
-	background: linear-gradient(90deg, #ff6b35 0%, #f7931e 100%);
-	color: #fff;
+  background: linear-gradient(90deg, #ff6b35, #f97316);
+  color: #fff;
 }
-.orders-list {
-	display: flex;
-	gap: 18px;
-	margin-top: 10px;
-	flex-wrap: wrap;
+
+.tab-count {
+  background: rgba(255,107,53,0.15);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.8rem;
 }
+
+/* GRID */
+.orders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+/* CARD */
 .order-card {
-	background: #fff;
-	border-radius: 16px;
-	box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-	min-width: 340px;
-	max-width: 370px;
-	flex: 1 1 340px;
-	display: flex;
-	flex-direction: column;
-	margin-bottom: 18px;
-	border-top: 4px solid #eee;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
-.order-card-header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 16px 18px 8px 18px;
+
+/* TOP */
+.order-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
+
 .order-id {
-	font-weight: 700;
-	color: #23272f;
-	font-size: 1.08rem;
+  font-weight: 800;
 }
+
 .order-status {
-	font-size: 0.98rem;
-	font-weight: 700;
-	padding: 4px 16px;
-	border-radius: 12px;
-	background: #f3f4f6;
-	letter-spacing: 1px;
+  font-weight: 800;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-radius: 999px;
 }
-.order-customer {
-	padding: 0 18px 8px 18px;
-	color: #23272f;
-	font-size: 0.98rem;
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
+
+/* SECTIONS */
+.order-section {
+  font-size: 0.95rem;
+  color: #374151;
 }
+
+/* ITEMS */
 .order-items {
-	padding: 0 18px 8px 18px;
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
+  border-top: 1px dashed #eee;
+  padding-top: 8px;
 }
+
 .order-item {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	font-size: 0.98rem;
+  display: flex;
+  gap: 8px;
+  font-size: 0.95rem;
 }
-.order-item-img {
-	width: 32px;
-	height: 32px;
-	object-fit: cover;
-	border-radius: 8px;
-	background: #f7f7f9;
+
+.qty {
+  font-weight: 800;
+  color: #ff6b35;
 }
-.order-item-qty {
-	font-weight: 700;
-	color: #ff6b35;
+
+.price {
+  margin-left: auto;
+  font-weight: 700;
 }
-.order-item-name {
-	font-weight: 600;
-}
-.order-item-type {
-	color: #6b7280;
-}
-.order-item-price {
-	margin-left: auto;
-	font-weight: 700;
-	color: #23272f;
-}
+
+/* SUMMARY */
 .order-summary {
-	padding: 0 18px 8px 18px;
-	color: #23272f;
-	font-size: 0.98rem;
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
+  border-top: 1px dashed #eee;
+  padding-top: 8px;
+  font-size: 1rem;
 }
-.order-driver {
-	color: #ff6b35;
-	font-weight: 600;
-}
+
+/* ACTIONS */
 .order-actions {
-	display: flex;
-	gap: 10px;
-	padding: 0 18px 8px 18px;
+  display: flex;
+  gap: 10px;
 }
-.order-action-btn {
-	background: #0366d6;
-	color: #fff;
-	font-weight: 700;
-	border: none;
-	border-radius: 8px;
-	padding: 8px 18px;
-	font-size: 1.08rem;
-	cursor: pointer;
-	transition: background 0.18s;
+
+.btn {
+  flex: 1;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  color: #fff;
 }
-.order-action-btn.accept {
-	background: #22d06a;
-}
-.order-action-btn.reject {
-	background: #dc2626;
-}
+
+.btn.success { background: #22c55e; }
+.btn.danger { background: #ef4444; }
+.btn.primary { background: #3b82f6; }
+.btn.warning { background: #f97316; }
+
+/* FOOTER */
 .order-footer {
-	padding: 0 18px 12px 18px;
-	color: #6b7280;
-	font-size: 0.92rem;
-	text-align: right;
+  font-size: 0.85rem;
+  color: #6b7280;
+  text-align: right;
 }
 
-.loading, .no-orders {
-	text-align: center;
-	padding: 3rem;
-	font-size: 1.125rem;
-	color: #666;
+/* EMPTY / LOADING */
+.orders-empty,
+.orders-loading {
+  background: #fff;
+  padding: 60px;
+  border-radius: 18px;
+  text-align: center;
+  font-size: 1.2rem;
+  color: #6b7280;
 }
 
-@media (max-width: 900px) {
-	.orders-list {
-		flex-direction: column;
-		gap: 12px;
-	}
-	.order-card {
-		min-width: 98vw;
-		max-width: 98vw;
-	}
+/* MOBILE */
+@media (max-width: 600px) {
+  .orders-page {
+    padding: 14px;
+  }
+
+  .orders-title-box h1 {
+    font-size: 1.5rem;
+  }
 }

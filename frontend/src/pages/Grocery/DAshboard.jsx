@@ -72,7 +72,7 @@ function Dashboard() {
 				{/* Stats Grid */}
 				<div className="stats-grid">
 					<div className="stat-card">
-						<div className="stat-icon revenue-icon">💰</div>
+						<div className="stat-icon revenue-icon"><img src="/potli.png" alt="Total Revenue" style={{width:40,height:40}} /></div>
 						<div className="stat-info">
 							<h3>Total Revenue</h3>
 							<p className="stat-value">₹{(stats.totalRevenue || 0).toLocaleString()}</p>
@@ -81,7 +81,7 @@ function Dashboard() {
 					</div>
 
 					<div className="stat-card">
-						<div className="stat-icon orders-icon">🥡</div>
+						<div className="stat-icon orders-icon"><img src="/checkout.png" alt="Active Orders" style={{width:40,height:40}} /></div>
 						<div className="stat-info">
 							<h3>Active Orders</h3>
 							<p className="stat-value">{activeOrdersCount}</p>
@@ -90,7 +90,7 @@ function Dashboard() {
 					</div>
 
 					<div className="stat-card">
-						<div className="stat-icon success-icon">✅</div>
+						<div className="stat-icon success-icon"><img src="/delivered.png" alt="Delivered" style={{width:40,height:40}} /></div>
 						<div className="stat-info">
 							<h3>Delivered</h3>
 							<p className="stat-value">{stats.delivered || 0}</p>
@@ -99,7 +99,7 @@ function Dashboard() {
 					</div>
 
 					<div className="stat-card">
-						<div className="stat-icon cancel-icon">❌</div>
+						<div className="stat-icon cancel-icon"><img src="/cancel.png" alt="Cancelled" style={{width:40,height:40}} /></div>
 						<div className="stat-info">
 							<h3>Cancelled</h3>
 							<p className="stat-value">{stats.cancelled || 0}</p>
@@ -149,40 +149,7 @@ function Dashboard() {
 						</div>
 					</div>
 
-					{/* Quick Actions Panel */}
-					<div className="dashboard-panel quick-actions-panel">
-						<h2>Quick Actions</h2>
-						<div className="actions-grid">
-							<Link to="/grocery/products" className="action-card">
-								<span className="action-icon">🛒</span>
-								<div className="action-details">
-									<h3>Manage Products</h3>
-									<p>Add or edit items</p>
-								</div>
-							</Link>
-							<Link to="/grocery/orders" className="action-card">
-								<span className="action-icon">📦</span>
-								<div className="action-details">
-									<h3>View Orders</h3>
-									<p>Track delivery status</p>
-								</div>
-							</Link>
-							<Link to="/grocery/offers" className="action-card">
-								<span className="action-icon">🏷️</span>
-								<div className="action-details">
-									<h3>Create Offer</h3>
-									<p>Boost sales now</p>
-								</div>
-							</Link>
-							<Link to="/grocery/reports" className="action-card">
-								<span className="action-icon">📈</span>
-								<div className="action-details">
-									<h3>View Reports</h3>
-									<p>Check analytics</p>
-								</div>
-							</Link>
-						</div>
-					</div>
+					
 				</div>
 			</div>
 		</>

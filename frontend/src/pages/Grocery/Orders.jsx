@@ -1,178 +1,206 @@
 
+
 import React, { useState, useEffect } from 'react';
 import Navbar from './Navbar';
-import './Orders.css';
 import groceryService from '../../services/groceryService';
+import './Orders.css';
 
 const orderTabs = [
 	{ label: 'All', key: 'all' },
-	{ label: 'Pending', key: 'Pending' },
-	{ label: 'Confirmed', key: 'Confirmed' },
-	{ label: 'Preparing', key: 'Preparing' },
-	{ label: 'Out for Delivery', key: 'OutForDelivery' },
-	{ label: 'Delivered', key: 'Delivered' },
-	{ label: 'Cancelled', key: 'Cancelled' },
+	{ label: 'Pending', key: 'pending' },
+	{ label: 'Confirmed', key: 'confirmed' },
+	{ label: 'Preparing', key: 'preparing' },
+	{ label: 'Out for Delivery', key: 'out_for_delivery' },
+	{ label: 'Delivered', key: 'delivered' },
+	{ label: 'Cancelled', key: 'cancelled' },
 ];
 
 const statusColors = {
-	Preparing: '#22d06a',
-	Pending: '#3b82f6',
-	Confirmed: '#f59e42',
-	OutForDelivery: '#f7931e',
-	Delivered: '#22d06a',
-	Cancelled: '#dc2626',
-};
-
-const statusLabels = {
-	Preparing: 'PREPARING',
-	Pending: 'PENDING',
-	Confirmed: 'CONFIRMED',
-	OutForDelivery: 'OUT FOR DELIVERY',
-	Delivered: 'DELIVERED',
-	Cancelled: 'CANCELLED',
+	pending: '#f59e0b',
+	confirmed: '#3b82f6',
+	preparing: '#8b5cf6',
+	out_for_delivery: '#f97316',
+	delivered: '#22c55e',
+	cancelled: '#ef4444',
 };
 
 export default function Orders() {
-	const [tab, setTab] = useState('all');
 	const [orders, setOrders] = useState([]);
 	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState(null);
-	const [refreshTrigger, setRefreshTrigger] = useState(0);
+	const [tab, setTab] = useState('all');
 
 	useEffect(() => {
-		const fetchOrders = async () => {
-			setLoading(true);
-			try {
-				const filters = {};
-				if (tab !== 'all') {
-					filters.status = tab;
-				}
-				const response = await groceryService.getOrders(filters);
-				// Handle both structure types if response wraps data differently
-				// service returns "api(...)" which usually returns json.
-				// backend order.service.js returns { orders: [], pagination: {} }
-
-				const ordersData = response.data?.orders || response.orders || [];
-				setOrders(ordersData);
-			} catch (err) {
-				console.error("Failed to fetch orders:", err);
-				setError("Failed to load orders");
-			} finally {
-				setLoading(false);
-			}
-		};
-
 		fetchOrders();
-	}, [tab, refreshTrigger]);
+		// eslint-disable-next-line
+	}, []);
 
-	const handleStatusUpdate = async (orderId, newStatus) => {
+	const fetchOrders = async () => {
 		try {
-			// Optimistic update could be done here, but safe to just refresh
-			await groceryService.updateOrderStatus(orderId, newStatus);
-			setRefreshTrigger(prev => prev + 1);
-		} catch (err) {
-			alert("Failed to update status: " + err.message);
+			setLoading(true);
+			const response = await groceryService.getOrders();
+			const ordersData = response?.orders || response?.data?.orders || response || [];
+			setOrders(Array.isArray(ordersData) ? ordersData : []);
+		} catch (e) {
+			console.error(e);
+			setOrders([]);
+		} finally {
+			setLoading(false);
 		}
 	};
 
-	// Determine available actions based on status
-	const getActions = (order) => {
-		const status = order.status;
-		if (status === 'Pending') return ['Confirmed', 'Cancelled'];
-		if (status === 'Confirmed') return ['Preparing', 'Cancelled'];
-		if (status === 'Preparing') return ['OutForDelivery'];
-		if (status === 'OutForDelivery') return ['Delivered'];
-		return [];
+	const handleStatusChange = async (id, status) => {
+		await groceryService.updateOrderStatus(id, status);
+		fetchOrders();
 	};
 
-	const formatDate = (dateString) => {
-		if (!dateString) return '';
-		return new Date(dateString).toLocaleString('en-IN');
-	};
+	const filteredOrders =
+		tab === 'all' ? orders : orders.filter(o => (o.status || '').toLowerCase() === tab);
 
 	return (
 		<>
 			<Navbar />
-			<div className="orders-container">
+			<div className="orders-page">
+				{/* HEADER */}
 				<div className="orders-header">
-					<span className="orders-emoji">🛒</span>
-					<div>
-						<h1 className="orders-title">Manage Orders</h1>
-						<div className="orders-overview">
-							{/* Note: This count is only for current tab/page unless we fetch separate stats */}
-							<b>{orders.length} Orders</b> in current view
+					<div className="orders-title-box">
+						<span className="orders-icon"><img src="/manageorder.png" alt="Manage Orders" className="orders-emoji" style={{ width: '70px', height: '70px', marginRight: '20px', background: 'none', boxShadow: 'none', borderRadius: 0 }} /></span>
+						<div>
+							<h1>Manage Orders</h1>
+							<p>
+								{orders.length} total ·{' '}
+								{orders.filter(o => (o.status || '').toLowerCase() === 'pending').length} pending action
+							</p>
 						</div>
 					</div>
 				</div>
-				{error && <div className="error-message">{error}</div>}
 
+				{/* TABS */}
 				<div className="orders-tabs">
 					{orderTabs.map(t => (
 						<button
 							key={t.key}
-							className={"orders-tab" + (tab === t.key ? ' active' : '')}
+							className={`orders-tab ${tab === t.key ? 'active' : ''}`}
 							onClick={() => setTab(t.key)}
 						>
 							{t.label}
+							<span className="tab-count">
+								{t.key === 'all'
+									? orders.length
+									: orders.filter(o => (o.status || '').toLowerCase() === t.key).length}
+							</span>
 						</button>
 					))}
 				</div>
 
-				<div className="orders-list">
-					{loading ? (
-						<div className="loading-state">Loading orders...</div>
-					) : orders.length === 0 ? (
-						<div className="empty-state">No orders found in this category.</div>
-					) : (
-						orders.map((order) => (
+				{/* CONTENT */}
+				{loading ? (
+					<div className="orders-loading">Loading orders…</div>
+				) : filteredOrders.length === 0 ? (
+					<div className="orders-empty">
+						<p>No orders found</p>
+					</div>
+				) : (
+					<div className="orders-grid">
+						{filteredOrders.map(order => (
 							<div className="order-card" key={order.id}>
-								<div className="order-card-header">
-									<span className="order-id">#{order.order_number}</span>
-									<span className="order-status" style={{ background: (statusColors[order.status] || '#ccc') + '22', color: (statusColors[order.status] || '#666') }}>
-										{statusLabels[order.status] || order.status.toUpperCase()}
+								{/* CARD HEADER */}
+								<div className="order-card-top">
+									<span className="order-id">
+										#{order.order_number || order.id}
+									</span>
+									<span
+										className="order-status"
+										style={{
+											background: statusColors[(order.status || '').toLowerCase()] + '22',
+											color: statusColors[(order.status || '').toLowerCase()],
+										}}
+									>
+										{(order.status || '').replaceAll('_', ' ').toUpperCase()}
 									</span>
 								</div>
 
-								<div className="order-customer">
-									<div><span role="img" aria-label="user">👤</span> {order.customer_name}</div>
-									<div><span role="img" aria-label="phone">📞</span> {order.customer_phone}</div>
-									<div><span role="img" aria-label="address">📍</span> {order.delivery_address}</div>
-									<div>Payment: {order.payment_method || 'COD'} ({order.payment_status})</div>
-									{order.customer_notes && <div>Has Notes 📝</div>}
+								{/* CUSTOMER */}
+								<div className="order-section">
+									<div>👤 {order.customer_name || 'N/A'}</div>
+									<div>📞 {order.customer_phone || 'N/A'}</div>
+									{order.delivery_address && (
+										<div>📍 {order.delivery_address}</div>
+									)}
 								</div>
 
-								{/* Order Items would ideally be fetched in detail or if standard list includes summary */}
-								{/* The 'getOrders' list usually returns summary. Detailed items need getOrderDetails or special expand.*/}
-								{/* For MVP list view, if items are not in list response, we might just show total items or fetch on expand.*/}
-								{/* order.service.js getOrders returns basic info but NOT items array. */}
-								{/* We will show a "View Details" button or generic summary if items are missing. */}
-								{/* Ideally we want to see items. Let's assume we need to click to view or fetch details.*/}
-								{/* MODIFY: For this MVP, let's just show total items count and price as the list doesn't return items array.*/}
-
-								<div className="order-summary">
-									<div>Total Amount <b>₹{order.total_amount}</b></div>
-									<div>Delivery Charge <b>₹{order.delivery_charge}</b></div>
-								</div>
-
-								<div className="order-actions">
-									{getActions(order).map(action => (
-										<button
-											key={action}
-											className={"order-action-btn " + action.toLowerCase()}
-											onClick={() => handleStatusUpdate(order.id, action)}
-										>
-											{action === 'OutForDelivery' ? 'Out for Delivery' : action}
-										</button>
+								{/* ITEMS */}
+								<div className="order-items">
+									{order.items?.map((item, i) => (
+										<div className="order-item" key={i}>
+											<span className="qty">{item.quantity}×</span>
+											<span className="name">{item.name}</span>
+											<span className="price">₹{item.price}</span>
+										</div>
 									))}
 								</div>
 
+								{/* SUMMARY */}
+								<div className="order-summary">
+									<div>
+										Total <b>₹{order.total_amount}</b>
+									</div>
+								</div>
+
+								{/* ACTIONS */}
+								<div className="order-actions">
+									{(order.status || '').toLowerCase() === 'pending' && (
+										<>
+											<button
+												className="btn success"
+												onClick={() => handleStatusChange(order.id, 'confirmed')}
+											>
+												Confirm
+											</button>
+											<button
+												className="btn danger"
+												onClick={() => handleStatusChange(order.id, 'cancelled')}
+											>
+												Cancel
+											</button>
+										</>
+									)}
+
+									{(order.status || '').toLowerCase() === 'confirmed' && (
+										<button
+											className="btn primary"
+											onClick={() => handleStatusChange(order.id, 'preparing')}
+										>
+											Start Preparing
+										</button>
+									)}
+
+									{(order.status || '').toLowerCase() === 'preparing' && (
+										<button
+											className="btn warning"
+											onClick={() => handleStatusChange(order.id, 'out_for_delivery')}
+										>
+											Ready for Delivery
+										</button>
+									)}
+
+									{(order.status || '').toLowerCase() === 'out_for_delivery' && (
+										<button
+											className="btn success"
+											onClick={() => handleStatusChange(order.id, 'delivered')}
+										>
+											Mark Delivered
+										</button>
+									)}
+								</div>
+
+								{/* FOOTER */}
 								<div className="order-footer">
-									<span>{formatDate(order.created_at)}</span>
+									{order.created_at && new Date(order.created_at).toLocaleString()}
 								</div>
 							</div>
-						))
-					)}
-				</div>
+						))}
+					</div>
+				)}
 			</div>
 		</>
 	);

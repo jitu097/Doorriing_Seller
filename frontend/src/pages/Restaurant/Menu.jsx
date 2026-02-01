@@ -174,7 +174,7 @@ const Menu = () => {
 			<Navbar />
 			<div className="menu-container">
 				<div className="menu-header">
-					<span className="menu-emoji" role="img" aria-label="menu">🍽️</span>
+					<img src="/MM.png" alt="Manage Menu" className="menu-emoji" style={{ width: '95px', height: '95px', marginRight: '20px', background: 'none', boxShadow: 'none', borderRadius: 0 }} />
 					<div>
 						<h1 className="menu-title">Manage Menu</h1>
 						<div className="menu-overview">
@@ -202,7 +202,7 @@ const Menu = () => {
 									{!cat.is_active && <span className="category-badge hidden">Hidden</span>}
 									<span className="category-toggle">
 										<label className="switch">
-											<input type="checkbox" checked={cat.is_active} onChange={() => handleToggleCategory(cat.id)} />
+											<input type="checkbox" checked={cat.is_active} onChange={() => handleToggleCategory(cat.id)} style={{ marginLeft: -8 }} />
 											<span className="slider round"></span>
 										</label>
 									</span>
@@ -214,27 +214,53 @@ const Menu = () => {
 										) : (
 											<div className="item-card-list">
 												{cat.items.map((item) => (
-													<div className="item-card" key={item.id}>
-														{item.image_url && <img src={item.image_url} alt={item.name} className="item-card-img" />}
-														<div className="item-card-body">
-															<div className="item-card-header">
-																<span className="item-card-title">{item.name}</span>
-																{item.is_active && <span className="item-card-active">ACTIVE</span>}
-																<div className="item-card-actions">
-																	<button onClick={() => handleToggleItem(item.id)} className="btn-ghost" style={{ fontSize: '0.8rem', padding: '4px 8px' }}>
-																		{item.is_active ? 'Deactivate' : 'Activate'}
-																	</button>
-																	<button onClick={() => handleDeleteItem(item.id)} className="btn-ghost" style={{ fontSize: '0.8rem', padding: '4px 8px', color: '#dc2626' }}>
-																		Delete
-																	</button>
-																</div>
+													<div className="item-card" key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 18, background: '#f4f0e6', borderRadius: 16, boxShadow: '0 2px 8px #0001', padding: 18, marginBottom: 18, minWidth: 350 }}>
+														{/* Avatar and status */}
+														<div style={{ position: 'relative', minWidth: 80, minHeight:90 }}>
+															<img
+																src={item.image_url || '/avatar-default.png'}
+																alt={item.name}
+																style={{ width: 100, height: 90, borderRadius: 16, objectFit: 'cover', position: 'relative', left: -20 }}
+															/>
+															{item.is_active && (
+																<span style={{ position: 'absolute', top: -35, left: -9, background: '#22c55e', color: '#fff', fontWeight: 700, fontSize: 13, borderRadius: 8, padding: '2px 10px', boxShadow: '0 1px 4px #0002' }}>
+																	ACTIVE
+																</span>
+															)}
+														</div>
+														{/* Main content */}
+														<div style={{ flex: 1, minWidth: 0 }}>
+															<div style={{ fontWeight: 700, fontSize: 20, 
+																marginBottom: 30 }}>{item.name}</div>
+															<div style={{ color: '#0b0d12', fontSize: 15, marginBottom: 6 }}>{item.description}</div>
+															<div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+																{item.half_portion_price && (
+																	<span style={{ background: '#e0edff', color: '#2563eb', border: 'none', borderRadius: 0, padding: '4px 16px', fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center' }}>
+																		Half: ₹{item.half_portion_price}
+																	</span>
+																)}
+																<span style={{ background: '#ffedd5', color: '#ea580c', border: 'none', borderRadius: 8, padding: '4px 16px', fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center' }}>
+																	Full: ₹{item.price}
+																</span>
 															</div>
-															<div className="item-card-category">{cat.name}</div>
-															<div className="item-card-desc">{item.description}</div>
-															<div className="item-card-prices">
-																{item.half_portion_price && <span className="item-card-price half">Half: ₹{item.half_portion_price}</span>}
-																<span className="item-card-price full">Full: ₹{item.price}</span>
+															<div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+																<label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+																	<input type="checkbox" checked={item.is_best_seller || false} onChange={() => {/* TODO: handle best seller toggle */}} style={{ width: 22, height: 22, marginRight: -3, marginLeft: -8 }} />
+																	<span style={{ background: '#fbbf24', color: '#fff', borderRadius: 6, padding: '2px 7px', fontWeight: 700, fontSize: 15, marginRight: 2 }}>Best Seller</span>
+																</label>
 															</div>
+														</div>
+														{/* Actions */}
+														<div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-end' }}>
+															<button onClick={() => handleToggleItem(item.id)} style={{ background: '#e0f2fe', border: 'none', borderRadius: 8, padding: 6, marginBottom: 2, cursor: 'pointer' }} title={item.is_active ? 'Deactivate' : 'Activate'}>
+																<svg width="22" height="22" fill="none" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="2" rx="1" fill="#2563eb"/></svg>
+															</button>
+															<button onClick={() => {/* TODO: handle edit item */}} style={{ background: '#e0e7ff', border: 'none', borderRadius: 8, padding: 6, marginBottom: 2, cursor: 'pointer' }} title="Edit">
+																<img src="/edit.png" alt="Edit" style={{ width: 22, height: 22 }} />
+															</button>
+															<button onClick={() => handleDeleteItem(item.id)} style={{ background: '#fee2e2', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer' }} title="Delete">
+																<img src="/delete.png" alt="Delete" style={{ width: 22, height: 22 }} />
+															</button>
 														</div>
 													</div>
 												))}
@@ -270,7 +296,7 @@ const Menu = () => {
 									</select>
 								</label>
 								<label className="half-portion-label">
-									<input type="checkbox" name="halfPortion" checked={newItem.halfPortion} onChange={handleInputChange} /> Enable Half Portion
+									<input type="checkbox" name="halfPortion" checked={newItem.halfPortion} onChange={handleInputChange} style={{ marginLeft: -8 }} /> Enable Half Portion
 								</label>
 							</div>
 							{newItem.halfPortion && (
@@ -299,7 +325,7 @@ const Menu = () => {
 							</label>
 							<div className="form-row">
 								<label className="active-checkbox">
-									<input type="checkbox" name="active" checked={newItem.active} onChange={handleInputChange} />
+									<input type="checkbox" name="active" checked={newItem.active} onChange={handleInputChange} style={{ marginLeft: 10 }} />
 									<span>Active (Visible to users)</span>
 								</label>
 							</div>
@@ -335,7 +361,7 @@ const Menu = () => {
 									<span style={{ color: '#6b7280', fontSize: '0.98rem', marginLeft: 8 }}>({cat.items?.length || 0} items)</span>
 									<span className="category-toggle">
 										<label className="switch">
-											<input type="checkbox" checked={cat.is_active} onChange={() => handleToggleCategory(cat.id)} />
+											<input type="checkbox" checked={cat.is_active} onChange={() => handleToggleCategory(cat.id)} style={{ marginLeft: -8 }} />
 											<span className="slider round"></span>
 										</label>
 									</span>
