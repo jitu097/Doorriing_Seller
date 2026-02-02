@@ -89,6 +89,13 @@ export const updateStock = async (itemId, quantity) => {
     });
 };
 
+export const toggleItemAvailability = async (itemId, is_available) => {
+    return api(`/grocery/items/${itemId}/availability`, {
+        method: 'PUT',
+        body: JSON.stringify({ is_available })
+    });
+};
+
 export const uploadItemImage = async (itemId, imageFile) => {
     const formData = new FormData();
     formData.append('image', imageFile);
@@ -110,6 +117,19 @@ export const createGroceryCategory = async (name) => {
     return api('/grocery/categories', {
         method: 'POST',
         body: JSON.stringify({ name })
+    });
+};
+
+export const deleteGroceryCategory = async (id) => {
+    return api(`/grocery/categories/${id}`, {
+        method: 'DELETE'
+    });
+};
+
+export const updateGroceryCategory = async (id, data) => {
+    return api(`/grocery/categories/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
     });
 };
 
@@ -207,10 +227,15 @@ export default {
     createGroceryItem,
     updateGroceryItem,
     deleteGroceryItem,
+    deleteGroceryItem,
     updateStock,
+    toggleItemAvailability,
     uploadItemImage,
     getGroceryCategories,
+    getGroceryCategories,
     createGroceryCategory,
+    deleteGroceryCategory,
+    updateGroceryCategory,
     // New additions
     getOrders,
     updateOrderStatus,

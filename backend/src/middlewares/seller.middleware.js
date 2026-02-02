@@ -77,9 +77,44 @@ const loadShop = async (req, res, next) => {
     next();
 };
 
+const requireBusiness = (allowedTypes) => (req, res, next) => {
+    if (!req.shop) {
+        return res.status(403).json({
+            success: false,
+            error: 'Shop registration required'
+        });
+    }
+
+    if (!req.shop.business_type) {
+        // Log warning for missing business type
+        console.warn(`Shop ${req.shop.id} has no business_type set`);
+        return res.status(403).json({
+            success: false,
+            error: 'Shop business type configuration error'
+        });
+    }
+
+    const types = Array.isArray(allowedTypes) ? allowedTypes : [allowedTypes];
+    const shopType = req.shop.business_type.toLowerCase();
+
+    if (!types.includes(shopType)) {
+        return res.status(403).json({
+            success: false,
+            error: `Access denied. This feature is for ${types.join('/')} shops only. Your shop is: ${shopType}`
+        });
+    }
+    next();
+};
+
+const requireRestaurant = requireBusiness(['restaurant', 'cloud kitchen', 'hotel']);
+const requireGrocery = requireBusiness(['grocery', 'supermarket']);
+
+
 module.exports = {
     loadSellerContext,
     requireShop,
     loadSeller,
-    loadShop
+    loadShop,
+    requireRestaurant,
+    requireGrocery
 };

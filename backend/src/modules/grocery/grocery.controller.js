@@ -185,6 +185,38 @@ const getCategories = async (req, res, next) => {
     }
 };
 
+const deleteCategory = async (req, res, next) => {
+    try {
+        const shopId = req.shop.id;
+        const { id } = req.params;
+        await groceryService.deleteGroceryCategory(shopId, id);
+
+        res.status(200).json({
+            success: true,
+            message: 'Category deleted successfully'
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const updateCategory = async (req, res, next) => {
+    try {
+        const shopId = req.shop.id;
+        const { id } = req.params;
+        const updates = req.body;
+        const category = await groceryService.updateGroceryCategory(shopId, id, updates);
+
+        res.status(200).json({
+            success: true,
+            message: 'Category updated successfully',
+            data: category
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createItem,
     getItems,
@@ -195,5 +227,7 @@ module.exports = {
     toggleAvailability,
     uploadImage,
     createCategory,
-    getCategories
+    getCategories,
+    deleteCategory,
+    updateCategory
 };

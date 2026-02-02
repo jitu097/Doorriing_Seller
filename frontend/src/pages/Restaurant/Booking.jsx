@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from './Navbar';
 import './Booking.css';
 import { bookingService } from '../../services/bookingService';
 
@@ -27,7 +26,7 @@ export default function Booking() {
 			const filters = {};
 			if (filter !== 'all') filters.status = filter;
 			if (selectedDate) filters.date = selectedDate;
-			
+
 			const data = await bookingService.getBookings(filters);
 			setBookings(data.bookings || data);
 		} catch (error) {
@@ -46,13 +45,12 @@ export default function Booking() {
 			alert('Failed to update booking status');
 		}
 	};
-	
+
 	const filteredBookings = bookings;
 
 	if (loading) {
 		return (
 			<>
-				<Navbar />
 				<div className="booking-container">
 					<div className="loading">Loading bookings...</div>
 				</div>
@@ -62,7 +60,6 @@ export default function Booking() {
 
 	return (
 		<>
-			<Navbar />
 			<div className="booking-container">
 				<div className="booking-header">
 					<div>
@@ -73,14 +70,14 @@ export default function Booking() {
 				</div>
 
 				<div className="booking-filters">
-					<input 
-						type="date" 
-						value={selectedDate} 
+					<input
+						type="date"
+						value={selectedDate}
 						onChange={(e) => setSelectedDate(e.target.value)}
 						className="date-input"
 					/>
-					<select 
-						value={filter} 
+					<select
+						value={filter}
 						onChange={(e) => setFilter(e.target.value)}
 						className="status-filter"
 					>
@@ -103,14 +100,14 @@ export default function Booking() {
 										<h3>{booking.customer_name}</h3>
 										<span className="booking-id">#{booking.id?.substring(0, 8)}</span>
 									</div>
-									<span 
-										className="status-badge" 
+									<span
+										className="status-badge"
 										style={{ backgroundColor: statusColors[booking.status] }}
 									>
 										{booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
 									</span>
 								</div>
-								
+
 								<div className="booking-details">
 									<div className="detail-row">
 										<span className="detail-icon">📞</span>
@@ -145,13 +142,13 @@ export default function Booking() {
 								<div className="booking-actions">
 									{booking.status === 'pending' && (
 										<>
-											<button 
+											<button
 												className="btn-confirm"
 												onClick={() => handleStatusUpdate(booking.id, 'confirmed')}
 											>
 												✓ Confirm
 											</button>
-											<button 
+											<button
 												className="btn-cancel"
 												onClick={() => handleStatusUpdate(booking.id, 'cancelled')}
 											>
@@ -160,7 +157,7 @@ export default function Booking() {
 										</>
 									)}
 									{booking.status === 'confirmed' && (
-										<button 
+										<button
 											className="btn-complete"
 											onClick={() => handleStatusUpdate(booking.id, 'completed')}
 										>

@@ -9,6 +9,7 @@ router.use(verifyToken, loadSeller, loadShop);
 router.post('/', categoryController.createCategory);
 router.get('/', categoryController.getCategories);
 router.patch('/:id', categoryController.updateCategory);
-router.patch('/:id/visibility', categoryController.toggleVisibility);
+router.patch('/:id/toggle', categoryController.toggleVisibility);
+router.delete('/:id', categoryController.deleteCategory);
 
 module.exports = router;

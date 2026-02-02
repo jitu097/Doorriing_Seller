@@ -85,6 +85,16 @@ const uploadImage = async (req, res, next) => {
     }
 };
 
+const deleteItem = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const result = await itemService.deleteItem(id, req.shop.id);
+        successResponse(res, result, 'Item deleted successfully');
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createItem,
     getItems,
@@ -92,5 +102,7 @@ module.exports = {
     updateItem,
     updateStock,
     toggleAvailability,
-    uploadImage
+    toggleAvailability,
+    uploadImage,
+    deleteItem
 };

@@ -257,7 +257,32 @@ const getGroceryCategories = async (shopId) => {
         .order('display_order', { ascending: true });
 
     if (error) throw error;
+    if (error) throw error;
     return data || [];
+};
+
+const deleteGroceryCategory = async (shopId, categoryId) => {
+    const { error } = await supabase
+        .from('categories')
+        .delete()
+        .eq('id', categoryId)
+        .eq('shop_id', shopId);
+
+    if (error) throw error;
+    return { success: true };
+};
+
+const updateGroceryCategory = async (shopId, categoryId, updates) => {
+    const { data, error } = await supabase
+        .from('categories')
+        .update(updates)
+        .eq('id', categoryId)
+        .eq('shop_id', shopId)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
 };
 
 module.exports = {
@@ -270,5 +295,7 @@ module.exports = {
     toggleAvailability,
     uploadItemImage,
     createGroceryCategory,
-    getGroceryCategories
+    getGroceryCategories,
+    deleteGroceryCategory,
+    updateGroceryCategory
 };

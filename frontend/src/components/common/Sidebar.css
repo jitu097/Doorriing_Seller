@@ -1,0 +1,221 @@
+/* Sidebar Container */
+.sidebar-container {
+    width: 280px;
+    height: 100vh;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #eee;
+    padding: 24px 16px;
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: auto;
+    overflow-y: auto;
+    z-index: 2000;
+    /* Higher than Navbar (1200) and Overlay (1299) */
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-container.open {
+    transform: translateX(0);
+}
+
+.sidebar-close-btn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+    padding: 5px;
+    z-index: 10;
+}
+
+/* Logo */
+.sidebar-logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.sidebar-logo img {
+    height: 60px;
+    object-fit: contain;
+}
+
+/* Shop Status */
+.shop-status-toggle {
+    margin-bottom: 24px;
+    padding: 0 8px;
+}
+
+.status-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.status-btn.open {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #d1fae5;
+}
+
+.status-btn.closed {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fee2e2;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-dot.green {
+    background: #10b981;
+}
+
+.status-dot.red {
+    background: #ef4444;
+}
+
+/* Navigation */
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    color: #4b5563;
+    text-decoration: none;
+    border-radius: 12px;
+    position: relative;
+    font-weight: 500;
+    transition: all 0.2s;
+    height: 56px;
+}
+
+.nav-item:hover {
+    background: #f9fafb;
+    color: #111827;
+}
+
+.nav-item.active {
+    background: #ffececad;
+    /* Light pink background */
+    color: #ea1d24;
+    font-weight: 600;
+}
+
+/* Active Indicator (Left Bar) */
+.active-indicator {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 32px;
+    background: #ea1d24;
+    border-radius: 0 4px 4px 0;
+}
+
+.nav-item.active .active-indicator {
+    display: block;
+}
+
+/* Icon with background circle (for active state if needed, or just icon) */
+.nav-icon-bg {
+    margin-right: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-item.active .nav-icon-bg svg {
+    stroke: #ea1d24;
+    /* Red icon color for active */
+    fill: #ffecec;
+}
+
+.nav-item .nav-icon-bg svg {
+    /* default stroke is currentColor */
+}
+
+/* Nav Label */
+.nav-label {
+    font-size: 1rem;
+}
+
+/* Bottom Actions */
+.sidebar-bottom {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 24px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.profile-btn,
+.logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fff;
+    width: 100%;
+}
+
+.profile-btn {
+    border: 1px solid #e5e7eb;
+    color: #374151;
+}
+
+.profile-btn:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+.logout-btn {
+    border: 1px solid #ea1d24;
+    color: #ea1d24;
+}
+
+.logout-btn:hover {
+    background: #fff0f0;
+}
+
+/* Responsive Hide for Mobile (will handle mobile separately or hide sidebar) */
+@media (max-width: 1024px) {
+    .sidebar-container {
+        display: none;
+        /* User didn't specify mobile behavior, but hiding for now or can use hamburger */
+    }
+}

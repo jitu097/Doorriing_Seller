@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from './Navbar';
 import './offers.css';
 import { discountService } from '../../services/discountService';
 
@@ -35,15 +34,14 @@ export default function Offers() {
 			alert('Failed to update offer status');
 		}
 	};
-	
-	const filteredOffers = filter === 'all' 
-		? offers 
+
+	const filteredOffers = filter === 'all'
+		? offers
 		: offers.filter(o => filter === 'active' ? o.is_active : !o.is_active);
 
 	if (loading) {
 		return (
 			<>
-				<Navbar />
 				<div className="offers-container">
 					<div className="loading">Loading offers...</div>
 				</div>
@@ -53,7 +51,6 @@ export default function Offers() {
 
 	return (
 		<>
-			<Navbar />
 			<div className="offers-container">
 				<div className="offers-header">
 					<div>
@@ -66,19 +63,19 @@ export default function Offers() {
 				</div>
 
 				<div className="offers-filters">
-					<button 
+					<button
 						className={filter === 'all' ? 'filter-btn active' : 'filter-btn'}
 						onClick={() => setFilter('all')}
 					>
 						All Offers
 					</button>
-					<button 
+					<button
 						className={filter === 'active' ? 'filter-btn active' : 'filter-btn'}
 						onClick={() => setFilter('active')}
 					>
 						Active
 					</button>
-					<button 
+					<button
 						className={filter === 'inactive' ? 'filter-btn active' : 'filter-btn'}
 						onClick={() => setFilter('inactive')}
 					>
@@ -108,8 +105,8 @@ export default function Offers() {
 									<div className="detail-item">
 										<span className="detail-label">Discount</span>
 										<span className="detail-value">
-											{offer.discount_type === 'percentage' 
-												? `${offer.discount_value}%` 
+											{offer.discount_type === 'percentage'
+												? `${offer.discount_value}%`
 												: `₹${offer.discount_value}`}
 										</span>
 									</div>
@@ -133,8 +130,8 @@ export default function Offers() {
 
 								{offer.usage_limit && (
 									<div className="usage-bar">
-										<div 
-											className="usage-fill" 
+										<div
+											className="usage-fill"
 											style={{ width: `${((offer.times_used || 0) / offer.usage_limit) * 100}%` }}
 										></div>
 									</div>
@@ -142,7 +139,7 @@ export default function Offers() {
 
 								<div className="offer-actions">
 									<button className="btn-edit">✏️ Edit</button>
-									<button 
+									<button
 										className="btn-toggle"
 										onClick={() => handleToggleStatus(offer.id, offer.is_active)}
 									>

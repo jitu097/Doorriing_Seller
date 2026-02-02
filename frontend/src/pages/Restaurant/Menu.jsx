@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Menu.css';
-import Navbar from './Navbar';
+import MenuItemCard from './MenuItemCard';
 import categoryService from '../../services/categoryService';
 import itemService from '../../services/itemService';
 
@@ -163,7 +163,6 @@ const Menu = () => {
 	if (loading) {
 		return (
 			<>
-				<Navbar />
 				<div className="loading">Loading menu...</div>
 			</>
 		);
@@ -171,7 +170,6 @@ const Menu = () => {
 
 	return (
 		<>
-			<Navbar />
 			<div className="menu-container">
 				<div className="menu-header">
 					<img src="/MM.png" alt="Manage Menu" className="menu-emoji" style={{ width: '95px', height: '95px', marginRight: '20px', background: 'none', boxShadow: 'none', borderRadius: 0 }} />
@@ -214,55 +212,26 @@ const Menu = () => {
 										) : (
 											<div className="item-card-list">
 												{cat.items.map((item) => (
-													<div className="item-card" key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 18, background: '#f4f0e6', borderRadius: 16, boxShadow: '0 2px 8px #0001', padding: 18, marginBottom: 18, minWidth: 350 }}>
-														{/* Avatar and status */}
-														<div style={{ position: 'relative', minWidth: 80, minHeight:90 }}>
-															<img
-																src={item.image_url || '/avatar-default.png'}
-																alt={item.name}
-																style={{ width: 100, height: 90, borderRadius: 16, objectFit: 'cover', position: 'relative', left: -20 }}
-															/>
-															{item.is_active && (
-																<span style={{ position: 'absolute', top: -35, left: -9, background: '#22c55e', color: '#fff', fontWeight: 700, fontSize: 13, borderRadius: 8, padding: '2px 10px', boxShadow: '0 1px 4px #0002' }}>
-																	ACTIVE
-																</span>
-															)}
-														</div>
-														{/* Main content */}
-														<div style={{ flex: 1, minWidth: 0 }}>
-															<div style={{ fontWeight: 700, fontSize: 20, 
-																marginBottom: 30 }}>{item.name}</div>
-															<div style={{ color: '#0b0d12', fontSize: 15, marginBottom: 6 }}>{item.description}</div>
-															<div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-																{item.half_portion_price && (
-																	<span style={{ background: '#e0edff', color: '#2563eb', border: 'none', borderRadius: 0, padding: '4px 16px', fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center' }}>
-																		Half: ₹{item.half_portion_price}
-																	</span>
-																)}
-																<span style={{ background: '#ffedd5', color: '#ea580c', border: 'none', borderRadius: 8, padding: '4px 16px', fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center' }}>
-																	Full: ₹{item.price}
-																</span>
-															</div>
-															<div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-																<label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-																	<input type="checkbox" checked={item.is_best_seller || false} onChange={() => {/* TODO: handle best seller toggle */}} style={{ width: 22, height: 22, marginRight: -3, marginLeft: -8 }} />
-																	<span style={{ background: '#fbbf24', color: '#fff', borderRadius: 6, padding: '2px 7px', fontWeight: 700, fontSize: 15, marginRight: 2 }}>Best Seller</span>
-																</label>
-															</div>
-														</div>
-														{/* Actions */}
-														<div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-end' }}>
-															<button onClick={() => handleToggleItem(item.id)} style={{ background: '#e0f2fe', border: 'none', borderRadius: 8, padding: 6, marginBottom: 2, cursor: 'pointer' }} title={item.is_active ? 'Deactivate' : 'Activate'}>
-																<svg width="22" height="22" fill="none" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="2" rx="1" fill="#2563eb"/></svg>
-															</button>
-															<button onClick={() => {/* TODO: handle edit item */}} style={{ background: '#e0e7ff', border: 'none', borderRadius: 8, padding: 6, marginBottom: 2, cursor: 'pointer' }} title="Edit">
-																<img src="/edit.png" alt="Edit" style={{ width: 22, height: 22 }} />
-															</button>
-															<button onClick={() => handleDeleteItem(item.id)} style={{ background: '#fee2e2', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer' }} title="Delete">
-																<img src="/delete.png" alt="Delete" style={{ width: 22, height: 22 }} />
-															</button>
-														</div>
-													</div>
+													<MenuItemCard
+														key={item.id}
+														item={item}
+														onToggle={handleToggleItem}
+														onDelete={handleDeleteItem}
+														onEdit={(item) => {
+															setNewItem({
+																name: item.name,
+																description: item.description || '',
+																category: item.category_id || cat.id,
+																image: null,
+																halfPortion: !!item.half_portion_price,
+																price: item.price,
+																priceHalf: item.half_portion_price || '',
+																unit: item.unit || 'plate',
+																active: item.is_available
+															});
+															setShowModal(true);
+														}}
+													/>
 												))}
 											</div>
 										)}
@@ -365,8 +334,19 @@ const Menu = () => {
 											<span className="slider round"></span>
 										</label>
 									</span>
-									<button className="delete-category-btn" type="button" onClick={() => handleDeleteCategory(cat.id)} title="Delete">
-										<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="5.5" y="9.5" width="1.5" height="6" rx="0.75" fill="#bbb" /><rect x="10.25" y="9.5" width="1.5" height="6" rx="0.75" fill="#bbb" /><rect x="15" y="9.5" width="1.5" height="6" rx="0.75" fill="#bbb" /><rect x="4" y="6" width="14" height="2" rx="1" fill="#eee" /><rect x="7" y="4" width="8" height="2" rx="1" fill="#eee" /></svg>
+									<button
+										className="action-btn delete-btn"
+										type="button"
+										onClick={() => handleDeleteCategory(cat.id)}
+										title="Delete"
+										style={{ marginLeft: '10px' }}
+									>
+										<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+											<polyline points="3 6 5 6 21 6"></polyline>
+											<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+											<line x1="10" y1="11" x2="10" y2="17"></line>
+											<line x1="14" y1="11" x2="14" y2="17"></line>
+										</svg>
 									</button>
 								</div>
 							))}

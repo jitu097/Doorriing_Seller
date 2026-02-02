@@ -100,9 +100,40 @@ const toggleCategoryVisibility = async (categoryId, shopId) => {
     return data;
 };
 
+const deleteCategory = async (categoryId, shopId) => {
+    // Check if category belongs to shop
+    const { data: category, error: fetchError } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('id', categoryId)
+        .eq('shop_id', shopId)
+        .single();
+
+    if (fetchError || !category) {
+        throw new Error('Category not found or access denied');
+    }
+
+    // Delete the category
+    // Note: Items should cascade delete or be handled if not cascading.
+    // Assuming foreign key constraints are set to CASCADE or we rely on explicit deletion.
+    // If we need to delete items first manually, we should do that, but usually DB handles it.
+    // However, for Cloudinary images, we might want to iterate items and delete them.
+    // simpler approach for now: delete category.
+
+    const { error } = await supabase
+        .from('categories')
+        .delete()
+        .eq('id', categoryId);
+
+    if (error) throw error;
+
+    return { message: 'Category deleted successfully' };
+};
+
 module.exports = {
     createCategory,
     getCategories,
     updateCategory,
-    toggleCategoryVisibility
+    toggleCategoryVisibility,
+    deleteCategory
 };

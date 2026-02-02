@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from './Navbar';
 import './Reports.css';
 import { analyticsService } from '../../services/analyticsService';
 
@@ -28,7 +27,6 @@ export default function Reports() {
 	if (loading) {
 		return (
 			<>
-				<Navbar />
 				<div className="reports-container">
 					<div className="loading">Loading reports...</div>
 				</div>
@@ -39,7 +37,6 @@ export default function Reports() {
 	if (!analytics) {
 		return (
 			<>
-				<Navbar />
 				<div className="reports-container">
 					<div className="no-data">No analytics data available</div>
 				</div>
@@ -49,15 +46,14 @@ export default function Reports() {
 
 	return (
 		<>
-			<Navbar />
 			<div className="reports-container">
 				<div className="reports-header">
 					<div>
 						<h1>📊 Sales Reports & Analytics</h1>
 						<p>Track your restaurant performance</p>
 					</div>
-					<select 
-						value={dateRange} 
+					<select
+						value={dateRange}
 						onChange={(e) => setDateRange(e.target.value)}
 						className="date-range-select"
 					>
@@ -109,8 +105,8 @@ export default function Reports() {
 								const maxRevenue = Math.max(...analytics.daily_data.map(d => d.revenue || 0));
 								return (
 									<div key={index} className="chart-bar">
-										<div 
-											className="bar" 
+										<div
+											className="bar"
 											style={{ height: `${maxRevenue > 0 ? (day.revenue / maxRevenue) * 100 : 0}%` }}
 											title={`₹${(day.revenue || 0).toLocaleString()}`}
 										></div>
@@ -158,24 +154,24 @@ export default function Reports() {
 						{analytics.total_orders > 0 && (
 							<>
 								<div className="status-item">
-									<div 
-										className="status-bar completed" 
+									<div
+										className="status-bar completed"
 										style={{ width: `${((analytics.completed_orders || 0) / analytics.total_orders * 100).toFixed(1)}%` }}
 									>
 										<span>Completed: {analytics.completed_orders || 0}</span>
 									</div>
 								</div>
 								<div className="status-item">
-									<div 
-										className="status-bar pending" 
+									<div
+										className="status-bar pending"
 										style={{ width: `${((analytics.pending_orders || 0) / analytics.total_orders * 100).toFixed(1)}%` }}
 									>
 										<span>Pending: {analytics.pending_orders || 0}</span>
 									</div>
 								</div>
 								<div className="status-item">
-									<div 
-										className="status-bar cancelled" 
+									<div
+										className="status-bar cancelled"
 										style={{ width: `${((analytics.cancelled_orders || 0) / analytics.total_orders * 100).toFixed(1)}%` }}
 									>
 										<span>Cancelled: {analytics.cancelled_orders || 0}</span>

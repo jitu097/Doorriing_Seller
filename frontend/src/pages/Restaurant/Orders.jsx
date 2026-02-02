@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from './Navbar';
 import orderService from '../../services/orderService';
 import './Orders.css';
 
@@ -55,13 +54,11 @@ export default function Orders() {
 
   return (
     <>
-      <Navbar />
-
       <div className="orders-page">
         {/* HEADER */}
         <div className="orders-header">
           <div className="orders-title-box">
-              <span className="orders-icon"><img src="/manageorder.png" alt="Manage Orders" className="orders-emoji" style={{ width: '70px', height: '70px', marginRight: '20px', background: 'none', boxShadow: 'none', borderRadius: 0 }} /></span>
+            <span className="orders-icon"><img src="/manageorder.png" alt="Manage Orders" className="orders-emoji" style={{ width: '70px', height: '70px', marginRight: '20px', background: 'none', boxShadow: 'none', borderRadius: 0 }} /></span>
             <div>
               <h1>Manage Orders</h1>
               <p>

@@ -207,6 +207,43 @@ const uploadItemImage = async (itemId, shopId, file) => {
     return updatedItem;
 };
 
+const deleteItem = async (itemId, shopId) => {
+    // 1. Get item to find image_url
+    const { data: item, error: fetchError } = await supabase
+        .from('items')
+        .select('id, image_url')
+        .eq('id', itemId)
+        .eq('shop_id', shopId)
+        .single();
+
+    if (fetchError || !item) {
+        throw new Error('Item not found or access denied');
+    }
+
+    // 2. Delete image from Cloudinary if exists
+    if (item.image_url) {
+        try {
+            const publicId = extractPublicId(item.image_url);
+            if (publicId) {
+                await deleteFromCloudinary(publicId);
+            }
+        } catch (err) {
+            console.error('Failed to delete image from Cloudinary:', err);
+            // Continue with item deletion even if image delete fails
+        }
+    }
+
+    // 3. Delete item from DB
+    const { error } = await supabase
+        .from('items')
+        .delete()
+        .eq('id', itemId);
+
+    if (error) throw error;
+
+    return { message: 'Item deleted successfully' };
+};
+
 const logInventoryChange = async (itemId, shopId, changeType, quantityBefore, quantityChange, notes = null) => {
     const quantityAfter = quantityBefore + quantityChange;
 
@@ -227,6 +264,7 @@ module.exports = {
     createItem,
     getItems,
     getItem,
+    deleteItem,
     updateItem,
     updateStock,
     toggleAvailability,

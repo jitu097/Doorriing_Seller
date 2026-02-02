@@ -42,9 +42,20 @@ const toggleVisibility = async (req, res, next) => {
     }
 };
 
+const deleteCategory = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const result = await categoryService.deleteCategory(id, req.shop.id);
+        successResponse(res, result, 'Category deleted successfully');
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createCategory,
     getCategories,
     updateCategory,
-    toggleVisibility
+    toggleVisibility,
+    deleteCategory
 };

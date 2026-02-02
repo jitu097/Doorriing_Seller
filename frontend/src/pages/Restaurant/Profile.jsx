@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from './Navbar';
 import './Profile.css';
 import apiCall from '../../services/api';
 
@@ -71,7 +70,6 @@ export default function Profile() {
 	if (loading) {
 		return (
 			<>
-				<Navbar />
 				<div className="profile-container">
 					<div className="loading">Loading profile...</div>
 				</div>
@@ -81,7 +79,6 @@ export default function Profile() {
 
 	return (
 		<>
-			<Navbar />
 			<div className="profile-container">
 				<div className="profile-header">
 					<h1>Restaurant Profile</h1>

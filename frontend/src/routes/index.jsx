@@ -27,6 +27,7 @@ const RestaurantBooking = lazy(() => import('../pages/Restaurant/Booking'));
 const RestaurantOffers = lazy(() => import('../pages/Restaurant/offers'));
 const RestaurantReports = lazy(() => import('../pages/Restaurant/Reports'));
 const RestaurantProfile = lazy(() => import('../pages/Restaurant/Profile'));
+const RestaurantLayout = lazy(() => import('../pages/Restaurant/RestaurantLayout'));
 
 /**
  * ROUTE GUARD: Basic Authentication
@@ -114,13 +115,15 @@ const AppRoutes = () => {
                         <Route path="/grocery/profile" element={<GroceryProfile />} />
 
                         {/* Restaurant Dashboard & Pages */}
-                        <Route path="/restaurant/dashboard" element={<RestaurantDashboard />} />
-                        <Route path="/restaurant/menu" element={<RestaurantMenu />} />
-                        <Route path="/restaurant/orders" element={<RestaurantOrders />} />
-                        <Route path="/restaurant/bookings" element={<RestaurantBooking />} />
-                        <Route path="/restaurant/offers" element={<RestaurantOffers />} />
-                        <Route path="/restaurant/reports" element={<RestaurantReports />} />
-                        <Route path="/restaurant/profile" element={<RestaurantProfile />} />
+                        <Route element={<RestaurantLayout />}>
+                            <Route path="/restaurant/dashboard" element={<RestaurantDashboard />} />
+                            <Route path="/restaurant/menu" element={<RestaurantMenu />} />
+                            <Route path="/restaurant/orders" element={<RestaurantOrders />} />
+                            <Route path="/restaurant/bookings" element={<RestaurantBooking />} />
+                            <Route path="/restaurant/offers" element={<RestaurantOffers />} />
+                            <Route path="/restaurant/reports" element={<RestaurantReports />} />
+                            <Route path="/restaurant/profile" element={<RestaurantProfile />} />
+                        </Route>
                     </Route>
                 </Route>
 
