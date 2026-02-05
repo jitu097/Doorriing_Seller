@@ -188,10 +188,7 @@
 		font-size: 0.98rem;
 	}
 }
-body {
-  background: #e4ba8e;
-  margin: 0;
-}
+
 /* Manage Categories Modal Styles */
 .category-list-modal {
 	display: flex;

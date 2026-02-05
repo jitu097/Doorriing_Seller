@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import Navbar from './Navbar';
 import './Reports.css';
 import groceryService from '../../services/groceryService';
 
@@ -61,7 +60,6 @@ const Reports = () => {
 
     return (
         <>
-            <Navbar />
             <div className="admin-container">
                 <header className="admin-header">
                     <div className="header-content">

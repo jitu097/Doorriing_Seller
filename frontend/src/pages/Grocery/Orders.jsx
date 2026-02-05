@@ -1,7 +1,6 @@
 
 
 import React, { useState, useEffect } from 'react';
-import Navbar from './Navbar';
 import groceryService from '../../services/groceryService';
 import './Orders.css';
 
@@ -58,7 +57,6 @@ export default function Orders() {
 
 	return (
 		<>
-			<Navbar />
 			<div className="orders-page">
 				{/* HEADER */}
 				<div className="orders-header">

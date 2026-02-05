@@ -4,11 +4,6 @@ html, body {
   overflow-x: hidden;
 }
 
-body {
-  background: #e4ba8e;
-  margin: 0;
-}
-
 /* ===== MAIN CONTAINER ===== */
 .admin-container {
   width: 100%;

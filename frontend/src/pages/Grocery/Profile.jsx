@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import Navbar from './Navbar';
 import './Profile.css';
 import groceryService from '../../services/groceryService';
 
@@ -93,7 +92,6 @@ const Profile = () => {
 
     return (
         <>
-            <Navbar />
             <div className="admin-container">
                 <div className="profile-header-card">
                     <div className="profile-cover">

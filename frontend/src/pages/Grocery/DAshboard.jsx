@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Navbar from './Navbar';
 import './Dashboard.css';
 import groceryService from '../../services/groceryService';
 
@@ -57,7 +56,6 @@ function Dashboard() {
 
 	return (
 		<>
-			<Navbar />
 			<div className="admin-container">
 				<header className="admin-header">
 					<div className="header-content">

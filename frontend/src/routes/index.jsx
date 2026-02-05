@@ -18,6 +18,7 @@ const GroceryOrders = lazy(() => import('../pages/Grocery/Orders'));
 const GroceryOffers = lazy(() => import('../pages/Grocery/Offers'));
 const GroceryReports = lazy(() => import('../pages/Grocery/Reports'));
 const GroceryProfile = lazy(() => import('../pages/Grocery/Profile'));
+const GroceryLayout = lazy(() => import('../pages/Grocery/GroceryLayout'));
 
 // Restaurant Pages
 const RestaurantDashboard = lazy(() => import('../pages/Restaurant/Dashboard'));
@@ -107,12 +108,14 @@ const AppRoutes = () => {
                     {/* Shop Required Routes */}
                     <Route element={<RequireShop />}>
                         {/* Grocery Dashboard & Pages */}
-                        <Route path="/grocery/dashboard" element={<GroceryDashboard />} />
-                        <Route path="/grocery/products" element={<GroceryProducts />} />
-                        <Route path="/grocery/orders" element={<GroceryOrders />} />
-                        <Route path="/grocery/offers" element={<GroceryOffers />} />
-                        <Route path="/grocery/reports" element={<GroceryReports />} />
-                        <Route path="/grocery/profile" element={<GroceryProfile />} />
+                        <Route element={<GroceryLayout />}>
+                            <Route path="/grocery/dashboard" element={<GroceryDashboard />} />
+                            <Route path="/grocery/products" element={<GroceryProducts />} />
+                            <Route path="/grocery/orders" element={<GroceryOrders />} />
+                            <Route path="/grocery/offers" element={<GroceryOffers />} />
+                            <Route path="/grocery/reports" element={<GroceryReports />} />
+                            <Route path="/grocery/profile" element={<GroceryProfile />} />
+                        </Route>
 
                         {/* Restaurant Dashboard & Pages */}
                         <Route element={<RestaurantLayout />}>

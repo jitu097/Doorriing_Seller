@@ -94,6 +94,10 @@ export default function Navbar() {
       <div className="rest-navbar-spacer" />
       <FooterMobile />
       {/* Sidebar */}
+      <div
+        className={`sidebar-overlay ${sidebarOpen ? 'active' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}

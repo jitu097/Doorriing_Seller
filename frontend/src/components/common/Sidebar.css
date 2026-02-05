@@ -212,10 +212,10 @@
     background: #fff0f0;
 }
 
-/* Responsive Hide for Mobile (will handle mobile separately or hide sidebar) */
-@media (max-width: 1024px) {
+/* Responsive adjustments */
+@media (max-width: 768px) {
     .sidebar-container {
-        display: none;
-        /* User didn't specify mobile behavior, but hiding for now or can use hamburger */
+        width: 85vw;
+        max-width: 320px;
     }
 }

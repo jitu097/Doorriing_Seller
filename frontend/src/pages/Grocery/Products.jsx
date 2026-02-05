@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import './Products.css';
-import Navbar from './Navbar';
 import groceryService from '../../services/groceryService';
 import GroceryProductCard from './GroceryProductCard';
 import GroceryProductForm from './GroceryProductForm';
@@ -215,7 +214,6 @@ const Products = () => {
 
 	return (
 		<>
-			<Navbar />
 			<div className="menu-container">
 				<div className="menu-header">
 					<span className="menu-emoji" role="img" aria-label="menu">🛒</span>
