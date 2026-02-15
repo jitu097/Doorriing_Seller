@@ -4,6 +4,7 @@ const router = express.Router();
 const authRoutes = require('../modules/auth/auth.routes');
 const shopRoutes = require('../modules/shop/shop.routes');
 const categoryRoutes = require('../modules/category/category.routes');
+const subcategoryRoutes = require('../modules/subcategory/subcategory.routes');
 const itemRoutes = require('../modules/item/item.routes');
 const orderRoutes = require('../modules/order/order.routes');
 const discountRoutes = require('../modules/discount/discount.routes');
@@ -16,6 +17,7 @@ const groceryRoutes = require('../modules/grocery/grocery.routes');
 router.use('/auth', authRoutes);
 router.use('/shop', shopRoutes);
 router.use('/categories', categoryRoutes);
+router.use('/subcategories', subcategoryRoutes);
 router.use('/items', itemRoutes);
 router.use('/grocery', groceryRoutes); // Grocery specific namespace
 router.use('/orders', orderRoutes);

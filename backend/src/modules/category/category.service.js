@@ -30,32 +30,42 @@ const createCategory = async (shopId, categoryData) => {
 };
 
 const getCategories = async (shopId) => {
-    const { data, error } = await supabase
+    // Fetch categories separately (avoids Supabase embed ambiguity)
+    const { data: categories, error: categoryError } = await supabase
         .from('categories')
-        .select(`
-            id, 
-            name, 
-            display_order, 
-            is_active, 
-            created_at,
-            items (
-                id,
-                name,
-                price,
-                half_portion_price,
-                stock_quantity,
-                unit,
-                image_url,
-                is_available,
-                is_active
-            )
-        `)
+        .select('id, name, display_order, is_active, created_at')
         .eq('shop_id', shopId)
         .order('display_order', { ascending: true });
 
-    if (error) throw error;
+    if (categoryError) throw categoryError;
 
-    return data || [];
+    // Fetch items separately using explicit foreign key
+    const { data: items, error: itemsError } = await supabase
+        .from('items')
+        .select(`
+            id,
+            category_id,
+            name,
+            price,
+            half_portion_price,
+            stock_quantity,
+            unit,
+            image_url,
+            is_available,
+            is_active
+        `)
+        .eq('shop_id', shopId)
+        .order('created_at', { ascending: false });
+
+    if (itemsError) throw itemsError;
+
+    // Merge items into categories in memory
+    const categoriesWithItems = (categories || []).map(category => ({
+        ...category,
+        items: (items || []).filter(item => item.category_id === category.id)
+    }));
+
+    return categoriesWithItems;
 };
 
 const updateCategory = async (categoryId, shopId, updates) => {

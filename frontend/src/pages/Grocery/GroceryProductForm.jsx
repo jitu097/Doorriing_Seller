@@ -6,6 +6,7 @@ const GroceryProductForm = ({
     title,
     formData,
     categories,
+    subcategories = [],
     onChange,
     onSubmit,
     onClose,
@@ -90,6 +91,22 @@ const GroceryProductForm = ({
                                 required
                             />
                         </div>
+                    </div>
+
+                    {/* Subcategory (optional) */}
+                    <div className="form-group">
+                        <label>Subcategory (optional)</label>
+                        <select
+                            name="subcategory_id"
+                            className="form-control"
+                            value={formData.subcategory_id || ''}
+                            onChange={onChange}
+                        >
+                            <option value="">None</option>
+                            {subcategories.filter(sub => sub.is_active).map(sub => (
+                                <option key={sub.id} value={sub.id}>{sub.name}</option>
+                            ))}
+                        </select>
                     </div>
 
                     {/* Quantity & Unit Row */}

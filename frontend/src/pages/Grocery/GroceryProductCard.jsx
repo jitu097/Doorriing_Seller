@@ -24,7 +24,14 @@ const GroceryProductCard = ({ item, onEdit, onDelete, onToggleStatus }) => {
             <div className="grocery-card-main">
                 {/* Header: Title & Actions */}
                 <div className="grocery-card-header">
-                    <h3 className="grocery-card-title">{item.name}</h3>
+                    <div>
+                        <h3 className="grocery-card-title">{item.name}</h3>
+                        {item.subcategory?.name && (
+                            <p style={{ color: '#6b7280', fontSize: '0.85rem', margin: '2px 0 0 0' }}>
+                                {item.category?.name} › {item.subcategory.name}
+                            </p>
+                        )}
+                    </div>
                     <div className="grocery-card-actions">
                         <button
                             className="icon-btn edit"

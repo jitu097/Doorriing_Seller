@@ -26,3 +26,10 @@
     padding: 0;
     overflow-x: hidden;
 }
+
+@media (max-width: 700px) {
+    .layout-content {
+        padding-bottom: 80px;
+        /* 60px Footer + 20px Buffer */
+    }
+}

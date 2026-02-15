@@ -4,7 +4,7 @@ const { validateRequired, validatePositiveNumber } = require('../../utils/valida
 
 const createItem = async (req, res, next) => {
     try {
-        validateRequired(['name', 'price'], req.body);
+        validateRequired(['name', 'price', 'category_id'], req.body);
 
         const item = await itemService.createItem(req.shop.id, req.body);
         successResponse(res, item, 'Item created successfully', 201);
@@ -49,9 +49,9 @@ const updateStock = async (req, res, next) => {
         const { stock_quantity, change_type, notes } = req.body;
 
         validateRequired(['stock_quantity'], req.body);
-        const validatedStock = validatePositiveNumber(new_stock_quantity, 'Stock quantity');
+        const validatedStock = validatePositiveNumber(stock_quantity, 'Stock quantity');
 
-        const item = await itemService.updateStock(id, req.shop.id, validatedStock, reason);
+        const item = await itemService.updateStock(id, req.shop.id, validatedStock, change_type, notes);
         successResponse(res, item, 'Stock updated successfully');
     } catch (error) {
         next(error);
@@ -101,7 +101,6 @@ module.exports = {
     getItem,
     updateItem,
     updateStock,
-    toggleAvailability,
     toggleAvailability,
     uploadImage,
     deleteItem

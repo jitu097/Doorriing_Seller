@@ -1,6 +1,6 @@
 const supabase = require('../../config/supabaseClient');
 const cache = require('../../utils/cache');
-const { ConflictError, NotFoundError } = require('../../utils/errors');
+const { ConflictError, NotFoundError, BadRequestError } = require('../../utils/errors');
 const { uploadToCloudinary, deleteFromCloudinary, extractPublicId } = require('../../config/cloudinary');
 
 const createShop = async (sellerId, shopData) => {
@@ -26,6 +26,14 @@ const createShop = async (sellerId, shopData) => {
             .maybeSingle();
         if (bType) businessTypeId = bType.id;
     } catch (ignore) { }
+
+    if (!businessTypeId) {
+        // Fallback or Error? DB requires it. Let's try to find a default or throw.
+        // Assuming strictness for now as per schema.
+        // Attempting to find 'Restaurant' or 'Grocery' exactly if input was loose
+        const typeName = shopData.category || shopData.business_type;
+        throw new BadRequestError(`Invalid business type: ${typeName}. Must match a valid system type.`);
+    }
 
     // Map camelCase inputs (from frontend) or snake_case inputs to DB columns
     const { data: shop, error } = await supabase

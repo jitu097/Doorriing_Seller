@@ -4,9 +4,11 @@ import groceryService from '../../services/groceryService';
 import GroceryProductCard from './GroceryProductCard';
 import GroceryProductForm from './GroceryProductForm';
 import GroceryCategoryManager from './GroceryCategoryManager';
+import subcategoryService from '../../services/subcategoryService';
 
 const Products = () => {
 	const [categories, setCategories] = useState([]);
+	const [subcategories, setSubcategories] = useState([]);
 	const [items, setItems] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
@@ -17,15 +19,20 @@ const Products = () => {
 	// Modals
 	const [showModal, setShowModal] = useState(false);
 	const [showCategoryModal, setShowCategoryModal] = useState(false);
+	const [showSubcategoryModal, setShowSubcategoryModal] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [editingItem, setEditingItem] = useState(null);
 
 	// Form States
 	const [newCategory, setNewCategory] = useState('');
+	const [selectedCategory, setSelectedCategory] = useState('');
+	const [subcategoriesList, setSubcategoriesList] = useState([]);
+	const [newSubcategory, setNewSubcategory] = useState('');
 	const [newItem, setNewItem] = useState({
 		name: '',
 		description: '',
 		category_id: '',
+		subcategory_id: '',
 		image: null,
 		stock_quantity: '',
 		unit: 'pieces',
@@ -61,14 +68,32 @@ const Products = () => {
 		setOpenIndex(openIndex === idx ? null : idx);
 	};
 
-	const handleInputChange = (e) => {
+	const handleInputChange = async (e) => {
 		const { name, value, type, checked, files } = e.target;
 		if (type === 'checkbox') {
 			setNewItem({ ...newItem, [name]: checked });
 		} else if (type === 'file') {
 			setNewItem({ ...newItem, image: files[0] });
 		} else {
-			setNewItem({ ...newItem, [name]: value });
+			// Load subcategories when category changes
+			if (name === 'category_id' && value) {
+				try {
+					console.log('Loading subcategories for category:', value);
+					const subs = await subcategoryService.getSubcategories(value);
+					console.log('Loaded subcategories:', subs);
+					setSubcategories(subs || []);
+					setNewItem(prev => ({ ...prev, [name]: value, subcategory_id: '' })); // Update category and reset subcategory
+				} catch (error) {
+					console.error('Failed to load subcategories:', error);
+					setSubcategories([]);
+					setNewItem({ ...newItem, [name]: value });
+				}
+			} else if (name === 'category_id' && !value) {
+				setSubcategories([]);
+				setNewItem(prev => ({ ...prev, [name]: value, subcategory_id: '' }));
+			} else {
+				setNewItem({ ...newItem, [name]: value });
+			}
 		}
 	};
 
@@ -79,17 +104,31 @@ const Products = () => {
 	const handleModalClose = () => {
 		setShowModal(false);
 		setEditingItem(null);
+		setSubcategories([]);
 		setNewItem({
-			name: '', description: '', category_id: '', image: null, stock_quantity: '', unit: 'pieces', price: '', active: true
+			name: '', description: '', category_id: '', subcategory_id: '', image: null, stock_quantity: '', unit: 'pieces', price: '', active: true
 		});
 	};
 
-	const handleEditItem = (item) => {
+	const handleEditItem = async (item) => {
 		setEditingItem(item);
+		
+		// Load subcategories for this category
+		if (item.category_id) {
+			try {
+				const subs = await subcategoryService.getSubcategories(item.category_id);
+				setSubcategories(subs || []);
+			} catch (error) {
+				console.error('Failed to load subcategories:', error);
+				setSubcategories([]);
+			}
+		}
+		
 		setNewItem({
 			name: item.name,
 			description: item.description || '',
 			category_id: item.category_id || '',
+			subcategory_id: item.subcategory_id || '',
 			image: null, // Keep null, only update if new file selected
 			stock_quantity: item.stock_quantity,
 			unit: item.unit || 'pieces',
@@ -184,6 +223,72 @@ const Products = () => {
 		}
 	};
 
+	// Subcategory handlers
+	const handleCategorySelectChange = async (e) => {
+		const catId = e.target.value;
+		setSelectedCategory(catId);
+		if (catId) {
+			try {
+				const subs = await subcategoryService.getSubcategories(catId);
+				setSubcategoriesList(subs || []);
+			} catch (error) {
+				console.error('Failed to load subcategories:', error);
+				setSubcategoriesList([]);
+			}
+		} else {
+			setSubcategoriesList([]);
+		}
+	};
+
+	const handleAddSubcategory = async (e) => {
+		e.preventDefault();
+		if (!selectedCategory) {
+			alert('Please select a category first');
+			return;
+		}
+		if (newSubcategory.trim()) {
+			try {
+				setIsSubmitting(true);
+				await subcategoryService.createSubcategory({
+					name: newSubcategory,
+					category_id: selectedCategory
+				});
+				const subs = await subcategoryService.getSubcategories(selectedCategory);
+				setSubcategoriesList(subs || []);
+				setNewSubcategory('');
+			} catch (error) {
+				console.error('Failed to create subcategory:', error);
+				alert('Failed to create subcategory. Please try again.');
+			} finally {
+				setIsSubmitting(false);
+			}
+		}
+	};
+
+	const handleDeleteSubcategory = async (subcategoryId) => {
+		if (window.confirm('Are you sure you want to delete this subcategory? Items with this subcategory will have it removed.')) {
+			try {
+				await subcategoryService.deleteSubcategory(subcategoryId);
+				const subs = await subcategoryService.getSubcategories(selectedCategory);
+				setSubcategoriesList(subs || []);
+			} catch (error) {
+				console.error('Failed to delete subcategory:', error);
+				alert('Failed to delete subcategory. Please try again.');
+			}
+		}
+	};
+
+	const handleToggleSubcategory = async (subcategoryId) => {
+		try {
+			await subcategoryService.toggleSubcategory(subcategoryId);
+			const subs = await subcategoryService.getSubcategories(selectedCategory);
+			setSubcategoriesList(subs || []);
+		} catch (error) {
+			console.error('Failed to toggle subcategory:', error);
+			alert('Failed to toggle subcategory. Please try again.');
+		}
+	};
+
 	// --- Derived State for UI ---
 
 	// Group items by category for display
@@ -229,6 +334,7 @@ const Products = () => {
 				<div className="menu-actions">
 					<button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Add New Product</button>
 					<button className="btn btn-outline" onClick={() => setShowCategoryModal(true)}>Manage Categories</button>
+					<button className="btn btn-outline" onClick={() => setShowSubcategoryModal(true)}>Manage Subcategories</button>
 				</div>
 
 				<div className="menu-categories">
@@ -272,6 +378,7 @@ const Products = () => {
 				title={editingItem ? 'Edit Product' : 'Add New Item'}
 				formData={newItem}
 				categories={categories}
+				subcategories={subcategories}
 				onChange={handleInputChange}
 				onSubmit={handleSaveItem}
 				onClose={handleModalClose}
@@ -286,6 +393,88 @@ const Products = () => {
 				onClose={() => setShowCategoryModal(false)}
 				onCategoriesChange={fetchData}
 			/>
+
+			{/* Manage Subcategories Modal */}
+			{showSubcategoryModal && (
+				<div className="modal-overlay">
+					<div className="modal-content">
+						<h2 className="modal-title">Manage Subcategories</h2>
+						
+						<label style={{ marginBottom: 12, display: 'block' }}>
+							Select Category
+							<select 
+								value={selectedCategory} 
+								onChange={handleCategorySelectChange}
+								style={{ marginTop: 6 }}
+								required
+							>
+								<option value="">-- Choose Category --</option>
+								{categories.filter(c => c.is_active !== false).map((cat) => (
+									<option key={cat.id} value={cat.id}>{cat.name}</option>
+								))}
+							</select>
+						</label>
+
+						{selectedCategory && (
+							<>
+								<form className="add-category-form" onSubmit={handleAddSubcategory} style={{ display: 'flex', gap: 12, marginBottom: 18 }}>
+									<input
+										type="text"
+										placeholder="New subcategory name"
+										value={newSubcategory}
+										onChange={e => setNewSubcategory(e.target.value)}
+										style={{ flex: 1 }}
+										required
+									/>
+									<button type="submit" className="btn btn-primary" style={{ minWidth: 110 }} disabled={isSubmitting}>Add</button>
+								</form>
+								<hr style={{ margin: '18px 0 10px 0', border: 'none', borderTop: '1.5px solid #f3f4f6' }} />
+								<div style={{ fontWeight: 700, fontSize: '1.15rem', marginBottom: 12 }}>Existing Subcategories</div>
+								<div className="category-list-modal">
+									{subcategoriesList.length === 0 ? (
+										<div style={{ color: '#6b7280', padding: '12px 0' }}>No subcategories yet. Add one above.</div>
+									) : (
+										subcategoriesList.map((sub) => (
+											<div className="category-modal-row" key={sub.id}>
+												<span style={{ fontWeight: 700, textTransform: 'lowercase', minWidth: 80 }}>{sub.name}</span>
+												<span className="category-toggle">
+													<label className="switch">
+														<input type="checkbox" checked={sub.is_active} onChange={() => handleToggleSubcategory(sub.id)} style={{ marginLeft: -8 }} />
+														<span className="slider round"></span>
+													</label>
+												</span>
+												<button
+													className="action-btn delete-btn"
+													type="button"
+													onClick={() => handleDeleteSubcategory(sub.id)}
+													title="Delete"
+													style={{ marginLeft: '10px' }}
+												>
+													<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+														<polyline points="3 6 5 6 21 6"></polyline>
+														<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+														<line x1="10" y1="11" x2="10" y2="17"></line>
+														<line x1="14" y1="11" x2="14" y2="17"></line>
+													</svg>
+												</button>
+											</div>
+										))
+									)}
+								</div>
+							</>
+						)}
+
+						<div className="modal-actions" style={{ marginTop: 24 }}>
+							<button type="button" className="btn btn-cancel" onClick={() => {
+								setShowSubcategoryModal(false);
+								setSelectedCategory('');
+								setSubcategoriesList([]);
+								setNewSubcategory('');
+							}}>Close</button>
+						</div>
+					</div>
+				</div>
+			)}
 		</>
 	);
 };

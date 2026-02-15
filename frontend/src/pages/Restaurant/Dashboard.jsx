@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import '../Restaurant/Dashboard.css';
 import { analyticsService } from '../../services/analyticsService';
+import orderService from '../../services/orderService';
 
 function Dashboard() {
 	const [stats, setStats] = useState(null);
@@ -17,7 +18,12 @@ function Dashboard() {
 			setLoading(true);
 			const data = await analyticsService.getSummary(7);
 			setStats(data);
-			// You can add an order service call here if you have recent orders endpoint
+
+			// Fetch recent orders
+			const ordersData = await orderService.getOrders({ limit: 5 });
+			if (ordersData && ordersData.orders) {
+				setRecentOrders(ordersData.orders);
+			}
 		} catch (error) {
 			console.error('Failed to fetch dashboard data:', error);
 		} finally {

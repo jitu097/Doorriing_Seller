@@ -20,12 +20,14 @@ const buildItemPayload = (shopId, data) => {
         shop_id: shopId,
         name: data.name,
         description: data.description || null,
+        expiry_date: data.expiry_date || null,
         price: data.price,
         half_portion_price: data.half_portion_price || null,
         stock_quantity: data.stock_quantity || 0,
         unit: data.unit || null,
         image_url: data.image_url || null,
         is_available: data.is_available !== undefined ? data.is_available : true,
+        subcategory_id: data.subcategory_id || null,
     };
 
     // Category is optional for Grocery
@@ -49,7 +51,39 @@ const createGroceryItem = async (shopId, itemData) => {
         throw new BadRequestError('Name and Price are required.');
     }
 
-    // 2. Build Safe Payload
+    // 2. Validate category if provided
+    if (itemData.category_id) {
+        const { data: category, error: categoryError } = await supabase
+            .from('categories')
+            .select('id')
+            .eq('id', itemData.category_id)
+            .eq('shop_id', shopId)
+            .single();
+
+        if (categoryError || !category) {
+            throw new BadRequestError('Category not found or does not belong to this shop');
+        }
+    }
+
+    // 3. Validate subcategory if provided
+    if (itemData.subcategory_id) {
+        const { data: subcategory, error: subcategoryError } = await supabase
+            .from('subcategories')
+            .select('id, category_id')
+            .eq('id', itemData.subcategory_id)
+            .eq('shop_id', shopId)
+            .single();
+
+        if (subcategoryError || !subcategory) {
+            throw new BadRequestError('Subcategory not found or does not belong to this shop');
+        }
+
+        if (itemData.category_id && subcategory.category_id !== itemData.category_id) {
+            throw new BadRequestError('Subcategory does not belong to the selected category');
+        }
+    }
+
+    // 4. Build Safe Payload
     const payload = buildItemPayload(shopId, itemData);
 
     // 3. Insert into Supabase
@@ -71,8 +105,23 @@ const getGroceryItems = async (shopId, filters = {}) => {
     let query = supabase
         .from('items')
         .select(`
-            *,
-            categories (id, name)
+            id,
+            shop_id,
+            category_id,
+            subcategory_id,
+            name,
+            description,
+            price,
+            half_portion_price,
+            stock_quantity,
+            unit,
+            image_url,
+            is_available,
+            expiry_date,
+            created_at,
+            updated_at,
+            category:categories!items_category_id_fkey(id, name),
+            subcategory:subcategories(id, name)
         `)
         .eq('shop_id', shopId);
 
@@ -96,8 +145,23 @@ const getGroceryItemById = async (shopId, itemId) => {
     const { data, error } = await supabase
         .from('items')
         .select(`
-            *,
-            categories (id, name)
+            id,
+            shop_id,
+            category_id,
+            subcategory_id,
+            name,
+            description,
+            price,
+            half_portion_price,
+            stock_quantity,
+            unit,
+            image_url,
+            is_available,
+            expiry_date,
+            created_at,
+            updated_at,
+            category:categories!items_category_id_fkey(id, name),
+            subcategory:subcategories(id, name)
         `)
         .eq('id', itemId)
         .eq('shop_id', shopId) // Security: Ensure item belongs to this shop
@@ -114,8 +178,43 @@ const updateGroceryItem = async (shopId, itemId, updates) => {
     // We treat 'updates' as a partial object.
     const allowedFields = [
         'name', 'description', 'price', 'half_portion_price',
-        'stock_quantity', 'unit', 'image_url', 'is_available', 'category_id'
+        'stock_quantity', 'unit', 'image_url', 'is_available', 'category_id',
+        'expiry_date', 'subcategory_id'
     ];
+
+    // 2. Validate category_id if being updated
+    if (updates.category_id) {
+        const { data: category, error: categoryError } = await supabase
+            .from('categories')
+            .select('id')
+            .eq('id', updates.category_id)
+            .eq('shop_id', shopId)
+            .single();
+
+        if (categoryError || !category) {
+            throw new BadRequestError('Category not found or does not belong to this shop');
+        }
+    }
+
+    // 3. Validate subcategory if provided
+    if (updates.subcategory_id) {
+        const { data: subcategory, error: subcategoryError } = await supabase
+            .from('subcategories')
+            .select('id, category_id')
+            .eq('id', updates.subcategory_id)
+            .eq('shop_id', shopId)
+            .single();
+
+        if (subcategoryError || !subcategory) {
+            throw new BadRequestError('Subcategory not found or does not belong to this shop');
+        }
+
+        // If category is being updated, check against new category, otherwise get current category
+        const categoryId = updates.category_id || (await getGroceryItemById(shopId, itemId)).category_id;
+        if (categoryId && subcategory.category_id !== categoryId) {
+            throw new BadRequestError('Subcategory does not belong to the selected category');
+        }
+    }
 
     const payload = {};
     allowedFields.forEach(field => {

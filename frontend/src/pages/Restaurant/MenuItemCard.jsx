@@ -17,6 +17,11 @@ const MenuItemCard = ({ item, onToggle, onDelete, onEdit }) => {
 
             <div className="item-details">
                 <h3 className="item-name">{item.name}</h3>
+                {item.subcategory?.name && (
+                    <p className="item-subcategory" style={{ color: '#6b7280', fontSize: '0.85rem', margin: '2px 0 6px 0' }}>
+                        {item.category?.name} › {item.subcategory.name}
+                    </p>
+                )}
                 <p className="item-description">{item.description}</p>
 
                 <div className="item-prices">

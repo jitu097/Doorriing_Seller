@@ -3,11 +3,47 @@ const { uploadToCloudinary, deleteFromCloudinary, extractPublicId } = require('.
 const notificationService = require('../notification/notification.service');
 
 const createItem = async (shopId, itemData) => {
+    // Validate category_id is required
+    if (!itemData.category_id) {
+        throw new Error('category_id is required');
+    }
+
+    // Validate category belongs to shop
+    const { data: category, error: categoryError } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('id', itemData.category_id)
+        .eq('shop_id', shopId)
+        .single();
+
+    if (categoryError || !category) {
+        throw new Error('Category not found or does not belong to this shop');
+    }
+
+    // Validate subcategory if provided
+    if (itemData.subcategory_id) {
+        const { data: subcategory, error: subcategoryError } = await supabase
+            .from('subcategories')
+            .select('id, category_id')
+            .eq('id', itemData.subcategory_id)
+            .eq('shop_id', shopId)
+            .single();
+
+        if (subcategoryError || !subcategory) {
+            throw new Error('Subcategory not found or does not belong to this shop');
+        }
+
+        if (subcategory.category_id !== itemData.category_id) {
+            throw new Error('Subcategory does not belong to the selected category');
+        }
+    }
+
     const { data, error } = await supabase
         .from('items')
         .insert({
             shop_id: shopId,
             category_id: itemData.category_id,
+            subcategory_id: itemData.subcategory_id || null,
             name: itemData.name,
             // description: itemData.description, // Removed due to schema mismatch error
             price: itemData.price,
@@ -35,7 +71,8 @@ const getItems = async (shopId, categoryId = null) => {
         .select(`
             id,
             name,
-            // description, 
+            category_id,
+            subcategory_id,
             price,
             half_portion_price,
             stock_quantity,
@@ -43,7 +80,8 @@ const getItems = async (shopId, categoryId = null) => {
             image_url,
             is_available,
             created_at,
-            categories (id, name)
+            category:categories!items_category_id_fkey(id, name),
+            subcategory:subcategories(id, name)
         `)
         .eq('shop_id', shopId);
 
@@ -62,8 +100,20 @@ const getItem = async (itemId, shopId) => {
     const { data, error } = await supabase
         .from('items')
         .select(`
-            *,
-            categories (id, name)
+            id,
+            shop_id,
+            category_id,
+            subcategory_id,
+            name,
+            price,
+            half_portion_price,
+            stock_quantity,
+            unit,
+            image_url,
+            is_available,
+            created_at,
+            category:categories!items_category_id_fkey(id, name),
+            subcategory:subcategories(id, name)
         `)
         .eq('id', itemId)
         .eq('shop_id', shopId)
@@ -77,8 +127,42 @@ const getItem = async (itemId, shopId) => {
 const updateItem = async (itemId, shopId, updates) => {
     const allowedFields = [
         'name', /* 'description', */ 'price', 'half_portion_price',
-        'unit', 'image_url', 'category_id'
+        'unit', 'image_url', 'category_id', 'subcategory_id'
     ];
+
+    // Validate category_id if being updated
+    if (updates.category_id) {
+        const { data: category, error: categoryError } = await supabase
+            .from('categories')
+            .select('id')
+            .eq('id', updates.category_id)
+            .eq('shop_id', shopId)
+            .single();
+
+        if (categoryError || !category) {
+            throw new Error('Category not found or does not belong to this shop');
+        }
+    }
+
+    // Validate subcategory if provided
+    if (updates.subcategory_id) {
+        const { data: subcategory, error: subcategoryError } = await supabase
+            .from('subcategories')
+            .select('id, category_id')
+            .eq('id', updates.subcategory_id)
+            .eq('shop_id', shopId)
+            .single();
+
+        if (subcategoryError || !subcategory) {
+            throw new Error('Subcategory not found or does not belong to this shop');
+        }
+
+        // If category is being updated, check against new category, otherwise get current category
+        const categoryId = updates.category_id || (await getItem(itemId, shopId)).category_id;
+        if (subcategory.category_id !== categoryId) {
+            throw new Error('Subcategory does not belong to the selected category');
+        }
+    }
 
     const filteredUpdates = {};
     Object.keys(updates).forEach(key => {
