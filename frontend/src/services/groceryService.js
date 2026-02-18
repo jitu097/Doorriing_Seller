@@ -47,6 +47,13 @@ export const createGroceryItem = async (itemData) => {
         payload.category_id = null;
     }
 
+    // Persist optional subcategory selection
+    if (itemData.subcategory_id && itemData.subcategory_id !== "") {
+        payload.subcategory_id = itemData.subcategory_id;
+    } else {
+        payload.subcategory_id = null;
+    }
+
     return api('/grocery/items', {
         method: 'POST',
         body: JSON.stringify(payload)
@@ -68,6 +75,10 @@ export const updateGroceryItem = async (itemId, updates) => {
 
     if (updates.category_id !== undefined) {
         payload.category_id = updates.category_id === "" ? null : updates.category_id;
+    }
+
+    if (updates.subcategory_id !== undefined) {
+        payload.subcategory_id = updates.subcategory_id === "" ? null : updates.subcategory_id;
     }
 
     return api(`/grocery/items/${itemId}`, {

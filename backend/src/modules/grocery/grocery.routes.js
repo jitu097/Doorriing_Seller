@@ -5,7 +5,10 @@ const { verifyToken } = require('../../middlewares/auth.middleware');
 const { loadSeller, loadShop, requireGrocery } = require('../../middlewares/seller.middleware');
 const upload = require('../../middlewares/upload.middleware');
 
-// Protect all routes
+// Debug - Moved before auth middleware to allow easy access
+router.get('/debug-constraints', groceryController.debugSchema);
+
+// Protect all routes below
 // 1. Verify User Token
 // 2. Load Seller/User Context
 // 3. Load Shop Context (Strictly required for adding items)

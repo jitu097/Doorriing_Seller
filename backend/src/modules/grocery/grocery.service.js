@@ -55,7 +55,7 @@ const createGroceryItem = async (shopId, itemData) => {
     if (itemData.category_id) {
         const { data: category, error: categoryError } = await supabase
             .from('categories')
-            .select('id')
+            .select('id, shop_id')
             .eq('id', itemData.category_id)
             .eq('shop_id', shopId)
             .single();
@@ -63,13 +63,18 @@ const createGroceryItem = async (shopId, itemData) => {
         if (categoryError || !category) {
             throw new BadRequestError('Category not found or does not belong to this shop');
         }
+
+        console.log('Validated category for item create', {
+            categoryId: category.id,
+            categoryShop: category.shop_id
+        });
     }
 
     // 3. Validate subcategory if provided
     if (itemData.subcategory_id) {
         const { data: subcategory, error: subcategoryError } = await supabase
             .from('subcategories')
-            .select('id, category_id')
+            .select('id, category_id, shop_id')
             .eq('id', itemData.subcategory_id)
             .eq('shop_id', shopId)
             .single();
@@ -78,13 +83,31 @@ const createGroceryItem = async (shopId, itemData) => {
             throw new BadRequestError('Subcategory not found or does not belong to this shop');
         }
 
-        if (itemData.category_id && subcategory.category_id !== itemData.category_id) {
-            throw new BadRequestError('Subcategory does not belong to the selected category');
+        if (subcategory.category_id == null) {
+            throw new BadRequestError('Subcategory is missing a parent category');
         }
+
+        if (itemData.category_id && subcategory.category_id !== itemData.category_id) {
+            console.warn('Category mismatch for item create; overriding to subcategory parent', {
+                providedCategory: itemData.category_id,
+                subcategoryCategory: subcategory.category_id,
+                subcategoryShop: subcategory.shop_id
+            });
+        }
+
+        itemData.category_id = subcategory.category_id;
+
+        console.log('Resolved category from subcategory during create', {
+            subcategoryId: itemData.subcategory_id,
+            categoryId: itemData.category_id,
+            subcategoryShop: subcategory.shop_id
+        });
     }
 
     // 4. Build Safe Payload
     const payload = buildItemPayload(shopId, itemData);
+
+    console.log('Creating grocery item with payload', payload);
 
     // 3. Insert into Supabase
     const { data, error } = await supabase
@@ -94,7 +117,7 @@ const createGroceryItem = async (shopId, itemData) => {
         .single();
 
     if (error) {
-        console.error('Error creating grocery item:', error);
+        console.error('Error creating grocery item:', { error, payload });
         throw error;
     }
 
@@ -186,7 +209,7 @@ const updateGroceryItem = async (shopId, itemId, updates) => {
     if (updates.category_id) {
         const { data: category, error: categoryError } = await supabase
             .from('categories')
-            .select('id')
+            .select('id, shop_id')
             .eq('id', updates.category_id)
             .eq('shop_id', shopId)
             .single();
@@ -194,13 +217,18 @@ const updateGroceryItem = async (shopId, itemId, updates) => {
         if (categoryError || !category) {
             throw new BadRequestError('Category not found or does not belong to this shop');
         }
+
+        console.log('Validated category for item update', {
+            categoryId: category.id,
+            categoryShop: category.shop_id
+        });
     }
 
     // 3. Validate subcategory if provided
     if (updates.subcategory_id) {
         const { data: subcategory, error: subcategoryError } = await supabase
             .from('subcategories')
-            .select('id, category_id')
+            .select('id, category_id, shop_id')
             .eq('id', updates.subcategory_id)
             .eq('shop_id', shopId)
             .single();
@@ -209,11 +237,25 @@ const updateGroceryItem = async (shopId, itemId, updates) => {
             throw new BadRequestError('Subcategory not found or does not belong to this shop');
         }
 
-        // If category is being updated, check against new category, otherwise get current category
-        const categoryId = updates.category_id || (await getGroceryItemById(shopId, itemId)).category_id;
-        if (categoryId && subcategory.category_id !== categoryId) {
-            throw new BadRequestError('Subcategory does not belong to the selected category');
+        if (subcategory.category_id == null) {
+            throw new BadRequestError('Subcategory is missing a parent category');
         }
+
+        if (updates.category_id && subcategory.category_id !== updates.category_id) {
+            console.warn('Category mismatch for item update; overriding to subcategory parent', {
+                providedCategory: updates.category_id,
+                subcategoryCategory: subcategory.category_id,
+                subcategoryShop: subcategory.shop_id
+            });
+        }
+
+        updates.category_id = subcategory.category_id;
+
+        console.log('Resolved category from subcategory during update', {
+            subcategoryId: updates.subcategory_id,
+            categoryId: updates.category_id,
+            subcategoryShop: subcategory.shop_id
+        });
     }
 
     const payload = {};

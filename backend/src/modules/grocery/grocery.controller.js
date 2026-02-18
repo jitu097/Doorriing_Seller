@@ -229,5 +229,42 @@ module.exports = {
     createCategory,
     getCategories,
     deleteCategory,
-    updateCategory
+    updateCategory,
+    debugSchema: async (req, res, next) => {
+        try {
+            const supabase = require('../../config/supabaseClient');
+
+            // 1. Get Triggers
+            const { data: triggers, error: triggerError } = await supabase.rpc('get_triggers', { table_name_param: 'items' });
+
+            // Fallback if RPC doesn't exist (likely won't worked if function not there, but try raw query if possible via some means? No, just try to get info via standard tables if we have permissions)
+            // But we can't run raw SQL easily. Let's try to query information_schema directly if Supabase allows
+
+            // Alternative: List constraints from postgres tables (might be restricted)
+            // We will try to invoke a raw query if we had a raw query function, but we don't.
+            // Let's rely on standard error catching to see what we can find.
+
+            // Actually, let's just return what we can find about the table structure or just standard connection check
+            // The user said "P0001" which is PL/pgSQL Error.
+
+            // Let's try to fetch constraints for 'items' table from information_schema
+            const { data: constraints, error: constraintError } = await supabase
+                .from('information_schema.table_constraints')
+                .select('*')
+                .eq('table_name', 'items')
+                .eq('table_schema', 'public');
+
+            // Also check trigger definitions if possible (pg_trigger is system table, might not be accessible via API)
+
+            res.status(200).json({
+                success: true,
+                constraints,
+                constraintError,
+                // We might not be able to see triggers easily without admin rights or rpc
+                note: 'Ensure you check Supabase dashboard -> Database -> Triggers if this list is empty'
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 };
