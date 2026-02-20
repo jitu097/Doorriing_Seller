@@ -125,22 +125,22 @@ export default function Registration() {
 
 		// Submit to backend
 		try {
-			// Prepare payload with snake_case keys for backend validation
-			const payload = {
-				shop_name: formData.shopName,
-				owner_name: formData.ownerName,
-				phone: formData.phone,
-				email: formData.email,
-				address: formData.address,
-				category: formData.category,
-				subcategory: formData.subcategory,
-				description: formData.description,
-				city: formData.city,
-				state: formData.state,
-				pincode: formData.PINCode,
-				// business_type handles category mapping in backend if needed, but validator checks 'category'
-				shop_image_url: null // consistent with current logic
-			};
+			const payload = new FormData();
+			payload.append('shop_name', formData.shopName);
+			payload.append('owner_name', formData.ownerName);
+			payload.append('phone', formData.phone);
+			payload.append('email', formData.email);
+			payload.append('address', formData.address);
+			payload.append('category', formData.category);
+			payload.append('subcategory', formData.subcategory);
+			payload.append('description', formData.description || '');
+			payload.append('city', formData.city);
+			payload.append('state', formData.state);
+			payload.append('pincode', formData.PINCode);
+
+			if (formData.shopPhoto) {
+				payload.append('image', formData.shopPhoto);
+			}
 
 			// Call API to create shop
 			await shopService.createShop(payload);

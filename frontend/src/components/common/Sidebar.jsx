@@ -16,8 +16,8 @@ const Sidebar = ({ isOpen, onClose, menuItems, profilePath }) => {
 
     const fetchShopStatus = async () => {
         try {
-            const shop = await shopService.getShop();
-            setIsShopOpen(shop?.is_open ?? true);
+            const isOpen = await shopService.getShopStatus();
+            setIsShopOpen(isOpen);
         } catch (e) {
             console.error(e);
         }

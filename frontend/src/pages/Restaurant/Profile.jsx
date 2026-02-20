@@ -1,24 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import './Profile.css';
 import apiCall from '../../services/api';
+import { shopService } from '../../services/shopService';
 
 export default function Profile() {
 	const [formData, setFormData] = useState({});
 	const [loading, setLoading] = useState(true);
 	const [isEditing, setIsEditing] = useState(false);
 	const [saving, setSaving] = useState(false);
+	const [uploadingImage, setUploadingImage] = useState(false);
 	const [activeSection, setActiveSection] = useState('shop');
+	const [selectedImageFile, setSelectedImageFile] = useState(null);
+	const [previewImage, setPreviewImage] = useState('');
+
+	const isShopOpen = (shop) => {
+		if (shop?.status) return String(shop.status).toLowerCase() === 'open';
+		return !!shop?.is_open;
+	};
 
 	useEffect(() => {
 		fetchShopData();
+		const unsubscribe = shopService.subscribeToShopStatus((isOpen) => {
+			setFormData(prev => ({ ...prev, is_open: isOpen, status: isOpen ? 'open' : 'closed' }));
+		});
+		return () => {
+			if (previewImage) {
+				URL.revokeObjectURL(previewImage);
+			}
+			unsubscribe();
+		};
 	}, []);
 
 	const fetchShopData = async () => {
 		try {
 			setLoading(true);
 			const response = await apiCall('/shop');
-			// Backend returns { shop: ..., user: ... }
-			setFormData(response.shop || {});
+			const shop = response.shop || {};
+			const open = isShopOpen(shop);
+			setFormData({
+				...shop,
+				status: shop.status || (open ? 'open' : 'closed'),
+				is_open: open
+			});
 		} catch (error) {
 			console.error('Failed to fetch shop data:', error);
 		} finally {
@@ -38,9 +61,14 @@ export default function Profile() {
 		try {
 			setSaving(true);
 			await apiCall('/shop', {
-				method: 'PUT',
-				body: JSON.stringify(formData)
+				method: 'PATCH',
+				body: JSON.stringify({
+					...formData,
+					status: isShopOpen(formData) ? 'open' : 'closed'
+				})
 			});
+
+			await fetchShopData();
 			setIsEditing(false);
 			alert('Shop profile updated successfully');
 		} catch (error) {
@@ -51,17 +79,53 @@ export default function Profile() {
 		}
 	};
 
-	const handleToggleStatus = async () => {
+	const handleImageChange = (e) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+		if (!validTypes.includes(file.type)) {
+			alert('Please select a valid image file (JPEG, PNG, or WebP)');
+			return;
+		}
+
+		if (file.size > 5 * 1024 * 1024) {
+			alert('Image size must be less than 5MB');
+			return;
+		}
+
+		setSelectedImageFile(file);
+		setPreviewImage(URL.createObjectURL(file));
+	};
+
+	const clearImageSelection = () => {
+		if (previewImage) {
+			URL.revokeObjectURL(previewImage);
+		}
+		setPreviewImage('');
+		setSelectedImageFile(null);
+	};
+
+	const handleSaveShopImage = async () => {
+		if (!selectedImageFile) {
+			alert('Please select an image first');
+			return;
+		}
+
 		try {
-			const newStatus = !formData.is_open;
-			await apiCall('/shop/status', {
-				method: 'PATCH',
-				body: JSON.stringify({ is_open: newStatus })
-			});
-			setFormData(prev => ({ ...prev, is_open: newStatus }));
+			setUploadingImage(true);
+			const updatedShop = await shopService.uploadShopImage(selectedImageFile);
+			setFormData(prev => ({
+				...prev,
+				shop_image_url: updatedShop?.shop_image_url || prev.shop_image_url
+			}));
+			clearImageSelection();
+			alert('Shop image uploaded successfully');
 		} catch (error) {
-			console.error('Failed to toggle shop status:', error);
-			alert('Failed to update shop status');
+			console.error('Failed to upload shop image:', error);
+			alert('Failed to upload shop image');
+		} finally {
+			setUploadingImage(false);
 		}
 	};
 
@@ -72,13 +136,37 @@ export default function Profile() {
 	return (
 		<div className="admin-container">
 			<div className="profile-header-card">
-				<div className="profile-cover">
-					<button className="edit-cover-btn">📷 Change Cover</button>
+				<div className="profile-cover" style={{ 
+					backgroundImage: (previewImage || formData.shop_image_url)
+						? `url(${previewImage || formData.shop_image_url})`
+						: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+					backgroundSize: 'cover',
+					backgroundPosition: 'center'
+				}}>
+					<input id="restaurant-cover-image" type="file" accept="image/jpeg,image/jpg,image/png,image/webp" onChange={handleImageChange} style={{ display: 'none' }} />
+					<button
+						type="button"
+						className="edit-cover-btn"
+						onClick={() => document.getElementById('restaurant-cover-image')?.click()}
+						disabled={uploadingImage || saving}
+					>
+						📷 {previewImage || formData.shop_image_url ? 'Change Shop Image' : 'Upload Shop Image'}
+					</button>
+					{selectedImageFile && (
+						<button
+							type="button"
+							className="edit-cover-btn"
+							onClick={handleSaveShopImage}
+							disabled={uploadingImage || saving}
+							style={{ marginTop: '0.5rem' }}
+						>
+							{uploadingImage ? 'Uploading...' : 'Upload & Save Image'}
+						</button>
+					)}
 				</div>
 				<div className="profile-info-bar">
 					<div className="profile-avatar">
-						<img src="https://ui-avatars.com/api/?name=Restaurant&background=FF6B6B&color=fff&size=128" alt="Shop Logo" />
-						<button className="edit-avatar-btn">✏️</button>
+					<img src={formData.shop_name ? `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.shop_name)}&background=FF6B6B&color=fff&size=128` : 'https://ui-avatars.com/api/?name=Restaurant&background=FF6B6B&color=fff&size=128'} alt="Shop Logo" />
 					</div>
 					<div className="profile-basics">
 						<h1>{formData.shop_name || 'Restaurant Name'}</h1>
@@ -251,60 +339,20 @@ export default function Profile() {
 										disabled={!isEditing}
 									/>
 								</div>
-								<div className="form-group">
-									<label>Delivery Charge (₹)</label>
-									<input
-										type="number"
-										name="delivery_charge"
-										value={formData.delivery_charge || ''}
-										onChange={handleInputChange}
-										disabled={!isEditing}
-									/>
-								</div>
-								<div className="form-group">
-									<label>Min Order (₹)</label>
-									<input
-										type="number"
-										name="min_order_amount"
-										value={formData.min_order_amount || ''}
-										onChange={handleInputChange}
-										disabled={!isEditing}
-									/>
-								</div>
-								<div className="form-group full-width">
-									<label className="toggle-label">
-										Delivery Status
-										<div className="toggle-switch">
-											<input
-												type="checkbox"
-												name="delivery_enabled"
-												checked={formData.delivery_enabled || false}
-												onChange={handleInputChange}
-												disabled={!isEditing}
-											/>
-											<span className="slider round"></span>
-										</div>
-										<span className="status-text">{formData.delivery_enabled ? 'Delivery Enabled' : 'Delivery Disabled'}</span>
-									</label>
-								</div>
 								<div className="form-group full-width">
 									<label className="toggle-label">
 										Shop Status
 										<div className="toggle-switch">
 											<input
 												type="checkbox"
-												checked={formData.is_open || false}
+													checked={isShopOpen(formData)}
 												disabled={true}
 											/>
 											<span className="slider round"></span>
 										</div>
-										<span className="status-text">{formData.is_open ? 'Open for Orders' : 'Temporarily Closed'}</span>
+											<span className="status-text">{isShopOpen(formData) ? 'Open for Orders' : 'Temporarily Closed'}</span>
 									</label>
-									{!isEditing && (
-										<button className="btn-toggle-status" onClick={handleToggleStatus} style={{ marginTop: '10px' }}>
-											{formData.is_open ? 'Close Shop' : 'Open Shop'}
-										</button>
-									)}
+									<p style={{ fontSize: '0.8rem', color: '#666', marginTop: '5px' }}>Shop status is controlled from the top Admin Panel toggle.</p>
 								</div>
 							</div>
 						</div>

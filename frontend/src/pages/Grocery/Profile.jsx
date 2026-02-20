@@ -2,11 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import './Profile.css';
 import groceryService from '../../services/groceryService';
+import { shopService } from '../../services/shopService';
 
 const Profile = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [activeSection, setActiveSection] = useState('shop');
     const [loading, setLoading] = useState(true);
+    const [selectedImageFile, setSelectedImageFile] = useState(null);
+    const [previewImage, setPreviewImage] = useState('');
 
     const [shopData, setShopData] = useState({
         shopName: '',
@@ -15,7 +18,6 @@ const Profile = () => {
         city: '',
         pincode: '',
         contact: '',
-        email: '',
         gstin: '',
         fssai: '',
         ownerName: '',
@@ -24,6 +26,11 @@ const Profile = () => {
         closingTime: '',
         isOpen: false
     });
+
+    const getShopStatus = (data) => {
+        if (data?.status) return String(data.status).toLowerCase();
+        return data?.is_open ? 'open' : 'closed';
+    };
 
     // Helper to ensure we never render an object
     const ensureString = (val) => {
@@ -47,14 +54,14 @@ const Profile = () => {
                     city: ensureString(data.city),
                     pincode: ensureString(data.pincode),
                     contact: ensureString(data.phone || userData.phone),
-                    email: ensureString(data.email || userData.email),
                     gstin: ensureString(data.tax_id),
                     fssai: ensureString(data.business_license),
                     ownerName: ensureString(data.owner_name || userData.owner_name),
                     category: ensureString(data.subcategory || data.category),
-                    openingTime: ensureString(data.operating_hours?.monday?.open || '09:00'),
-                    closingTime: ensureString(data.operating_hours?.monday?.close || '21:00'),
-                    isOpen: !!data.is_open // Force boolean
+                    openingTime: ensureString(data.opening_time || data.operating_hours?.monday?.open || '09:00'),
+                    closingTime: ensureString(data.closing_time || data.operating_hours?.monday?.close || '21:00'),
+                    isOpen: getShopStatus(data) === 'open',
+                    imageUrl: ensureString(data.shop_image_url)
                 });
             } catch (error) {
                 console.error("Failed to fetch profile", error);
@@ -64,6 +71,12 @@ const Profile = () => {
         };
 
         fetchProfile();
+
+        const unsubscribe = shopService.subscribeToShopStatus((isOpen) => {
+            setShopData(prev => ({ ...prev, isOpen }));
+        });
+
+        return unsubscribe;
     }, []);
 
     const handleSave = async () => {
@@ -73,12 +86,22 @@ const Profile = () => {
                 description: shopData.description,
                 address: shopData.address,
                 phone: shopData.contact,
-                email: shopData.email,
                 city: shopData.city,
-                pincode: shopData.pincode
+                pincode: shopData.pincode,
+                opening_time: shopData.openingTime || null,
+                closing_time: shopData.closingTime || null,
+                status: shopData.isOpen ? 'open' : 'closed'
             };
 
             await groceryService.updateShopProfile(updates);
+
+            if (selectedImageFile) {
+                await shopService.uploadShopImage(selectedImageFile);
+                setSelectedImageFile(null);
+                setPreviewImage('');
+            }
+
+            // Image already uploaded via handleImageChange
 
             // Note: Toggle isOpen might need separate API call if not handled by update
             setIsEditing(false);
@@ -88,19 +111,44 @@ const Profile = () => {
         }
     };
 
+    const handleImageChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            alert('Please select a valid image file (JPEG, PNG, or WebP)');
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Image size must be less than 5MB');
+            return;
+        }
+
+        setSelectedImageFile(file);
+        setPreviewImage(URL.createObjectURL(file));
+    };
+
     if (loading) return <div>Loading Profile...</div>;
 
     return (
         <>
             <div className="admin-container">
                 <div className="profile-header-card">
-                    <div className="profile-cover">
-                        <button className="edit-cover-btn">📷 Change Cover</button>
+                    <div className="profile-cover" style={{ 
+                        backgroundImage: previewImage || shopData.imageUrl ? `url(${previewImage || shopData.imageUrl})` : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                    }}>
+                        <input id="grocery-cover-image" type="file" accept="image/jpeg,image/jpg,image/png,image/webp" onChange={handleImageChange} style={{ display: 'none' }} />
+                        <button type="button" className="edit-cover-btn" onClick={() => document.getElementById('grocery-cover-image')?.click()}>
+                            📷 {previewImage || shopData.imageUrl ? 'Change Shop Image' : 'Upload Shop Image'}
+                        </button>
                     </div>
                     <div className="profile-info-bar">
                         <div className="profile-avatar">
-                            <img src="https://ui-avatars.com/api/?name=Green+Valley&background=FFA500&color=fff&size=128" alt="Shop Logo" />
-                            <button className="edit-avatar-btn">✏️</button>
+                            <img src={shopData.shopName ? `https://ui-avatars.com/api/?name=${encodeURIComponent(shopData.shopName)}&background=FFA500&color=fff&size=128` : "https://ui-avatars.com/api/?name=Green+Valley&background=FFA500&color=fff&size=128"} alt="Shop Logo" />
                         </div>
                         <div className="profile-basics">
                             <h1>{shopData.shopName}</h1>
@@ -183,15 +231,6 @@ const Profile = () => {
                                             onChange={(e) => setShopData({ ...shopData, contact: e.target.value })}
                                         />
                                     </div>
-                                    <div className="form-group">
-                                        <label>Email Address</label>
-                                        <input
-                                            type="email"
-                                            value={shopData.email}
-                                            disabled={!isEditing}
-                                            onChange={(e) => setShopData({ ...shopData, email: e.target.value })}
-                                        />
-                                    </div>
                                     <div className="form-group full-width">
                                         <label>Address</label>
                                         <input
@@ -233,6 +272,7 @@ const Profile = () => {
                                             type="text"
                                             value={shopData.ownerName}
                                             disabled={!isEditing}
+                                            onChange={(e) => setShopData({ ...shopData, ownerName: e.target.value })}
                                         />
                                     </div>
                                     <div className="form-group">

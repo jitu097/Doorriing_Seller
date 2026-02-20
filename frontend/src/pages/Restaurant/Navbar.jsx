@@ -26,12 +26,18 @@ export default function Navbar() {
 
   useEffect(() => {
     fetchShopStatus();
+
+    const unsubscribe = shopService.subscribeToShopStatus((isOpen) => {
+      setIsShopOpen(isOpen);
+    });
+
+    return unsubscribe;
   }, []);
 
   const fetchShopStatus = async () => {
     try {
-      const shop = await shopService.getShop();
-      setIsShopOpen(shop?.is_open ?? true);
+      const status = await shopService.getShopStatus();
+      setIsShopOpen(status);
     } catch (e) {
       console.error(e);
     }

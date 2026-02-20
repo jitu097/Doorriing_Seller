@@ -1,12 +1,14 @@
 const shopService = require('./shop.service');
 const { successResponse } = require('../../utils/response');
 const { validateRequired } = require('../../utils/validators');
+const { BadRequestError } = require('../../utils/errors');
 
 const createShop = async (req, res, next) => {
     try {
         validateRequired(['shop_name', 'owner_name', 'phone', 'category', 'subcategory', 'address'], req.body);
         
-        const shop = await shopService.createShop(req.user.id, req.body);
+        const imageFile = req.file;
+        const shop = await shopService.createShop(req.user.id, req.body, imageFile);
         successResponse(res, shop, 'Shop created successfully', 201);
     } catch (error) {
         next(error);
@@ -34,7 +36,8 @@ const getShop = async (req, res, next) => {
 
 const updateShop = async (req, res, next) => {
     try {
-        const shop = await shopService.updateShop(req.seller.id, req.body);
+        const imageFile = req.file;
+        const shop = await shopService.updateShop(req.seller.id, req.body, imageFile);
         successResponse(res, shop, 'Shop updated successfully');
     } catch (error) {
         next(error);
@@ -43,8 +46,29 @@ const updateShop = async (req, res, next) => {
 
 const toggleStatus = async (req, res, next) => {
     try {
-        const { is_open } = req.body;
-        const shop = await shopService.toggleShopStatus(req.seller.id, is_open);
+        const { status, is_open } = req.body;
+        if (typeof is_open !== 'boolean' && typeof status !== 'string') {
+            throw new BadRequestError('Either status or is_open is required');
+        }
+
+        const shop = await shopService.updateShopStatusById(
+            req.seller.id,
+            req.shop.id,
+            status,
+            is_open
+        );
+        successResponse(res, shop, 'Shop status updated');
+    } catch (error) {
+        next(error);
+    }
+};
+
+const updateStatusById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { status, is_open } = req.body;
+
+        const shop = await shopService.updateShopStatusById(req.seller.id, id, status, is_open);
         successResponse(res, shop, 'Shop status updated');
     } catch (error) {
         next(error);
@@ -64,10 +88,25 @@ const uploadShopImage = async (req, res, next) => {
     }
 };
 
+const uploadCoverImage = async (req, res, next) => {
+    try {
+        if (!req.file) {
+            throw new Error('No image file provided');
+        }
+
+        const shop = await shopService.uploadShopImage(req.seller.id, req.file);
+        successResponse(res, shop, 'Shop image uploaded successfully');
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createShop,
     getShop,
     updateShop,
     toggleStatus,
-    uploadShopImage
+    updateStatusById,
+    uploadShopImage,
+    uploadCoverImage
 };

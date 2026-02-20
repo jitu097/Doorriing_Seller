@@ -7,10 +7,12 @@ const upload = require('../../middlewares/upload.middleware');
 
 router.use(verifyToken, loadSellerContext);
 
-router.post('/', shopController.createShop);
+router.post('/', upload.single('image'), shopController.createShop);
 router.get('/', shopController.getShop);
-router.patch('/', shopController.updateShop);
-router.patch('/status', shopController.toggleStatus);
+router.patch('/', requireShop, upload.single('image'), shopController.updateShop);
+router.patch('/status', requireShop, shopController.toggleStatus);
+router.put('/:id/status', requireShop, shopController.updateStatusById);
 router.post('/image', requireShop, upload.single('image'), shopController.uploadShopImage);
+router.post('/cover', requireShop, upload.single('cover'), shopController.uploadCoverImage);
 
 module.exports = router;

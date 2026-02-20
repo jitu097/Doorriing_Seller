@@ -13,8 +13,8 @@ export default function FooterMobile() {
 
   const fetchShopStatus = async () => {
     try {
-      const shop = await shopService.getShop();
-      setIsShopOpen(shop?.is_open ?? true);
+      const isOpen = await shopService.getShopStatus();
+      setIsShopOpen(isOpen);
     } catch (error) {
       // fail silently
     }

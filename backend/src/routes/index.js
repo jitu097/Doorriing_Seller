@@ -16,6 +16,7 @@ const groceryRoutes = require('../modules/grocery/grocery.routes');
 
 router.use('/auth', authRoutes);
 router.use('/shop', shopRoutes);
+router.use('/shops', shopRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/subcategories', subcategoryRoutes);
 router.use('/items', itemRoutes);

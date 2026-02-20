@@ -214,7 +214,7 @@ export const getShopProfile = async () => {
 
 export const updateShopProfile = async (data) => {
     return api('/shop', {
-        method: 'PUT',
+        method: 'PATCH',
         body: JSON.stringify(data)
     });
 };

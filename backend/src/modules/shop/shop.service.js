@@ -3,7 +3,27 @@ const cache = require('../../utils/cache');
 const { ConflictError, NotFoundError, BadRequestError } = require('../../utils/errors');
 const { uploadToCloudinary, deleteFromCloudinary, extractPublicId } = require('../../config/cloudinary');
 
-const createShop = async (sellerId, shopData) => {
+const VALID_SHOP_STATUSES = ['open', 'closed'];
+
+const normalizeShopStatus = (status, isOpen) => {
+    if (typeof status === 'string') {
+        const normalized = status.toLowerCase();
+        if (!VALID_SHOP_STATUSES.includes(normalized)) {
+            throw new BadRequestError(`Invalid shop status: ${status}. Allowed values: ${VALID_SHOP_STATUSES.join(', ')}`);
+        }
+        return normalized;
+    }
+
+    if (typeof isOpen === 'boolean') {
+        return isOpen ? 'open' : 'closed';
+    }
+
+    return null;
+};
+
+const isStatusOpen = (status) => status === 'open';
+
+const createShop = async (sellerId, shopData, imageFile = null) => {
     // Check for existing shop using correct column 'seller_id'
     const { data: existingShop } = await supabase
         .from('shops')
@@ -35,6 +55,13 @@ const createShop = async (sellerId, shopData) => {
         throw new BadRequestError(`Invalid business type: ${typeName}. Must match a valid system type.`);
     }
 
+    let uploadedImage = null;
+    if (imageFile) {
+        const folder = 'bazarse/shops';
+        const publicId = `shop_${sellerId}_${Date.now()}`;
+        uploadedImage = await uploadToCloudinary(imageFile.buffer, folder, publicId);
+    }
+
     // Map camelCase inputs (from frontend) or snake_case inputs to DB columns
     const { data: shop, error } = await supabase
         .from('shops')
@@ -52,10 +79,13 @@ const createShop = async (sellerId, shopData) => {
             business_type_id: businessTypeId, // Added likely required FK
             subcategory: shopData.subcategory,
             description: shopData.description || '',
-            shop_image_url: null, // Image upload requires separate flow, setting null for now
+            shop_image_url: uploadedImage?.secure_url || null,
             delivery_enabled: true,
             delivery_charge: 0,
             min_order_amount: 0,
+            opening_time: shopData.opening_time || shopData.openingTime || null,
+            closing_time: shopData.closing_time || shopData.closingTime || null,
+            status: 'open',
             is_open: true,
             is_active: true,
             is_verified: false
@@ -64,6 +94,9 @@ const createShop = async (sellerId, shopData) => {
         .single();
 
     if (error) {
+        if (uploadedImage?.public_id) {
+            await deleteFromCloudinary(uploadedImage.public_id);
+        }
         console.error('Supabase Create Shop Error:', error);
         throw error;
     }
@@ -85,19 +118,57 @@ const getShop = async (sellerId) => {
     return data;
 };
 
-const updateShop = async (sellerId, updates) => {
+const updateShop = async (sellerId, updates, imageFile = null) => {
     const allowedFields = [
         'shop_name', 'description', 'phone', 'email', 'website',
-        'address', 'shop_photo_url', 'operating_hours',
-        'delivery_enabled', 'delivery_charge', 'min_order_amount'
+        'address', 'shop_image_url', 'operating_hours',
+        'delivery_enabled', 'delivery_charge', 'min_order_amount',
+        'opening_time', 'closing_time', 'status', 'is_open',
+        'city', 'state', 'pincode', 'owner_name'
     ];
 
+    const normalizedUpdates = { ...updates };
+
+    if (updates.openingTime !== undefined && updates.opening_time === undefined) {
+        normalizedUpdates.opening_time = updates.openingTime;
+    }
+
+    if (updates.closingTime !== undefined && updates.closing_time === undefined) {
+        normalizedUpdates.closing_time = updates.closingTime;
+    }
+
+    const normalizedStatus = normalizeShopStatus(updates.status, updates.is_open);
+    if (normalizedStatus) {
+        normalizedUpdates.status = normalizedStatus;
+        normalizedUpdates.is_open = isStatusOpen(normalizedStatus);
+    }
+
     const filteredUpdates = {};
-    Object.keys(updates).forEach(key => {
+    Object.keys(normalizedUpdates).forEach(key => {
         if (allowedFields.includes(key)) {
-            filteredUpdates[key] = updates[key];
+            filteredUpdates[key] = normalizedUpdates[key];
         }
     });
+
+    let oldImageUrl = null;
+
+    if (imageFile) {
+        const { data: existingShop, error: existingShopError } = await supabase
+            .from('shops')
+            .select('id, shop_image_url')
+            .eq('seller_id', sellerId)
+            .single();
+
+        if (existingShopError || !existingShop) {
+            throw new NotFoundError('Shop not found');
+        }
+
+        oldImageUrl = existingShop.shop_image_url;
+        const folder = 'bazarse/shops';
+        const publicId = `shop_${existingShop.id}_${Date.now()}`;
+        const { secure_url } = await uploadToCloudinary(imageFile.buffer, folder, publicId);
+        filteredUpdates.shop_image_url = secure_url;
+    }
 
     const { data, error } = await supabase
         .from('shops')
@@ -108,17 +179,54 @@ const updateShop = async (sellerId, updates) => {
 
     if (error) throw error;
 
+    if (imageFile && oldImageUrl) {
+        const oldPublicId = extractPublicId(oldImageUrl);
+        if (oldPublicId) {
+            await deleteFromCloudinary(oldPublicId);
+        }
+    }
+
     cache.delete(`shop:seller:${sellerId}`);
 
     return data;
 };
 
 const toggleShopStatus = async (sellerId, isOpen) => {
+    const normalizedStatus = normalizeShopStatus(undefined, isOpen);
+
     const { data, error } = await supabase
         .from('shops')
-        .update({ is_open: isOpen })
+        .update({
+            status: normalizedStatus,
+            is_open: isStatusOpen(normalizedStatus)
+        })
         .eq('seller_id', sellerId)
-        .select('id, shop_name, is_open')
+        .select('id, shop_name, status, is_open, opening_time, closing_time')
+        .single();
+
+    if (error) throw error;
+
+    cache.delete(`shop:seller:${sellerId}`);
+
+    return data;
+};
+
+const updateShopStatusById = async (sellerId, shopId, status, isOpen) => {
+    const normalizedStatus = normalizeShopStatus(status, isOpen);
+
+    if (!normalizedStatus) {
+        throw new BadRequestError('Either status or is_open is required');
+    }
+
+    const { data, error } = await supabase
+        .from('shops')
+        .update({
+            status: normalizedStatus,
+            is_open: isStatusOpen(normalizedStatus)
+        })
+        .eq('seller_id', sellerId)
+        .eq('id', shopId)
+        .select('id, shop_name, status, is_open, opening_time, closing_time')
         .single();
 
     if (error) throw error;
@@ -169,10 +277,17 @@ const uploadShopImage = async (sellerId, file) => {
     return updatedShop;
 };
 
+const uploadCoverImage = async (sellerId, file) => {
+    // Alias to uploadShopImage for cover button functionality
+    return await uploadShopImage(sellerId, file);
+};
+
 module.exports = {
     createShop,
     getShop,
     updateShop,
     toggleShopStatus,
-    uploadShopImage
+    updateShopStatusById,
+    uploadShopImage,
+    uploadCoverImage
 };
