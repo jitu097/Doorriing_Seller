@@ -8,7 +8,7 @@ router.use(verifyToken, loadSeller, loadShop);
 
 router.get('/', subcategoryController.getSubcategories);
 router.get('/:id', subcategoryController.getSubcategoryById);
-router.post('/', subcategoryController.createSubcategory);
+router.post('/', require('../../middlewares/upload.middleware').single('image'), subcategoryController.createSubcategory);
 router.patch('/:id', subcategoryController.updateSubcategory);
 router.patch('/:id/toggle', subcategoryController.toggleVisibility);
 router.delete('/:id', subcategoryController.deleteSubcategory);

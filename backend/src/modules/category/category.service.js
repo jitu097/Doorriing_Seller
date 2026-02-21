@@ -1,5 +1,6 @@
 const supabase = require('../../config/supabaseClient');
 const { ConflictError } = require('../../utils/errors');
+const { fetchImageFromUnsplash } = require('../../services/unsplash.service');
 
 const createCategory = async (shopId, categoryData) => {
     const { data: existing } = await supabase
@@ -13,11 +14,17 @@ const createCategory = async (shopId, categoryData) => {
         throw new ConflictError('Category with this name already exists');
     }
 
+    let imageUrl = categoryData.image_url;
+    if (!imageUrl || imageUrl.trim() === '') {
+        imageUrl = await fetchImageFromUnsplash(categoryData.name);
+    }
+
     const { data, error } = await supabase
         .from('categories')
         .insert({
             shop_id: shopId,
             name: categoryData.name,
+            image_url: imageUrl,
             display_order: categoryData.display_order || 0,
             is_active: categoryData.is_active !== undefined ? categoryData.is_active : true
         })

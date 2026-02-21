@@ -86,21 +86,71 @@
     display: flex;
     gap: 12px;
     margin-bottom: 24px;
+    align-items: center;
+}
+
+.add-category-input-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .add-category-input {
-    flex: 1;
-    padding: 12px 16px;
+    width: 100%;
+    padding: 12px 40px 12px 14px;
+    /* Space for icon */
     border: 1px solid #d1d5db;
-    border-radius: 12px;
+    border-radius: 8px;
     font-size: 1rem;
-    color: #1f2937;
-    transition: border-color 0.2s;
+    outline: none;
+    transition: all 0.2s ease;
 }
 
 .add-category-input:focus {
-    outline: none;
-    border-color: #f97316;
+    border-color: #ff6b6b;
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+}
+
+.category-image-upload-icon {
+    position: absolute;
+    right: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+.category-image-upload-icon:hover {
+    transform: scale(1.1);
+}
+
+.hidden-file-input {
+    display: none;
+}
+
+.clear-image-btn {
+    position: absolute;
+    right: -10px;
+    top: -10px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #ff4d4f;
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+}
+
+.clear-image-btn:hover {
+    background: #e11d48;
 }
 
 .add-category-btn {
@@ -127,37 +177,51 @@
 
 /* Category List */
 .category-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 16px;
 }
 
-.category-item-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    /* Space between name and controls */
-    padding: 14px 18px;
-    background: #f9fafb;
+.category-card {
     border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s ease;
+    background: #f9fafb;
     border: 1px solid #e5e7eb;
-    transition: background 0.2s;
+    position: relative;
 }
 
-.category-item-row:hover {
+.category-card:hover {
+    transform: translateY(-4px);
     background: #f3f4f6;
 }
 
-.category-info {
+.category-image {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    display: block;
+}
+
+.category-name {
+    padding: 10px;
     font-weight: 600;
+    text-align: center;
     color: #374151;
     font-size: 1.05rem;
 }
 
-.category-controls {
+.category-controls-overlay {
+    position: absolute;
+    top: 8px;
+    right: 8px;
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 4px 8px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Toggle Switch specific for category */
@@ -225,8 +289,4 @@ input:checked+.cat-slider:before {
 
 .cat-delete-btn:hover {
     background: #fee2e2;
-}
-
-.cat-delete-btn svg {
-    /* SVG stroke color is handled inline or inherited, but we can enforce it here if needed */
 }

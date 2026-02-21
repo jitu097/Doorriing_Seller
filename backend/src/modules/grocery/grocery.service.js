@@ -2,6 +2,7 @@ const supabase = require('../../config/supabaseClient');
 const { NotFoundError, BadRequestError } = require('../../utils/errors');
 const cache = require('../../utils/cache');
 const { uploadToCloudinary, deleteFromCloudinary, extractPublicId } = require('../../config/cloudinary');
+const { fetchImageFromUnsplash } = require('../../services/unsplash.service');
 
 /**
  * Service: Grocery
@@ -369,7 +370,7 @@ const uploadItemImage = async (itemId, shopId, file) => {
 
 // --- CATEGORIES (OPTIONAL) ---
 
-const createGroceryCategory = async (shopId, name) => {
+const createGroceryCategory = async (shopId, name, file) => {
     // Check dupe
     const { data: existing } = await supabase
         .from('categories')
@@ -380,9 +381,26 @@ const createGroceryCategory = async (shopId, name) => {
 
     if (existing) throw new BadRequestError('Category already exists');
 
+    let imageUrl = null;
+
+    if (file) {
+        // Handle manual Cloudinary Upload
+        const folder = 'bazarse/categories';
+        const publicId = `shop_${shopId}_category_${Date.now()}`;
+        const uploadResult = await uploadToCloudinary(file.buffer, folder, publicId);
+        imageUrl = uploadResult.secure_url;
+    } else {
+        // Fallback to Unsplash
+        imageUrl = await fetchImageFromUnsplash(name);
+    }
+
     const { data, error } = await supabase
         .from('categories')
-        .insert({ shop_id: shopId, name: name })
+        .insert({
+            shop_id: shopId,
+            name: name,
+            image_url: imageUrl
+        })
         .select()
         .single();
 

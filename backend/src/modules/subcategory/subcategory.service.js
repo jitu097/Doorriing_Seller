@@ -1,5 +1,7 @@
 const supabase = require('../../config/supabaseClient');
 const { NotFoundError, BadRequestError } = require('../../utils/errors');
+const { fetchImageFromUnsplash } = require('../../services/unsplash.service');
+const { uploadToCloudinary } = require('../../config/cloudinary');
 
 /**
  * Get all subcategories for a shop, optionally filtered by category
@@ -7,7 +9,7 @@ const { NotFoundError, BadRequestError } = require('../../utils/errors');
 const getSubcategories = async (shopId, categoryId = null) => {
     let query = supabase
         .from('subcategories')
-        .select('id, name, category_id, is_active, created_at')
+        .select('id, name, category_id, is_active, image_url, created_at')
         .eq('shop_id', shopId)
         .order('created_at', { ascending: true });
 
@@ -41,7 +43,7 @@ const getSubcategoryById = async (shopId, subcategoryId) => {
 /**
  * Create a new subcategory
  */
-const createSubcategory = async (shopId, subcategoryData) => {
+const createSubcategory = async (shopId, subcategoryData, file) => {
     // Validate required fields
     if (!subcategoryData.name || !subcategoryData.category_id) {
         throw new BadRequestError('Name and category_id are required');
@@ -72,6 +74,19 @@ const createSubcategory = async (shopId, subcategoryData) => {
         throw new BadRequestError('Subcategory with this name already exists in this category');
     }
 
+    let imageUrl = subcategoryData.image_url;
+
+    if (file) {
+        // Handle manual Cloudinary Upload
+        const folder = 'bazarse/subcategories';
+        const publicId = `shop_${shopId}_subcategory_${Date.now()}`;
+        const uploadResult = await uploadToCloudinary(file.buffer, folder, publicId);
+        imageUrl = uploadResult.secure_url;
+    } else if (!imageUrl || imageUrl.trim() === '') {
+        // Fallback to Unsplash
+        imageUrl = await fetchImageFromUnsplash(subcategoryData.name);
+    }
+
     // Create subcategory
     const { data, error } = await supabase
         .from('subcategories')
@@ -79,6 +94,7 @@ const createSubcategory = async (shopId, subcategoryData) => {
             shop_id: shopId,
             category_id: subcategoryData.category_id,
             name: subcategoryData.name,
+            image_url: imageUrl,
             is_active: subcategoryData.is_active !== undefined ? subcategoryData.is_active : true
         })
         .select()
@@ -93,7 +109,7 @@ const createSubcategory = async (shopId, subcategoryData) => {
  */
 const updateSubcategory = async (shopId, subcategoryId, updates) => {
     const allowedFields = ['name', 'is_active'];
-    
+
     const payload = {};
     allowedFields.forEach(field => {
         if (updates[field] !== undefined) {

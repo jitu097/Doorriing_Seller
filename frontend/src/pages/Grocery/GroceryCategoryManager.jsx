@@ -4,7 +4,9 @@ import groceryService from '../../services/groceryService';
 
 const GroceryCategoryManager = ({ isOpen, categories, onClose, onCategoriesChange }) => {
     const [newCategory, setNewCategory] = useState('');
+    const [imageFile, setImageFile] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const fallbackImage = "/images/category-placeholder.png";
 
     // If not open, don't render
     if (!isOpen) return null;
@@ -21,16 +23,23 @@ const GroceryCategoryManager = ({ isOpen, categories, onClose, onCategoriesChang
 
         try {
             setIsSubmitting(true);
-            await groceryService.createGroceryCategory(newCategory);
+            await groceryService.createGroceryCategory(newCategory, imageFile);
             // Refresh categories logic should be handled by parent or re-fetch
             // Assuming parent passes a "refresh" or we call onCategoriesChange
             onCategoriesChange();
             setNewCategory('');
+            setImageFile(null);
         } catch (err) {
             console.error(err);
             alert('Failed to add category');
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleImageChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            setImageFile(e.target.files[0]);
         }
     };
 
@@ -81,14 +90,39 @@ const GroceryCategoryManager = ({ isOpen, categories, onClose, onCategoriesChang
                 <div className="category-manager-body">
                     {/* Add Form */}
                     <form className="add-category-row" onSubmit={handleAddCategory}>
-                        <input
-                            type="text"
-                            className="add-category-input"
-                            placeholder="New category name"
-                            value={newCategory}
-                            onChange={(e) => setNewCategory(e.target.value)}
-                            required
-                        />
+                        <div className="add-category-input-wrapper">
+                            <input
+                                type="text"
+                                className="add-category-input"
+                                placeholder="New category name"
+                                value={newCategory}
+                                onChange={(e) => setNewCategory(e.target.value)}
+                                required
+                            />
+                            <label className={`category-image-upload-icon ${imageFile ? 'has-file' : ''}`} title="Upload Custom Image (Optional)">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill={imageFile ? '#10b981' : 'none'} stroke={imageFile ? '#10b981' : '#6b7280'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                    <polyline points="21 15 16 10 5 21" />
+                                </svg>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden-file-input"
+                                    onChange={handleImageChange}
+                                />
+                            </label>
+                            {imageFile && (
+                                <button
+                                    type="button"
+                                    className="clear-image-btn"
+                                    onClick={() => setImageFile(null)}
+                                    title="Remove Custom Image"
+                                >
+                                    &times;
+                                </button>
+                            )}
+                        </div>
                         <button type="submit" className="add-category-btn" disabled={isSubmitting}>
                             {isSubmitting ? 'Adding...' : 'Add'}
                         </button>
@@ -97,10 +131,19 @@ const GroceryCategoryManager = ({ isOpen, categories, onClose, onCategoriesChang
                     {/* List */}
                     <div className="category-list">
                         {categories.map(cat => (
-                            <div className="category-item-row" key={cat.id}>
-                                <span className="category-info">{cat.name}</span>
+                            <div className="category-card" key={cat.id}>
+                                <img
+                                    src={cat.image_url || fallbackImage}
+                                    alt={cat.name}
+                                    className="category-image"
+                                    loading="lazy"
+                                    decoding="async"
+                                />
+                                <div className="category-name">
+                                    {cat.name}
+                                </div>
 
-                                <div className="category-controls">
+                                <div className="category-controls-overlay">
                                     {/* Toggle */}
                                     <label className="cat-toggle" title="Toggle Visibility">
                                         <input

@@ -124,7 +124,18 @@ export const getGroceryCategories = async () => {
     });
 };
 
-export const createGroceryCategory = async (name) => {
+export const createGroceryCategory = async (name, imageFile = null) => {
+    if (imageFile) {
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('image', imageFile);
+
+        return api('/grocery/categories', {
+            method: 'POST',
+            body: formData
+        });
+    }
+
     return api('/grocery/categories', {
         method: 'POST',
         body: JSON.stringify({ name })

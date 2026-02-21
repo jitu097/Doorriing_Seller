@@ -156,10 +156,11 @@ const createCategory = async (req, res, next) => {
     try {
         const shopId = req.shop.id;
         const { name } = req.body;
+        const file = req.file; // Extract optional file
 
         if (!name) return res.status(400).json({ success: false, message: 'Name is required' });
 
-        const category = await groceryService.createGroceryCategory(shopId, name);
+        const category = await groceryService.createGroceryCategory(shopId, name, file);
 
         res.status(201).json({
             success: true,

@@ -32,7 +32,19 @@ export const getSubcategoryById = async (subcategoryId) => {
  * @param {Object} subcategoryData - Subcategory data { name, category_id }
  * @returns {Promise<Object>} Created subcategory object
  */
-export const createSubcategory = async (subcategoryData) => {
+export const createSubcategory = async (subcategoryData, imageFile = null) => {
+  if (imageFile) {
+    const formData = new FormData();
+    formData.append('name', subcategoryData.name);
+    formData.append('category_id', subcategoryData.category_id);
+    formData.append('image', imageFile);
+
+    return api('/subcategories', {
+      method: 'POST',
+      body: formData
+    });
+  }
+
   return api('/subcategories', {
     method: 'POST',
     body: JSON.stringify(subcategoryData)

@@ -28,7 +28,7 @@ router.put('/items/:id/stock', groceryController.updateStock);
 router.put('/items/:id/availability', groceryController.toggleAvailability);
 
 // --- Category Management (Optional for Grocery) ---
-router.post('/categories', groceryController.createCategory);
+router.post('/categories', upload.single('image'), groceryController.createCategory);
 router.get('/categories', groceryController.getCategories);
 router.put('/categories/:id', groceryController.updateCategory);
 router.delete('/categories/:id', groceryController.deleteCategory);
