@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './Menu.css';
 import MenuItemCard from './MenuItemCard';
-import categoryService from '../../services/categoryService';
+import categoryService from '../../services/restaurantCategoryService';
 import itemService from '../../services/itemService';
-import subcategoryService from '../../services/subcategoryService';
+import subcategoryService from '../../services/restaurantSubcategoryService';
 
 const Menu = () => {
 	const [categories, setCategories] = useState([]);
@@ -19,6 +19,8 @@ const Menu = () => {
 	const [subcategoriesList, setSubcategoriesList] = useState([]);
 	const [newCategory, setNewCategory] = useState('');
 	const [newSubcategory, setNewSubcategory] = useState('');
+	const [categoryImageFile, setCategoryImageFile] = useState(null);
+	const [subcategoryImageFile, setSubcategoryImageFile] = useState(null);
 	const [newItem, setNewItem] = useState({
 		name: '',
 		description: '',
@@ -31,6 +33,7 @@ const Menu = () => {
 		unit: 'plate',
 		active: true,
 	});
+	const fallbackCategoryImage = '/images/category-placeholder.png';
 
 	useEffect(() => {
 		fetchCategories();
@@ -93,13 +96,30 @@ const Menu = () => {
 
 	const handleModalOpen = () => setShowModal(true);
 	const handleCategoryModalOpen = () => setShowCategoryModal(true);
-	const handleCategoryModalClose = () => setShowCategoryModal(false);
+	const handleCategoryModalClose = () => {
+		setShowCategoryModal(false);
+		setNewCategory('');
+		setCategoryImageFile(null);
+	};
 	const handleSubcategoryModalOpen = () => setShowSubcategoryModal(true);
 	const handleSubcategoryModalClose = () => {
 		setShowSubcategoryModal(false);
 		setSelectedCategory('');
 		setSubcategoriesList([]);
 		setNewSubcategory('');
+		setSubcategoryImageFile(null);
+	};
+
+	const handleCategoryImageChange = (e) => {
+		if (e.target.files && e.target.files[0]) {
+			setCategoryImageFile(e.target.files[0]);
+		}
+	};
+
+	const handleSubcategoryImageChange = (e) => {
+		if (e.target.files && e.target.files[0]) {
+			setSubcategoryImageFile(e.target.files[0]);
+		}
 	};
 
 	const handleCreateItem = async (e) => {
@@ -139,9 +159,10 @@ const Menu = () => {
 				await categoryService.createCategory({
 					name: newCategory,
 					display_order: categories.length
-				});
+				}, categoryImageFile);
 				fetchCategories();
 				setNewCategory('');
+				setCategoryImageFile(null);
 				handleCategoryModalClose();
 			} catch (error) {
 				console.error('Failed to create category:', error);
@@ -222,10 +243,11 @@ const Menu = () => {
 				await subcategoryService.createSubcategory({
 					name: newSubcategory,
 					category_id: selectedCategory
-				});
+				}, subcategoryImageFile);
 				const subs = await subcategoryService.getSubcategories(selectedCategory);
 				setSubcategoriesList(subs || []);
 				setNewSubcategory('');
+				setSubcategoryImageFile(null);
 			} catch (error) {
 				console.error('Failed to create subcategory:', error);
 				alert('Failed to create subcategory. Please try again.');
@@ -294,6 +316,12 @@ const Menu = () => {
 							<div className="category-accordion" key={cat.id}>
 								<div className="category-header">
 									<span className="category-arrow" onClick={() => handleAccordion(idx)}>{openIndex === idx ? '▼' : '▶'}</span>
+									<img
+										src={cat.image_url || fallbackCategoryImage}
+										alt={cat.name}
+										loading="lazy"
+										style={{ width: 30, height: 30, borderRadius: 8, objectFit: 'cover', marginRight: 10 }}
+									/>
 									<span className="category-name" onClick={() => handleAccordion(idx)}>{cat.name}</span>
 									<span className="category-items">{cat.items?.length || 0} items</span>
 									{!cat.is_active && <span className="category-badge hidden">Hidden</span>}
@@ -426,52 +454,96 @@ const Menu = () => {
 				</div>
 			)}
 			{showCategoryModal && (
-				<div className="modal-overlay">
-					<div className="modal-content">
-						<h2 className="modal-title">Manage Categories</h2>
-						<form className="add-category-form" onSubmit={handleAddCategory} style={{ display: 'flex', gap: 12, marginBottom: 18 }}>
-							<input
-								type="text"
-								placeholder="New category name"
-								value={newCategory}
-								onChange={e => setNewCategory(e.target.value)}
-								style={{ flex: 1 }}
-								required
-							/>
-							<button type="submit" className="btn btn-primary" style={{ minWidth: 110 }}>Add</button>
-						</form>
-						<hr style={{ margin: '18px 0 10px 0', border: 'none', borderTop: '1.5px solid #f3f4f6' }} />
-						<div style={{ fontWeight: 700, fontSize: '1.15rem', marginBottom: 12 }}>Existing Categories</div>
-						<div className="category-list-modal">
-							{categories.map((cat) => (
-								<div className="category-modal-row" key={cat.id}>
-									<span style={{ fontWeight: 700, textTransform: 'lowercase', minWidth: 80 }}>{cat.name}</span>
-									<span style={{ color: '#6b7280', fontSize: '0.98rem', marginLeft: 8 }}>({cat.items?.length || 0} items)</span>
-									<span className="category-toggle">
-										<label className="switch">
-											<input type="checkbox" checked={cat.is_active} onChange={() => handleToggleCategory(cat.id)} style={{ marginLeft: -8 }} />
-											<span className="slider round"></span>
-										</label>
-									</span>
-									<button
-										className="action-btn delete-btn"
-										type="button"
-										onClick={() => handleDeleteCategory(cat.id)}
-										title="Delete"
-										style={{ marginLeft: '10px' }}
-									>
-										<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-											<polyline points="3 6 5 6 21 6"></polyline>
-											<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-											<line x1="10" y1="11" x2="10" y2="17"></line>
-											<line x1="14" y1="11" x2="14" y2="17"></line>
-										</svg>
-									</button>
-								</div>
-							))}
+				<div className="category-manager-overlay" onClick={(e) => {
+					if (e.target.className === 'category-manager-overlay') {
+						handleCategoryModalClose();
+					}
+				}}>
+					<div className="category-manager-card">
+						<div className="category-manager-header">
+							<h2>Manage Categories</h2>
+							<button className="close-btn" onClick={handleCategoryModalClose} title="Close">&times;</button>
 						</div>
-						<div className="modal-actions" style={{ marginTop: 24 }}>
-							<button type="button" className="btn btn-cancel" onClick={handleCategoryModalClose}>Close</button>
+
+						<div className="category-manager-body">
+							<form className="add-category-row" onSubmit={handleAddCategory}>
+								<div className="add-category-input-wrapper">
+									<input
+										type="text"
+										className="add-category-input"
+										placeholder="New category name"
+										value={newCategory}
+										onChange={(e) => setNewCategory(e.target.value)}
+										required
+									/>
+									<label className={`category-image-upload-icon ${categoryImageFile ? 'has-file' : ''}`} title="Upload Custom Image (Optional)">
+										<svg width="20" height="20" viewBox="0 0 24 24" fill={categoryImageFile ? '#10b981' : 'none'} stroke={categoryImageFile ? '#10b981' : '#6b7280'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+											<rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+											<circle cx="8.5" cy="8.5" r="1.5" />
+											<polyline points="21 15 16 10 5 21" />
+										</svg>
+										<input
+											type="file"
+											accept="image/*"
+											className="hidden-file-input"
+											onChange={handleCategoryImageChange}
+										/>
+									</label>
+									{categoryImageFile && (
+										<button
+											type="button"
+											className="clear-image-btn"
+											onClick={() => setCategoryImageFile(null)}
+											title="Remove Custom Image"
+										>
+											&times;
+										</button>
+									)}
+								</div>
+								<button type="submit" className="add-category-btn">Add</button>
+							</form>
+
+							<div className="category-list">
+								{categories.map(cat => (
+									<div className="category-card" key={cat.id}>
+										<img
+											src={cat.image_url || fallbackCategoryImage}
+											alt={cat.name}
+											className="category-image"
+											loading="lazy"
+											decoding="async"
+										/>
+										<div className="category-name">{cat.name}</div>
+										<div className="category-controls-overlay">
+											<label className="cat-toggle" title="Toggle Visibility">
+												<input
+													type="checkbox"
+													checked={cat.is_active !== false}
+													onChange={() => handleToggleCategory(cat.id)}
+												/>
+												<span className="cat-slider round"></span>
+											</label>
+											<button
+												className="cat-delete-btn"
+												onClick={() => handleDeleteCategory(cat.id)}
+												title="Delete Category"
+											>
+												<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+													<rect x="5.5" y="8" width="9" height="7" rx="2" stroke="#b85c1c" strokeWidth="1.5" />
+													<path d="M8 10v3m4-3v3" stroke="#b85c1c" strokeWidth="1.5" />
+													<rect x="8" y="4" width="4" height="2" rx="1" stroke="#b85c1c" strokeWidth="1.5" />
+													<path d="M4 6h12" stroke="#b85c1c" strokeWidth="1.5" />
+												</svg>
+											</button>
+										</div>
+									</div>
+								))}
+								{categories.length === 0 && (
+									<div style={{ textAlign: 'center', color: '#9ca3af', fontStyle: 'italic' }}>
+										No categories. Add one above.
+									</div>
+								)}
+							</div>
 						</div>
 					</div>
 				</div>
@@ -498,16 +570,41 @@ const Menu = () => {
 
 						{selectedCategory && (
 							<>
-								<form className="add-category-form" onSubmit={handleAddSubcategory} style={{ display: 'flex', gap: 12, marginBottom: 18 }}>
-									<input
-										type="text"
-										placeholder="New subcategory name"
-										value={newSubcategory}
-										onChange={e => setNewSubcategory(e.target.value)}
-										style={{ flex: 1 }}
-										required
-									/>
-									<button type="submit" className="btn btn-primary" style={{ minWidth: 110 }}>Add</button>
+								<form className="add-category-row" onSubmit={handleAddSubcategory} style={{ marginBottom: 18 }}>
+									<div className="add-category-input-wrapper">
+										<input
+											type="text"
+											className="add-category-input"
+											placeholder="New subcategory name"
+											value={newSubcategory}
+											onChange={e => setNewSubcategory(e.target.value)}
+											required
+										/>
+										<label className={`category-image-upload-icon ${subcategoryImageFile ? 'has-file' : ''}`} title="Upload Custom Image (Optional)">
+											<svg width="20" height="20" viewBox="0 0 24 24" fill={subcategoryImageFile ? '#10b981' : 'none'} stroke={subcategoryImageFile ? '#10b981' : '#6b7280'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+												<rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+												<circle cx="8.5" cy="8.5" r="1.5" />
+												<polyline points="21 15 16 10 5 21" />
+											</svg>
+											<input
+												type="file"
+												accept="image/*"
+												className="hidden-file-input"
+												onChange={handleSubcategoryImageChange}
+											/>
+										</label>
+										{subcategoryImageFile && (
+											<button
+												type="button"
+												className="clear-image-btn"
+												onClick={() => setSubcategoryImageFile(null)}
+												title="Remove Custom Image"
+											>
+												&times;
+											</button>
+										)}
+									</div>
+									<button type="submit" className="add-category-btn">Add</button>
 								</form>
 								<hr style={{ margin: '18px 0 10px 0', border: 'none', borderTop: '1.5px solid #f3f4f6' }} />
 								<div style={{ fontWeight: 700, fontSize: '1.15rem', marginBottom: 12 }}>Existing Subcategories</div>
@@ -516,28 +613,37 @@ const Menu = () => {
 										<div style={{ color: '#6b7280', padding: '12px 0' }}>No subcategories yet. Add one above.</div>
 									) : (
 										subcategoriesList.map((sub) => (
-											<div className="category-modal-row" key={sub.id}>
-												<span style={{ fontWeight: 700, textTransform: 'lowercase', minWidth: 80 }}>{sub.name}</span>
-												<span className="category-toggle">
-													<label className="switch">
-														<input type="checkbox" checked={sub.is_active} onChange={() => handleToggleSubcategory(sub.id)} style={{ marginLeft: -8 }} />
-														<span className="slider round"></span>
+											<div className="subcategory-card" key={sub.id}>
+												<img
+													src={sub.image_url || fallbackCategoryImage}
+													alt={sub.name}
+													loading="lazy"
+													className="subcategory-image"
+													decoding="async"
+												/>
+												<div className="subcategory-name">{sub.name}</div>
+												<div className="cat-controls-overlay">
+													<label className="cat-toggle" title="Toggle Visibility">
+														<input
+															type="checkbox"
+															checked={sub.is_active}
+															onChange={() => handleToggleSubcategory(sub.id)}
+														/>
+														<span className="cat-slider round"></span>
 													</label>
-												</span>
 												<button
-													className="action-btn delete-btn"
-													type="button"
+														className="cat-delete-btn"
 													onClick={() => handleDeleteSubcategory(sub.id)}
-													title="Delete"
-													style={{ marginLeft: '10px' }}
+														title="Delete Category"
 												>
-													<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-														<polyline points="3 6 5 6 21 6"></polyline>
-														<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-														<line x1="10" y1="11" x2="10" y2="17"></line>
-														<line x1="14" y1="11" x2="14" y2="17"></line>
+														<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+															<rect x="5.5" y="8" width="9" height="7" rx="2" stroke="#b85c1c" strokeWidth="1.5" />
+															<path d="M8 10v3m4-3v3" stroke="#b85c1c" strokeWidth="1.5" />
+															<rect x="8" y="4" width="4" height="2" rx="1" stroke="#b85c1c" strokeWidth="1.5" />
+															<path d="M4 6h12" stroke="#b85c1c" strokeWidth="1.5" />
 													</svg>
 												</button>
+												</div>
 											</div>
 										))
 									)}

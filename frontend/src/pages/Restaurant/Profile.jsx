@@ -8,7 +8,6 @@ export default function Profile() {
 	const [loading, setLoading] = useState(true);
 	const [isEditing, setIsEditing] = useState(false);
 	const [saving, setSaving] = useState(false);
-	const [uploadingImage, setUploadingImage] = useState(false);
 	const [activeSection, setActiveSection] = useState('shop');
 	const [selectedImageFile, setSelectedImageFile] = useState(null);
 	const [previewImage, setPreviewImage] = useState('');
@@ -60,6 +59,8 @@ export default function Profile() {
 	const handleSubmit = async () => {
 		try {
 			setSaving(true);
+			
+			// 1. Update shop profile data
 			await apiCall('/shop', {
 				method: 'PATCH',
 				body: JSON.stringify({
@@ -68,6 +69,13 @@ export default function Profile() {
 				})
 			});
 
+			// 2. Upload image if selected
+			if (selectedImageFile) {
+				await shopService.uploadShopImage(selectedImageFile);
+				clearImageSelection();
+			}
+
+			// 3. Refresh shop data
 			await fetchShopData();
 			setIsEditing(false);
 			alert('Shop profile updated successfully');
@@ -106,29 +114,6 @@ export default function Profile() {
 		setSelectedImageFile(null);
 	};
 
-	const handleSaveShopImage = async () => {
-		if (!selectedImageFile) {
-			alert('Please select an image first');
-			return;
-		}
-
-		try {
-			setUploadingImage(true);
-			const updatedShop = await shopService.uploadShopImage(selectedImageFile);
-			setFormData(prev => ({
-				...prev,
-				shop_image_url: updatedShop?.shop_image_url || prev.shop_image_url
-			}));
-			clearImageSelection();
-			alert('Shop image uploaded successfully');
-		} catch (error) {
-			console.error('Failed to upload shop image:', error);
-			alert('Failed to upload shop image');
-		} finally {
-			setUploadingImage(false);
-		}
-	};
-
 	if (loading) {
 		return <div className="loading-container">Loading Profile...</div>;
 	}
@@ -148,21 +133,10 @@ export default function Profile() {
 						type="button"
 						className="edit-cover-btn"
 						onClick={() => document.getElementById('restaurant-cover-image')?.click()}
-						disabled={uploadingImage || saving}
+						disabled={saving}
 					>
 						📷 {previewImage || formData.shop_image_url ? 'Change Shop Image' : 'Upload Shop Image'}
 					</button>
-					{selectedImageFile && (
-						<button
-							type="button"
-							className="edit-cover-btn"
-							onClick={handleSaveShopImage}
-							disabled={uploadingImage || saving}
-							style={{ marginTop: '0.5rem' }}
-						>
-							{uploadingImage ? 'Uploading...' : 'Upload & Save Image'}
-						</button>
-					)}
 				</div>
 				<div className="profile-info-bar">
 					<div className="profile-avatar">

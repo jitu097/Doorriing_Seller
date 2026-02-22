@@ -1,8 +1,9 @@
 const supabase = require('../../config/supabaseClient');
 const { ConflictError } = require('../../utils/errors');
 const { fetchImageFromUnsplash } = require('../../services/unsplash.service');
+const { uploadToCloudinary } = require('../../config/cloudinary');
 
-const createCategory = async (shopId, categoryData) => {
+const createCategory = async (shopId, categoryData, file) => {
     const { data: existing } = await supabase
         .from('categories')
         .select('id')
@@ -15,7 +16,12 @@ const createCategory = async (shopId, categoryData) => {
     }
 
     let imageUrl = categoryData.image_url;
-    if (!imageUrl || imageUrl.trim() === '') {
+    if (file) {
+        const folder = 'bazarse/categories';
+        const publicId = `shop_${shopId}_category_${Date.now()}`;
+        const uploadResult = await uploadToCloudinary(file.buffer, folder, publicId);
+        imageUrl = uploadResult.secure_url;
+    } else if (!imageUrl || imageUrl.trim() === '') {
         imageUrl = await fetchImageFromUnsplash(categoryData.name);
     }
 
@@ -40,7 +46,7 @@ const getCategories = async (shopId) => {
     // Fetch categories separately (avoids Supabase embed ambiguity)
     const { data: categories, error: categoryError } = await supabase
         .from('categories')
-        .select('id, name, display_order, is_active, created_at')
+        .select('id, name, image_url, display_order, is_active, created_at')
         .eq('shop_id', shopId)
         .order('display_order', { ascending: true });
 
@@ -76,13 +82,15 @@ const getCategories = async (shopId) => {
 };
 
 const updateCategory = async (categoryId, shopId, updates) => {
+    const payload = {};
+    if (updates.name !== undefined) payload.name = updates.name;
+    if (updates.display_order !== undefined) payload.display_order = updates.display_order;
+    if (updates.is_active !== undefined) payload.is_active = updates.is_active;
+    if (updates.image_url !== undefined) payload.image_url = updates.image_url;
+
     const { data, error } = await supabase
         .from('categories')
-        .update({
-            name: updates.name,
-            display_order: updates.display_order,
-            is_active: updates.is_active
-        })
+        .update(payload)
         .eq('id', categoryId)
         .eq('shop_id', shopId)
         .select()

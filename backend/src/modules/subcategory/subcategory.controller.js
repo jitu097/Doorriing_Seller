@@ -1,5 +1,6 @@
 const subcategoryService = require('./subcategory.service');
 const { successResponse } = require('../../utils/response');
+const { validateUUID } = require('../../utils/validators');
 
 /**
  * Get all subcategories, optionally filtered by category_id
@@ -9,6 +10,10 @@ const getSubcategories = async (req, res, next) => {
     try {
         const shopId = req.shop.id;
         const { category_id } = req.query;
+
+        if (category_id) {
+            validateUUID(category_id);
+        }
 
         const subcategories = await subcategoryService.getSubcategories(shopId, category_id);
         successResponse(res, subcategories);
@@ -24,6 +29,7 @@ const getSubcategoryById = async (req, res, next) => {
     try {
         const shopId = req.shop.id;
         const { id } = req.params;
+        validateUUID(id);
 
         const subcategory = await subcategoryService.getSubcategoryById(shopId, id);
         successResponse(res, subcategory);
@@ -38,6 +44,11 @@ const getSubcategoryById = async (req, res, next) => {
 const createSubcategory = async (req, res, next) => {
     try {
         const shopId = req.shop.id;
+
+        if (req.body?.category_id) {
+            validateUUID(req.body.category_id);
+        }
+
         const subcategory = await subcategoryService.createSubcategory(shopId, req.body, req.file);
 
         successResponse(res, subcategory, 'Subcategory created successfully', 201);
@@ -53,6 +64,7 @@ const updateSubcategory = async (req, res, next) => {
     try {
         const shopId = req.shop.id;
         const { id } = req.params;
+        validateUUID(id);
 
         const subcategory = await subcategoryService.updateSubcategory(shopId, id, req.body);
         successResponse(res, subcategory, 'Subcategory updated successfully');
@@ -68,6 +80,7 @@ const toggleVisibility = async (req, res, next) => {
     try {
         const shopId = req.shop.id;
         const { id } = req.params;
+        validateUUID(id);
 
         const subcategory = await subcategoryService.toggleSubcategoryVisibility(shopId, id);
         successResponse(res, subcategory, 'Subcategory visibility updated');
@@ -83,6 +96,7 @@ const deleteSubcategory = async (req, res, next) => {
     try {
         const shopId = req.shop.id;
         const { id } = req.params;
+        validateUUID(id);
 
         const result = await subcategoryService.deleteSubcategory(shopId, id);
         successResponse(res, result, 'Subcategory deleted successfully');
