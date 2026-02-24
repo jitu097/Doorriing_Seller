@@ -1,36 +1,49 @@
 import React, { useState, useEffect } from 'react';
-import './Booking.css';
 import { bookingService } from '../../services/bookingService';
+import './Booking.css';
 
-const statusColors = {
-	pending: '#f59e42',
-	confirmed: '#22d06a',
-	cancelled: '#dc2626',
-	completed: '#3b82f6'
-};
-
-export default function Booking() {
+function Booking() {
 	const [bookings, setBookings] = useState([]);
 	const [loading, setLoading] = useState(true);
-	const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-	const [filter, setFilter] = useState('all');
+	const [filterStatus, setFilterStatus] = useState('');
+	const [filterDate, setFilterDate] = useState('');
+	const [currentPage, setCurrentPage] = useState(1);
+	const [totalPages, setTotalPages] = useState(1);
 
-	// Fetch bookings from backend
 	useEffect(() => {
 		fetchBookings();
-	}, [selectedDate, filter]);
+	}, [filterStatus, filterDate, currentPage]);
 
 	const fetchBookings = async () => {
 		try {
 			setLoading(true);
-			const filters = {};
-			if (filter !== 'all') filters.status = filter;
-			if (selectedDate) filters.date = selectedDate;
+			const filters = {
+				page: currentPage,
+				limit: 20
+			};
 
-			const data = await bookingService.getBookings(filters);
-			setBookings(data.bookings || data);
+			if (filterStatus) {
+				filters.status = filterStatus;
+			}
+
+			if (filterDate) {
+				filters.date = filterDate;
+			}
+
+			console.log('📋 Fetching bookings with filters:', filters);
+
+			const response = await bookingService.getBookings(filters);
+			console.log('✅ Received bookings response:', response);
+			
+			setBookings(response.bookings || []);
+			setTotalPages(response.pagination?.totalPages || 1);
+			
+			if (!response.bookings || response.bookings.length === 0) {
+				console.warn('⚠️ No bookings returned from API');
+			}
 		} catch (error) {
-			console.error('Failed to fetch bookings:', error);
+			console.error('❌ Failed to fetch bookings:', error);
+			alert('Failed to load bookings. Please check console for details.');
 		} finally {
 			setLoading(false);
 		}
@@ -39,137 +52,255 @@ export default function Booking() {
 	const handleStatusUpdate = async (bookingId, newStatus) => {
 		try {
 			await bookingService.updateStatus(bookingId, newStatus);
-			fetchBookings();
+			// Update local state
+			setBookings(prev => prev.map(booking =>
+				booking.id === bookingId ? { ...booking, status: newStatus } : booking
+			));
 		} catch (error) {
 			console.error('Failed to update booking status:', error);
 			alert('Failed to update booking status');
 		}
 	};
 
-	const filteredBookings = bookings;
+	const getStatusBadgeClass = (status) => {
+		const statusMap = {
+			'Pending': 'status-pending',
+			'Confirmed': 'status-confirmed',
+			'Cancelled': 'status-cancelled',
+			'Completed': 'status-completed'
+		};
+		return statusMap[status] || 'status-default';
+	};
 
-	if (loading) {
+	const formatDate = (dateString) => {
+		const date = new Date(dateString);
+		return date.toLocaleDateString('en-IN', {
+			weekday: 'short',
+			day: 'numeric',
+			month: 'short',
+			year: 'numeric'
+		});
+	};
+
+	const formatTime = (timeString) => {
+		return timeString;
+	};
+
+	if (loading && bookings.length === 0) {
 		return (
-			<>
-				<div className="booking-container">
-					<div className="loading">Loading bookings...</div>
-				</div>
-			</>
+			<div className="bookings-container">
+				<div className="loading">Loading bookings...</div>
+			</div>
 		);
 	}
 
 	return (
-		<>
-			<div className="booking-container">
-				<div className="booking-header">
-					<div>
-						<h1>📅 Table Bookings</h1>
-						<p>Manage your restaurant reservations</p>
-					</div>
-					<button className="btn-new-booking">+ New Booking</button>
+		<div className="bookings-container">
+			<header className="bookings-header">
+				<div className="header-content">
+					<h1>Table Bookings</h1>
+					<p>Manage your restaurant table reservations</p>
 				</div>
+			</header>
 
-				<div className="booking-filters">
-					<input
-						type="date"
-						value={selectedDate}
-						onChange={(e) => setSelectedDate(e.target.value)}
-						className="date-input"
-					/>
+			{/* Filters */}
+			<div className="bookings-filters">
+				<div className="filter-group">
+					<label>Status</label>
 					<select
-						value={filter}
-						onChange={(e) => setFilter(e.target.value)}
-						className="status-filter"
+						value={filterStatus}
+						onChange={(e) => {
+							setFilterStatus(e.target.value);
+							setCurrentPage(1);
+						}}
 					>
-						<option value="all">All Status</option>
+						<option value="">All Status</option>
 						<option value="Pending">Pending</option>
 						<option value="Confirmed">Confirmed</option>
-						<option value="Completed">Completed</option>
 						<option value="Cancelled">Cancelled</option>
+						<option value="Completed">Completed</option>
 					</select>
 				</div>
 
-				<div className="bookings-grid">
-					{filteredBookings.length === 0 ? (
-						<div className="no-bookings">No bookings found</div>
-					) : (
-						filteredBookings.map((booking) => (
+				<div className="filter-group">
+					<label>Date</label>
+					<input
+						type="date"
+						value={filterDate}
+						onChange={(e) => {
+							setFilterDate(e.target.value);
+							setCurrentPage(1);
+						}}
+					/>
+				</div>
+
+				<button
+					className="filter-clear-btn"
+					onClick={() => {
+						setFilterStatus('');
+						setFilterDate('');
+						setCurrentPage(1);
+					}}
+				>
+					Clear Filters
+				</button>
+			</div>
+
+			{/* Bookings Stats */}
+			<div className="booking-stats">
+				<div className="stat-item">
+					<span className="stat-label">Total Bookings</span>
+					<span className="stat-value">{bookings.length}</span>
+				</div>
+				<div className="stat-item">
+					<span className="stat-label">Pending</span>
+					<span className="stat-value">
+						{bookings.filter(b => b.status === 'Pending').length}
+					</span>
+				</div>
+				<div className="stat-item">
+					<span className="stat-label">Confirmed</span>
+					<span className="stat-value">
+						{bookings.filter(b => b.status === 'Confirmed').length}
+					</span>
+				</div>
+			</div>
+
+			{/* Bookings List */}
+			<div className="bookings-list">
+				{bookings.length === 0 ? (
+					<div className="empty-state">
+						<div className="empty-icon">📅</div>
+						<h3>No bookings found</h3>
+						<p>No bookings match your current filters</p>
+					</div>
+				) : (
+					<div className="bookings-grid">
+						{bookings.map((booking) => (
 							<div key={booking.id} className="booking-card">
 								<div className="booking-card-header">
-									<div>
-										<h3>{booking.customer_name}</h3>
-										<span className="booking-id">#{booking.id?.substring(0, 8)}</span>
+									<div className="booking-id">
+										<span className="id-label">Booking #</span>
+										<span className="id-value">{booking.id.substring(0, 8)}</span>
 									</div>
-									<span
-										className="status-badge"
-										style={{ backgroundColor: statusColors[booking.status] }}
-									>
-										{booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+									<span className={`status-badge ${getStatusBadgeClass(booking.status)}`}>
+										{booking.status}
 									</span>
 								</div>
 
-								<div className="booking-details">
-									<div className="detail-row">
-										<span className="detail-icon">📞</span>
-										<span>{booking.phone}</span>
-									</div>
-									<div className="detail-row">
-										<span className="detail-icon">👥</span>
-										<span>{booking.party_size} People</span>
-									</div>
-									<div className="detail-row">
-										<span className="detail-icon">📅</span>
-										<span>{new Date(booking.booking_date).toLocaleDateString()}</span>
-									</div>
-									<div className="detail-row">
-										<span className="detail-icon">🕒</span>
-										<span>{booking.booking_time}</span>
-									</div>
-									{booking.table_number && (
-										<div className="detail-row">
-											<span className="detail-icon">🪑</span>
-											<span>Table {booking.table_number}</span>
+								<div className="booking-card-body">
+									<div className="booking-info-row">
+										<div className="info-item">
+											<span className="info-icon">👤</span>
+											<div className="info-content">
+												<span className="info-label">Customer</span>
+												<span className="info-value">{booking.customer_name}</span>
+											</div>
 										</div>
-									)}
-									{booking.special_request && (
-										<div className="detail-row special-request">
-											<span className="detail-icon">💬</span>
-											<span>{booking.special_request}</span>
+										<div className="info-item">
+											<span className="info-icon">📞</span>
+											<div className="info-content">
+												<span className="info-label">Phone</span>
+												<span className="info-value">{booking.customer_phone}</span>
+											</div>
 										</div>
-									)}
+									</div>
+
+									<div className="booking-info-row">
+										<div className="info-item">
+											<span className="info-icon">📅</span>
+											<div className="info-content">
+												<span className="info-label">Date</span>
+												<span className="info-value">{formatDate(booking.booking_date)}</span>
+											</div>
+										</div>
+										<div className="info-item">
+											<span className="info-icon">🕒</span>
+											<div className="info-content">
+												<span className="info-label">Time</span>
+												<span className="info-value">{formatTime(booking.booking_time)}</span>
+											</div>
+										</div>
+									</div>
+
+									<div className="booking-info-row">
+										<div className="info-item">
+											<span className="info-icon">👥</span>
+											<div className="info-content">
+												<span className="info-label">Guests</span>
+												<span className="info-value">{booking.number_of_guests} persons</span>
+											</div>
+										</div>
+									</div>
 								</div>
 
-								<div className="booking-actions">
-									{booking.status === 'pending' && (
+								<div className="booking-card-footer">
+									{booking.status === 'Pending' && (
 										<>
 											<button
-												className="btn-confirm"
-												onClick={() => handleStatusUpdate(booking.id, 'confirmed')}
+												className="action-btn confirm-btn"
+												onClick={() => handleStatusUpdate(booking.id, 'Confirmed')}
 											>
 												✓ Confirm
 											</button>
 											<button
-												className="btn-cancel"
-												onClick={() => handleStatusUpdate(booking.id, 'cancelled')}
+												className="action-btn cancel-btn"
+												onClick={() => handleStatusUpdate(booking.id, 'Cancelled')}
 											>
-												✕ Cancel
+												✗ Cancel
 											</button>
 										</>
 									)}
-									{booking.status === 'confirmed' && (
-										<button
-											className="btn-complete"
-											onClick={() => handleStatusUpdate(booking.id, 'completed')}
-										>
-											✓ Complete
-										</button>
+									{booking.status === 'Confirmed' && (
+										<>
+											<button
+												className="action-btn complete-btn"
+												onClick={() => handleStatusUpdate(booking.id, 'Completed')}
+											>
+												✓ Mark Completed
+											</button>
+											<button
+												className="action-btn cancel-btn"
+												onClick={() => handleStatusUpdate(booking.id, 'Cancelled')}
+											>
+												✗ Cancel
+											</button>
+										</>
+									)}
+									{(booking.status === 'Cancelled' || booking.status === 'Completed') && (
+										<span className="booking-finalized">Booking {booking.status}</span>
 									)}
 								</div>
 							</div>
-						))
-					)}
-				</div>
+						))}
+					</div>
+				)}
 			</div>
-		</>
+
+			{/* Pagination */}
+			{totalPages > 1 && (
+				<div className="pagination">
+					<button
+						className="pagination-btn"
+						disabled={currentPage === 1}
+						onClick={() => setCurrentPage(prev => prev - 1)}
+					>
+						Previous
+					</button>
+					<span className="pagination-info">
+						Page {currentPage} of {totalPages}
+					</span>
+					<button
+						className="pagination-btn"
+						disabled={currentPage === totalPages}
+						onClick={() => setCurrentPage(prev => prev + 1)}
+					>
+						Next
+					</button>
+				</div>
+			)}
+		</div>
 	);
 }
+
+export default Booking;

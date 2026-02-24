@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import '../Restaurant/Dashboard.css';
 import { analyticsService } from '../../services/analyticsService';
 import orderService from '../../services/orderService';
+import { bookingService } from '../../services/bookingService';
 
 function Dashboard() {
 	const [stats, setStats] = useState(null);
 	const [recentOrders, setRecentOrders] = useState([]);
+	const [todayBookings, setTodayBookings] = useState([]);
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
@@ -24,6 +26,11 @@ function Dashboard() {
 			if (ordersData && ordersData.orders) {
 				setRecentOrders(ordersData.orders);
 			}
+
+			// Fetch today's bookings
+			const bookingsData = await bookingService.getTodayBookings();
+			console.log('📅 Today\'s bookings:', bookingsData);
+			setTodayBookings(bookingsData || []);
 		} catch (error) {
 			console.error('Failed to fetch dashboard data:', error);
 		} finally {
@@ -141,6 +148,40 @@ function Dashboard() {
 									)}
 								</tbody>
 							</table>
+						</div>
+					</div>
+
+					{/* Today's Bookings Panel */}
+					<div className="dashboard-panel today-bookings">
+						<div className="panel-header">
+							<h2>Today's Bookings</h2>
+							<Link to="/restaurant/bookings" className="view-all-link">View All Bookings</Link>
+						</div>
+						<div className="bookings-list-dashboard">
+							{todayBookings.length === 0 ? (
+								<div className="empty-state">No bookings for today</div>
+							) : (
+								todayBookings.slice(0, 4).map(booking => (
+									<div key={booking.id} className="booking-item">
+										<div className="booking-time">
+											<span className="time-icon">🕒</span>
+											<span className="time-value">{booking.booking_time}</span>
+										</div>
+										<div className="booking-details">
+											<div className="customer-name">{booking.customer_name}</div>
+											<div className="booking-meta">
+												<span>👥 {booking.number_of_guests} guests</span>
+												<span>📞 {booking.customer_phone}</span>
+											</div>
+										</div>
+										<div className="booking-status">
+											<span className={`status-badge ${booking.status.toLowerCase()}`}>
+												{booking.status}
+											</span>
+										</div>
+									</div>
+								))
+							)}
 						</div>
 					</div>
 

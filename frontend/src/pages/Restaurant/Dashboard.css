@@ -137,6 +137,82 @@ html, body {
   color: #999;
 }
 
+/* ===== TODAY'S BOOKINGS PANEL ===== */
+.today-bookings {
+  grid-column: span 1;
+}
+
+.bookings-list-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.booking-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border-left: 4px solid #F97316;
+  transition: all 0.2s;
+}
+
+.booking-item:hover {
+  background: #fff5e6;
+  transform: translateX(4px);
+}
+
+.booking-time {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 8px;
+  min-width: 70px;
+}
+
+.time-icon {
+  font-size: 1.25rem;
+}
+
+.time-value {
+  font-weight: 700;
+  color: #F97316;
+  font-size: 0.875rem;
+  margin-top: 4px;
+}
+
+.booking-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.customer-name {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.booking-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.booking-status {
+  flex-shrink: 0;
+}
+
+.booking-status .status-badge {
+  font-size: 0.7rem;
+  padding: 4px 10px;
+}
+
 /* ===== MOBILE FIXES ===== */
 @media (max-width: 700px) {
 
@@ -158,4 +234,17 @@ html, body {
     padding: 12px;
     border-radius: 12px;
   }
-}
+
+  .dashboard-content-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .booking-item {
+    flex-wrap: wrap;
+  }
+
+    .booking-meta {
+      flex-direction: column;
+      gap: 4px;
+    }
+  }
