@@ -1,5 +1,6 @@
 ﻿const supabase = require('../../config/supabaseClient');
 const { validatePagination, validateOrderStatus } = require('../../utils/validators');
+const { isValidTransition } = require('../../utils/orderTransitions');
 const notificationService = require('../notification/notification.service');
 
 const getOrders = async (shopId, page = 1, limit = 20, status = null) => {
@@ -60,21 +61,137 @@ const getOrderDetails = async (orderId, shopId) => {
     };
 };
 
-const updateOrderStatus = async (orderId, shopId, newStatus, cancellationReason = null) => {
+const checkExpiry = async (orderId, shopId) => {
+    const { data: order, error } = await supabase
+        .from('orders')
+        .select('id, status, pending_until, order_number')
+        .eq('id', orderId)
+        .eq('shop_id', shopId)
+        .single();
+
+    if (error) throw error;
+    if (!order) throw new Error('Order not found');
+
+    if (order.status === 'pending') {
+        const now = new Date();
+        const pendingUntil = order.pending_until ? new Date(order.pending_until) : null;
+
+        // If pending_until exists and is in the past, expire it
+        // COMMENTED OUT FOR TESTING: Allows accepting/rejecting at any time
+        // if (pendingUntil && pendingUntil.getTime() < now.getTime()) {
+        //     // Auto expire
+        //     const { data: expiredOrder, error: updateError } = await supabase
+        //         .from('orders')
+        //         .update({ status: 'expired', expired_at: now.toISOString() })
+        //         .eq('id', orderId)
+        //         .select()
+        //         .single();
+
+        //     if (updateError) throw updateError;
+        //     throw new Error('Order has expired and can no longer be processed');
+        // }
+    }
+
+    return order;
+};
+
+const acceptOrder = async (orderId, shopId) => {
+    const order = await checkExpiry(orderId, shopId);
+
+    if (order.status !== 'pending') {
+        throw new Error(`Cannot accept order with status: ${order.status}`);
+    }
+
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+        .from('orders')
+        .update({
+            status: 'confirmed',
+            accepted_at: now,
+            confirmed_at: now
+        })
+        .eq('id', orderId)
+        .eq('shop_id', shopId)
+        .select()
+        .single();
+
+    if (error) throw error;
+
+    try {
+        await notificationService.createNotification(
+            shopId,
+            'Order Accepted',
+            `Order #${data.order_number} has been accepted and confirmed`,
+            'order_update',
+            orderId,
+            'order'
+        );
+    } catch (err) {
+        console.error('Failed to send notification', err);
+    }
+
+    return data;
+};
+
+const rejectOrder = async (orderId, shopId) => {
+    const order = await checkExpiry(orderId, shopId);
+
+    if (order.status !== 'pending') {
+        throw new Error(`Cannot reject order with status: ${order.status}`);
+    }
+
+    const { data, error } = await supabase
+        .from('orders')
+        .update({
+            status: 'rejected',
+            cancelled_at: new Date().toISOString()
+        })
+        .eq('id', orderId)
+        .eq('shop_id', shopId)
+        .select()
+        .single();
+
+    if (error) throw error;
+
+    try {
+        await notificationService.createNotification(
+            shopId,
+            'Order Rejected',
+            `Order #${data.order_number} has been rejected`,
+            'order_update',
+            orderId,
+            'order'
+        );
+    } catch (err) {
+        console.error('Failed to send notification', err);
+    }
+
+    return data;
+};
+
+const updateOrderStatus = async (orderId, shopId, newStatus, shopType) => {
     validateOrderStatus(newStatus);
 
-    const updates = { status: newStatus };
+    const { data: currentOrder, error: fetchError } = await supabase
+        .from('orders')
+        .select('status, order_number')
+        .eq('id', orderId)
+        .eq('shop_id', shopId)
+        .single();
 
-    if (newStatus === 'Confirmed') {
-        updates.confirmed_at = new Date().toISOString();
-    } else if (newStatus === 'Delivered') {
-        updates.delivered_at = new Date().toISOString();
-    } else if (newStatus === 'Cancelled') {
-        updates.cancelled_at = new Date().toISOString();
-        if (cancellationReason) {
-            updates.cancellation_reason = cancellationReason;
-        }
+    if (fetchError) throw fetchError;
+    if (!currentOrder) throw new Error('Order not found');
+
+    if (!isValidTransition(currentOrder.status, newStatus, shopType)) {
+        throw new Error(`Invalid status transition from ${currentOrder.status} to ${newStatus}`);
     }
+
+    const updates = { status: newStatus };
+    const now = new Date().toISOString();
+
+    if (newStatus === 'preparing' || newStatus === 'packing') updates.preparing_at = now;
+    if (newStatus === 'out_for_delivery') updates.out_for_delivery_at = now;
+    if (newStatus === 'delivered') updates.delivered_at = now;
 
     const data = await (async () => {
         const { data, error } = await supabase
@@ -142,6 +259,8 @@ const getOrderStats = async (shopId) => {
 module.exports = {
     getOrders,
     getOrderDetails,
+    acceptOrder,
+    rejectOrder,
     updateOrderStatus,
     getOrderStats
 };

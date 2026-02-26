@@ -44,6 +44,16 @@ export default function Orders() {
     }
   };
 
+  const handleAccept = async (id) => {
+    await orderService.acceptOrder(id);
+    fetchOrders();
+  };
+
+  const handleReject = async (id) => {
+    await orderService.rejectOrder(id);
+    fetchOrders();
+  };
+
   const handleStatusChange = async (id, status) => {
     await orderService.updateOrderStatus(id, status);
     fetchOrders();
@@ -147,19 +157,15 @@ export default function Orders() {
                     <>
                       <button
                         className="btn success"
-                        onClick={() =>
-                          handleStatusChange(order.id, 'confirmed')
-                        }
+                        onClick={() => handleAccept(order.id)}
                       >
-                        Confirm
+                        Accept
                       </button>
                       <button
                         className="btn danger"
-                        onClick={() =>
-                          handleStatusChange(order.id, 'cancelled')
-                        }
+                        onClick={() => handleReject(order.id)}
                       >
-                        Cancel
+                        Reject
                       </button>
                     </>
                   )}

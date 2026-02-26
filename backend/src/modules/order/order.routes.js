@@ -9,6 +9,8 @@ router.use(verifyToken, loadSeller, loadShop);
 router.get('/', orderController.getOrders);
 router.get('/stats', orderController.getStats);
 router.get('/:id', orderController.getOrderDetails);
-router.patch('/:id/status', orderController.updateStatus);
+router.patch('/:id/accept', orderController.acceptOrder);
+router.patch('/:id/reject', orderController.rejectOrder);
+router.patch('/:id/update-status', orderController.updateStatus);
 
 module.exports = router;

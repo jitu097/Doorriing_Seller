@@ -23,7 +23,7 @@ router.use('/subcategories', subcategoryRoutes);
 router.use('/items', itemRoutes);
 router.use('/grocery', groceryRoutes); // Grocery specific namespace
 router.use('/restaurant', restaurantRoutes);
-router.use('/orders', orderRoutes);
+router.use('/seller/orders', orderRoutes);
 router.use('/discounts', discountRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/bookings', bookingRoutes);

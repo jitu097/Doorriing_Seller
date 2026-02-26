@@ -21,12 +21,32 @@ const getOrderDetails = async (req, res, next) => {
     }
 };
 
+const acceptOrder = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const order = await orderService.acceptOrder(id, req.shop.id);
+        successResponse(res, order, 'Order accepted successfully');
+    } catch (error) {
+        next(error);
+    }
+};
+
+const rejectOrder = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const order = await orderService.rejectOrder(id, req.shop.id);
+        successResponse(res, order, 'Order rejected successfully');
+    } catch (error) {
+        next(error);
+    }
+};
+
 const updateStatus = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { status, cancellation_reason } = req.body;
-        
-        const order = await orderService.updateOrderStatus(id, req.shop.id, status, cancellation_reason);
+        const { status } = req.body;
+
+        const order = await orderService.updateOrderStatus(id, req.shop.id, status, req.shop.shop_type);
         successResponse(res, order, 'Order status updated successfully');
     } catch (error) {
         next(error);
@@ -45,6 +65,8 @@ const getStats = async (req, res, next) => {
 module.exports = {
     getOrders,
     getOrderDetails,
+    acceptOrder,
+    rejectOrder,
     updateStatus,
     getStats
 };

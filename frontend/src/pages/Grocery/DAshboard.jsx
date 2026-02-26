@@ -70,7 +70,7 @@ function Dashboard() {
 				{/* Stats Grid */}
 				<div className="stats-grid">
 					<div className="stat-card">
-						<div className="stat-icon revenue-icon"><img src="/potli.png" alt="Total Revenue" style={{width:40,height:40}} /></div>
+						<div className="stat-icon revenue-icon"><img src="/potli.png" alt="Total Revenue" style={{ width: 40, height: 40 }} /></div>
 						<div className="stat-info">
 							<h3>Total Revenue</h3>
 							<p className="stat-value">₹{(stats.totalRevenue || 0).toLocaleString()}</p>
@@ -79,7 +79,7 @@ function Dashboard() {
 					</div>
 
 					<div className="stat-card">
-						<div className="stat-icon orders-icon"><img src="/checkout.png" alt="Active Orders" style={{width:40,height:40}} /></div>
+						<div className="stat-icon orders-icon"><img src="/checkout.png" alt="Active Orders" style={{ width: 40, height: 40 }} /></div>
 						<div className="stat-info">
 							<h3>Active Orders</h3>
 							<p className="stat-value">{activeOrdersCount}</p>
@@ -88,7 +88,7 @@ function Dashboard() {
 					</div>
 
 					<div className="stat-card">
-						<div className="stat-icon success-icon"><img src="/delivered.png" alt="Delivered" style={{width:40,height:40}} /></div>
+						<div className="stat-icon success-icon"><img src="/delivered.png" alt="Delivered" style={{ width: 40, height: 40 }} /></div>
 						<div className="stat-info">
 							<h3>Delivered</h3>
 							<p className="stat-value">{stats.delivered || 0}</p>
@@ -97,7 +97,7 @@ function Dashboard() {
 					</div>
 
 					<div className="stat-card">
-						<div className="stat-icon cancel-icon"><img src="/cancel.png" alt="Cancelled" style={{width:40,height:40}} /></div>
+						<div className="stat-icon cancel-icon"><img src="/cancel.png" alt="Cancelled" style={{ width: 40, height: 40 }} /></div>
 						<div className="stat-info">
 							<h3>Cancelled</h3>
 							<p className="stat-value">{stats.cancelled || 0}</p>
@@ -133,7 +133,7 @@ function Dashboard() {
 											<tr key={order.id}>
 												<td className="order-id">#{order.order_number}</td>
 												<td>
-													<span className={`status-badge ${order.status.toLowerCase()}`}>
+													<span className={`status-badge ${(order.status || '').toLowerCase()}`}>
 														{order.status}
 													</span>
 												</td>
@@ -147,7 +147,7 @@ function Dashboard() {
 						</div>
 					</div>
 
-					
+
 				</div>
 			</div>
 		</>

@@ -41,15 +41,15 @@ const validateUUID = (uuid) => {
 const validatePagination = (page, limit, maxLimit = 100) => {
     const pageNum = parseInt(page) || 1;
     const limitNum = parseInt(limit) || 20;
-    
+
     if (pageNum < 1) {
         throw new BadRequestError('Page must be greater than 0');
     }
-    
+
     if (limitNum < 1 || limitNum > maxLimit) {
         throw new BadRequestError(`Limit must be between 1 and ${maxLimit}`);
     }
-    
+
     return {
         page: pageNum,
         limit: limitNum,
@@ -58,8 +58,12 @@ const validatePagination = (page, limit, maxLimit = 100) => {
 };
 
 const validateOrderStatus = (status) => {
-    const validStatuses = ['Pending', 'Confirmed', 'Preparing', 'OutForDelivery', 'Delivered', 'Cancelled'];
-    if (!validStatuses.includes(status)) {
+    const validStatuses = [
+        'pending', 'accepted', 'rejected', 'confirmed',
+        'preparing', 'packing', 'ready', 'out_for_delivery',
+        'delivered', 'cancelled', 'expired'
+    ];
+    if (!status || !validStatuses.includes(status.toLowerCase())) {
         throw new BadRequestError(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
     }
 };

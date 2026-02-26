@@ -159,9 +159,17 @@ export const updateGroceryCategory = async (id, data) => {
 
 export const getOrders = async (filters = {}) => {
     const queryParams = new URLSearchParams(filters).toString();
-    return api(`/orders?${queryParams}`, {
+    return api(`/seller/orders?${queryParams}`, {
         method: 'GET'
     });
+};
+
+export const acceptOrder = async (orderId) => {
+    return api(`/seller/orders/${orderId}/accept`, { method: 'PATCH' });
+};
+
+export const rejectOrder = async (orderId) => {
+    return api(`/seller/orders/${orderId}/reject`, { method: 'PATCH' });
 };
 
 export const updateOrderStatus = async (orderId, status, cancellationReason = null) => {
@@ -169,14 +177,14 @@ export const updateOrderStatus = async (orderId, status, cancellationReason = nu
     if (cancellationReason) {
         body.cancellation_reason = cancellationReason;
     }
-    return api(`/orders/${orderId}/status`, {
-        method: 'PUT',
+    return api(`/seller/orders/${orderId}/update-status`, {
+        method: 'PATCH',
         body: JSON.stringify(body)
     });
 };
 
 export const getOrderStats = async () => {
-    return api('/orders/stats', { method: 'GET' });
+    return api('/seller/orders/stats', { method: 'GET' });
 };
 
 // --- OFFERS (Discounts) ---
@@ -258,8 +266,9 @@ export default {
     createGroceryCategory,
     deleteGroceryCategory,
     updateGroceryCategory,
-    // New additions
     getOrders,
+    acceptOrder,
+    rejectOrder,
     updateOrderStatus,
     getOrderStats,
     getOffers,

@@ -17,7 +17,7 @@ export const getOrders = async (filters = {}) => {
   if (filters.endDate) queryParams.append('endDate', filters.endDate);
 
   const queryString = queryParams.toString();
-  const endpoint = queryString ? `/orders?${queryString}` : '/orders';
+  const endpoint = queryString ? `/seller/orders?${queryString}` : '/seller/orders';
 
   return api(endpoint, {
     method: 'GET'
@@ -30,8 +30,26 @@ export const getOrders = async (filters = {}) => {
  * @returns {Promise<Object>} Order object
  */
 export const getOrderById = async (orderId) => {
-  return api(`/orders/${orderId}`, {
+  return api(`/seller/orders/${orderId}`, {
     method: 'GET'
+  });
+};
+
+/**
+ * Accept order
+ */
+export const acceptOrder = async (orderId) => {
+  return api(`/seller/orders/${orderId}/accept`, {
+    method: 'PATCH'
+  });
+};
+
+/**
+ * Reject order
+ */
+export const rejectOrder = async (orderId) => {
+  return api(`/seller/orders/${orderId}/reject`, {
+    method: 'PATCH'
   });
 };
 
@@ -42,7 +60,7 @@ export const getOrderById = async (orderId) => {
  * @returns {Promise<Object>} Updated order object
  */
 export const updateOrderStatus = async (orderId, status) => {
-  return api(`/orders/${orderId}/status`, {
+  return api(`/seller/orders/${orderId}/update-status`, {
     method: 'PATCH',
     body: JSON.stringify({ status })
   });
@@ -53,7 +71,7 @@ export const updateOrderStatus = async (orderId, status) => {
  * @returns {Promise<Array>} Array of today's orders
  */
 export const getTodayOrders = async () => {
-  return api('/orders/today', {
+  return api('/seller/orders/today', {
     method: 'GET'
   });
 };
@@ -64,7 +82,7 @@ export const getTodayOrders = async () => {
  * @returns {Promise<Object>} Order statistics
  */
 export const getOrderStats = async (days = 7) => {
-  return api(`/orders/stats?days=${days}`, {
+  return api(`/seller/orders/stats?days=${days}`, {
     method: 'GET'
   });
 };
@@ -72,6 +90,8 @@ export const getOrderStats = async (days = 7) => {
 export default {
   getOrders,
   getOrderById,
+  acceptOrder,
+  rejectOrder,
   updateOrderStatus,
   getTodayOrders,
   getOrderStats

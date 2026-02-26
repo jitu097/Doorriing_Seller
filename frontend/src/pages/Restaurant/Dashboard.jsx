@@ -134,15 +134,15 @@ function Dashboard() {
 										<tr><td colSpan="4" className="empty-state">No recent orders found</td></tr>
 									) : (
 										recentOrders.slice(0, 5).map(order => (
-											<tr key={order._id}>
-												<td className="order-id">#{order._id.substring(0, 8)}...</td>
+											<tr key={order.id}>
+												<td className="order-id">#{order.id.substring(0, 8)}...</td>
 												<td>
-													<span className={`status-badge ${order.status.toLowerCase()}`}>
+													<span className={`status-badge ${(order.status || '').toLowerCase()}`}>
 														{order.status}
 													</span>
 												</td>
-												<td className="amount">₹{order.totalAmount}</td>
-												<td className="time">{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+												<td className="amount">₹{order.total_amount}</td>
+												<td className="time">{new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
 											</tr>
 										))
 									)}
@@ -175,7 +175,7 @@ function Dashboard() {
 											</div>
 										</div>
 										<div className="booking-status">
-											<span className={`status-badge ${booking.status.toLowerCase()}`}>
+											<span className={`status-badge ${(booking.status || '').toLowerCase()}`}>
 												{booking.status}
 											</span>
 										</div>

@@ -47,6 +47,16 @@ export default function Orders() {
 		}
 	};
 
+	const handleAccept = async (id) => {
+		await groceryService.acceptOrder(id);
+		fetchOrders();
+	};
+
+	const handleReject = async (id) => {
+		await groceryService.rejectOrder(id);
+		fetchOrders();
+	};
+
 	const handleStatusChange = async (id, status) => {
 		await groceryService.updateOrderStatus(id, status);
 		fetchOrders();
@@ -150,15 +160,15 @@ export default function Orders() {
 										<>
 											<button
 												className="btn success"
-												onClick={() => handleStatusChange(order.id, 'confirmed')}
+												onClick={() => handleAccept(order.id)}
 											>
-												Confirm
+												Accept
 											</button>
 											<button
 												className="btn danger"
-												onClick={() => handleStatusChange(order.id, 'cancelled')}
+												onClick={() => handleReject(order.id)}
 											>
-												Cancel
+												Reject
 											</button>
 										</>
 									)}
@@ -166,18 +176,27 @@ export default function Orders() {
 									{(order.status || '').toLowerCase() === 'confirmed' && (
 										<button
 											className="btn primary"
-											onClick={() => handleStatusChange(order.id, 'preparing')}
+											onClick={() => handleStatusChange(order.id, 'packing')}
 										>
-											Start Preparing
+											Start Packing
 										</button>
 									)}
 
-									{(order.status || '').toLowerCase() === 'preparing' && (
+									{(order.status || '').toLowerCase() === 'packing' && (
+										<button
+											className="btn warning"
+											onClick={() => handleStatusChange(order.id, 'ready')}
+										>
+											Mark Ready
+										</button>
+									)}
+
+									{(order.status || '').toLowerCase() === 'ready' && (
 										<button
 											className="btn warning"
 											onClick={() => handleStatusChange(order.id, 'out_for_delivery')}
 										>
-											Ready for Delivery
+											Out for Delivery
 										</button>
 									)}
 
