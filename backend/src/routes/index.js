@@ -14,6 +14,7 @@ const notificationRoutes = require('../modules/notification/notification.routes'
 const analyticsRoutes = require('../modules/analytics/analytics.routes');
 const groceryRoutes = require('../modules/grocery/grocery.routes');
 const restaurantRoutes = require('../modules/restaurant/restaurant.routes');
+const walletRoutes = require('../modules/wallet/wallet.routes');
 
 router.use('/auth', authRoutes);
 router.use('/shop', shopRoutes);
@@ -29,5 +30,6 @@ router.use('/reviews', reviewRoutes);
 router.use('/bookings', bookingRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/analytics', analyticsRoutes);
+router.use('/seller/wallet', walletRoutes);
 
 module.exports = router;

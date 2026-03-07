@@ -59,11 +59,12 @@ export default function Navbar() {
     { label: 'Menu', path: '/restaurant/menu' },
     { label: 'Orders', path: '/restaurant/orders' },
     { label: 'Bookings', path: '/restaurant/bookings' },
+    { label: 'Wallet', path: '/restaurant/wallet' },
     { label: 'Offers', path: '/restaurant/offers' },
     { label: 'Reports', path: '/restaurant/reports' }
   ];
 
-  const mobileNavLabels = ['Dashboard', 'Menu', 'Orders'];
+  const mobileNavLabels = ['Dashboard', 'Menu', 'Orders', 'Wallet'];
 
   const handleLogout = async () => {
     if (!window.confirm('Logout?')) return;
@@ -144,6 +145,15 @@ export default function Navbar() {
             path: '/restaurant/menu', label: 'Menu', icon: (
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 3h18v18H3zM21 9H3M21 15H3M12 3v18" />
+              </svg>
+            )
+          },
+          {
+            path: '/restaurant/wallet', label: 'Wallet', icon: (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2" ry="2" />
+                <line x1="2" y1="10" x2="22" y2="10" />
+                <line x1="6" y1="16" x2="6.01" y2="16" />
               </svg>
             )
           },

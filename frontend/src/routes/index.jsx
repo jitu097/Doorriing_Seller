@@ -19,6 +19,7 @@ const GroceryOffers = lazy(() => import('../pages/Grocery/Offers'));
 const GroceryReports = lazy(() => import('../pages/Grocery/Reports'));
 const GroceryProfile = lazy(() => import('../pages/Grocery/Profile'));
 const GroceryLayout = lazy(() => import('../pages/Grocery/GroceryLayout'));
+const WalletPage = lazy(() => import('../pages/Wallet/Wallet'));
 
 // Restaurant Pages
 const RestaurantDashboard = lazy(() => import('../pages/Restaurant/Dashboard'));
@@ -115,6 +116,7 @@ const AppRoutes = () => {
                             <Route path="/grocery/offers" element={<GroceryOffers />} />
                             <Route path="/grocery/reports" element={<GroceryReports />} />
                             <Route path="/grocery/profile" element={<GroceryProfile />} />
+                            <Route path="/grocery/wallet" element={<WalletPage />} />
                         </Route>
 
                         {/* Restaurant Dashboard & Pages */}
@@ -126,6 +128,7 @@ const AppRoutes = () => {
                             <Route path="/restaurant/offers" element={<RestaurantOffers />} />
                             <Route path="/restaurant/reports" element={<RestaurantReports />} />
                             <Route path="/restaurant/profile" element={<RestaurantProfile />} />
+                            <Route path="/restaurant/wallet" element={<WalletPage />} />
                         </Route>
                     </Route>
                 </Route>

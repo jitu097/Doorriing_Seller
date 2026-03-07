@@ -1,7 +1,8 @@
-﻿const supabase = require('../../config/supabaseClient');
+const supabase = require('../../config/supabaseClient');
 const { validatePagination, validateOrderStatus } = require('../../utils/validators');
 const { isValidTransition } = require('../../utils/orderTransitions');
 const notificationService = require('../notification/notification.service');
+const walletService = require('../wallet/wallet.service');
 
 const getOrders = async (shopId, page = 1, limit = 20, status = null) => {
     const pagination = validatePagination(page, limit);
@@ -205,6 +206,14 @@ const updateOrderStatus = async (orderId, shopId, newStatus, shopType) => {
         if (error) throw error;
         return data;
     })();
+
+    if (newStatus === 'delivered' && data) {
+        try {
+            await walletService.processOrderDelivery(orderId, shopId, data.total_amount);
+        } catch (err) {
+            console.error('Failed to update wallet for delivered order', err);
+        }
+    }
 
     // Helper to send notification safely
     try {
