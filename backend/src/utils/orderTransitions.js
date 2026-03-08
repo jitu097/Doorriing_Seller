@@ -21,7 +21,8 @@ const VALID_TRANSITIONS = {
  * @returns {boolean} True if valid, false otherwise
  */
 const isValidTransition = (currentStatus, newStatus, shopType) => {
-    const type = shopType?.toLowerCase() === 'restaurant' ? 'restaurant' : 'grocery';
+    const restaurantTypes = ['restaurant', 'cloud kitchen', 'hotel'];
+    const type = restaurantTypes.includes(shopType?.toLowerCase()) ? 'restaurant' : 'grocery';
     const allowedNextStates = VALID_TRANSITIONS[type][currentStatus?.toLowerCase()];
 
     if (!allowedNextStates) {
