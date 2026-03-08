@@ -46,7 +46,7 @@ const updateStatus = async (req, res, next) => {
         const { id } = req.params;
         const { status } = req.body;
 
-        const order = await orderService.updateOrderStatus(id, req.shop.id, status, req.shop.shop_type);
+        const order = await orderService.updateOrderStatus(id, req.shop.id, status, req.shop.business_type);
         successResponse(res, order, 'Order status updated successfully');
     } catch (error) {
         next(error);

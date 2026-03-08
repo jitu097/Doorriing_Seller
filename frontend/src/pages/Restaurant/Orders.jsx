@@ -7,6 +7,7 @@ const orderTabs = [
   { label: 'Pending', key: 'pending' },
   { label: 'Confirmed', key: 'confirmed' },
   { label: 'Preparing', key: 'preparing' },
+  { label: 'Ready', key: 'ready' },
   { label: 'Out for Delivery', key: 'out_for_delivery' },
   { label: 'Delivered', key: 'delivered' },
   { label: 'Cancelled', key: 'cancelled' },
@@ -16,6 +17,7 @@ const statusColors = {
   pending: '#f59e0b',
   confirmed: '#3b82f6',
   preparing: '#8b5cf6',
+  ready: '#0ea5e9',
   out_for_delivery: '#f97316',
   delivered: '#22c55e',
   cancelled: '#ef4444',
@@ -185,10 +187,21 @@ export default function Orders() {
                     <button
                       className="btn warning"
                       onClick={() =>
+                        handleStatusChange(order.id, 'ready')
+                      }
+                    >
+                      Mark Ready
+                    </button>
+                  )}
+
+                  {order.status === 'ready' && (
+                    <button
+                      className="btn warning"
+                      onClick={() =>
                         handleStatusChange(order.id, 'out_for_delivery')
                       }
                     >
-                      Ready for Delivery
+                      Out for Delivery
                     </button>
                   )}
 
