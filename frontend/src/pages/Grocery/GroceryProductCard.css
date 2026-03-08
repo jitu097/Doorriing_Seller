@@ -1,53 +1,49 @@
 .grocery-card {
-    background: #f8f5ef;
+    background: #ffffff;
     border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(44, 62, 80, 0.06);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    padding: 18px 18px 14px 18px;
-    min-width: 320px;
-    max-width: 340px;
+    flex-direction: column;
     position: relative;
-    flex: 1 1 320px;
+    width: 100%;
+    overflow: hidden;
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .grocery-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(44, 62, 80, 0.1);
+    transform: translateY(-4px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
 }
 
 /* Active Badge - Top Left */
 .grocery-card-badge {
     position: absolute;
-    top: 10px;
-    left: 10px;
+    top: 12px;
+    left: 12px;
     background: #22d06a;
     color: #fff;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-weight: 700;
-    border-radius: 5px;
-    padding: 2px 8px;
+    border-radius: 6px;
+    padding: 4px 10px;
     z-index: 2;
-    box-shadow: 0 1px 4px rgba(34, 208, 106, 0.10);
+    box-shadow: 0 2px 8px rgba(34, 208, 106, 0.3);
 }
 
 .grocery-card-badge.inactive {
     background: #9ca3af;
-    box-shadow: none;
+    box-shadow: 0 2px 8px rgba(156, 163, 175, 0.3);
 }
 
-/* Image Box */
+/* Image Box - Full Width at Top */
 .grocery-card-imgbox {
-    width: 64px;
-    height: 64px;
-    background: #f3e7d7;
-    border-radius: 12px;
+    width: 100%;
+    height: 180px;
+    background: linear-gradient(135deg, #f3e7d7 0%, #fef3e2 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
+    position: relative;
     overflow: hidden;
 }
 
@@ -58,34 +54,25 @@
 }
 
 .grocery-card-placeholder {
-    font-size: 2rem;
-    color: #b85c1c;
+    font-size: 4rem;
+    color: rgba(109, 29, 29, 0.3);
 }
 
-/* Main Content Area */
-.grocery-card-main {
-    flex: 1;
+/* Content Below Image */
+.grocery-card-content {
+    padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    min-width: 0;
-    /* Prevent overflow text truncation issues */
+    gap: 10px;
 }
 
-/* Top Row: Title + Actions */
-.grocery-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 8px;
-}
-
+/* Title */
 .grocery-card-title {
-    font-size: 1.18rem;
-    font-weight: 700;
-    color: #23272f;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1f2937;
     margin: 0;
-    line-height: 1.3;
+    line-height: 1.4;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
@@ -93,163 +80,145 @@
     -webkit-box-orient: vertical;
 }
 
-.grocery-card-actions {
-    display: flex;
-    gap: 4px;
-    flex-shrink: 0;
+/* Description */
+.grocery-card-description {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
-.icon-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 6px;
-    transition: background 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+/* Stock Status */
+.grocery-card-stock {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #059669;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
-.icon-btn.edit:hover {
-    background: #ffe5d0;
-}
-
-.icon-btn.delete:hover {
-    background: #ffe5e5;
-}
-
-/* Middle Row: Price & Info */
-.grocery-card-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+/* Price */
+.grocery-card-price {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
     margin: 4px 0;
 }
 
-.grocery-card-price-tag {
-    background: #ffe5d0;
-    color: #b85c1c;
-    font-size: 1.05rem;
-    border-radius: 8px;
-    padding: 4px 12px;
-    font-weight: 600;
+/* Action Buttons */
+.grocery-card-actions {
     display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-/* Bottom Row: Best Seller & Toggle & Qty */
-.grocery-card-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
     gap: 8px;
-    margin-top: auto;
-    padding-top: 8px;
+    margin-top: 8px;
 }
 
-.bestseller-tag {
+.action-btn {
+    flex: 1;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
-    background: #fffbe5;
+    padding: 10px 16px;
     border-radius: 8px;
-    padding: 4px 8px;
-    font-weight: 600;
-    color: #b85c1c;
-    font-size: 0.9rem;
-    border: 1px solid #fef3c7;
-}
-
-.bestseller-tag input[type="checkbox"] {
-    accent-color: #f7931e;
-    width: 16px;
-    height: 16px;
-    cursor: default;
-}
-
-.qty-display {
-    background: #f7f7f9;
-    color: #23272f;
-    border-radius: 8px;
-    padding: 4px 10px;
     font-size: 0.95rem;
-    font-weight: 500;
-    white-space: nowrap;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
 }
 
-/* Toggle Switch */
+.edit-btn {
+    background: rgb(109, 29, 29);
+    color: white;
+}
+
+.edit-btn:hover {
+    background: rgb(89, 19, 19);
+    transform: translateY(-1px);
+}
+
+.delete-btn {
+    background: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #e5e7eb;
+}
+
+
+.delete-btn:hover {
+    background: #fee2e2;
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+/* Availability Toggle */
 .availability-toggle {
     display: flex;
     align-items: center;
-}
-
-.toggle-switch {
-    position: relative;
-    display: inline-block;
-    width: 36px;
-    height: 20px;
-}
-
-.toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.toggle-slider {
-    position: absolute;
+    gap: 10px;
+    padding: 12px 0 4px 0;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 8px;
     cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
-    border-radius: 34px;
 }
 
-.toggle-slider:before {
+.availability-toggle input[type="checkbox"] {
+    width: 44px;
+    height: 24px;
+    position: relative;
+    cursor: pointer;
+    appearance: none;
+    background: #d1d5db;
+    border-radius: 12px;
+    transition: background 0.3s;
+    outline: none;
+}
+
+.availability-toggle input[type="checkbox"]:checked {
+    background: rgb(109, 29, 29);
+}
+
+.availability-toggle input[type="checkbox"]::before {
+    content: '';
     position: absolute;
-    content: "";
-    height: 16px;
-    width: 16px;
-    left: 2px;
-    bottom: 2px;
-    background-color: white;
-    transition: .4s;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
+    background: white;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s;
 }
 
-input:checked+.toggle-slider {
-    background-color: #22d06a;
+.availability-toggle input[type="checkbox"]:checked::before {
+    transform: translateX(20px);
 }
 
-input:focus+.toggle-slider {
-    box-shadow: 0 0 1px #22d06a;
+.toggle-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #4b5563;
 }
 
-input:checked+.toggle-slider:before {
-    transform: translateX(16px);
-}
-
-/* Responsive adjustments */
 @media (max-width: 700px) {
-    .grocery-card {
-        min-width: 100%;
-        max-width: 100%;
-        padding: 14px;
-        gap: 12px;
-    }
-
     .grocery-card-imgbox {
-        width: 60px;
-        height: 60px;
+        height: 150px;
     }
-
+    
     .grocery-card-title {
-        font-size: 1.1rem;
+        font-size: 1rem;
+    }
+    
+    .grocery-card-price {
+        font-size: 1.3rem;
+    }
+    
+    .action-btn {
+        padding: 8px 12px;
+        font-size: 0.85rem;
     }
 }

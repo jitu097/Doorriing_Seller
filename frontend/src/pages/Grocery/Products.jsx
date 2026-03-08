@@ -329,26 +329,28 @@ const Products = () => {
 
 	return (
 		<>
-			<div className="menu-container">
-				<div className="menu-header">
-					<span className="menu-emoji" role="img" aria-label="menu">🛒</span>
-					<div>
-						<h1 className="menu-title">Grocery Products</h1>
-						<div className="menu-overview">
-							Overview: <b>{items.length} Items</b> |
-							<b>{items.filter(i => i.is_available).length} Active</b> |
-							<b>{categories.length} Categories</b>
+			<div className="menu-page-wrapper">
+				<div className="menu-sticky-wrapper">
+					<div className="menu-header">
+						<span className="menu-emoji" role="img" aria-label="menu">🛒</span>
+						<div>
+							<h1 className="menu-title">Grocery Products</h1>
+							<div className="menu-overview">
+								Overview: <b>{items.length} Items</b> |
+								<b>{items.filter(i => i.is_available).length} Active</b> |
+								<b>{categories.length} Categories</b>
+							</div>
 						</div>
 					</div>
-				</div>
-				<div className="menu-actions">
-					<button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Add New Product</button>
-					<button className="btn btn-outline" onClick={() => setShowCategoryModal(true)}>Manage Categories</button>
-					<button className="btn btn-outline" onClick={() => setShowSubcategoryModal(true)}>Manage Subcategories</button>
+					<div className="menu-actions">
+						<button className="btn btn-outline" onClick={() => setShowCategoryModal(true)}>Manage Categories</button>
+						<button className="btn btn-outline" onClick={() => setShowSubcategoryModal(true)}>Manage Subcategories</button>
+						<button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Add New Product</button>
+					</div>
 				</div>
 
-				<div className="menu-categories">
-					{groupedData.length === 0 ? (
+				<div className="menu-container">
+					<div className="menu-categories">{groupedData.length === 0 ? (
 						<div className="empty-state">No products or categories found. Add one to get started!</div>
 					) : groupedData.map((cat, idx) => (
 						<div className="category-accordion" key={cat.id}>
@@ -378,6 +380,7 @@ const Products = () => {
 							)}
 						</div>
 					))}
+				</div>
 				</div>
 			</div>
 

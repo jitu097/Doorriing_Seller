@@ -55,11 +55,11 @@ export default function Navbar() {
     { label: 'Dashboard', path: '/grocery/dashboard' },
     { label: 'Products', path: '/grocery/products' },
     { label: 'Orders', path: '/grocery/orders' },
-    { label: 'Wallet', path: '/grocery/wallet' },
     { label: 'Offers', path: '/grocery/offers' },
-    { label: 'Reports', path: '/grocery/reports' }
+    { label: 'Reports', path: '/grocery/reports' },
+    { label: 'Wallet', path: '/grocery/wallet' }
   ];
-  const mobileNavLabels = ['Dashboard', 'Products', 'Orders', 'Wallet'];
+  const mobileNavLabels = ['Dashboard', 'Products', 'Orders'];
 
   return (
     <>
@@ -136,6 +136,15 @@ export default function Navbar() {
                 <line x1="16" y1="13" x2="8" y2="13"></line>
                 <line x1="16" y1="17" x2="8" y2="17"></line>
                 <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            )
+          },
+          {
+            path: '/grocery/wallet', label: 'Wallet', icon: (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>
+                <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
+                <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path>
               </svg>
             )
           },

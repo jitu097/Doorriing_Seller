@@ -4,14 +4,14 @@ import './GroceryProductCard.css';
 const GroceryProductCard = ({ item, onEdit, onDelete, onToggleStatus }) => {
     return (
         <div className="grocery-card">
-            {/* Active Status Badge (Top Right or Left) */}
+            {/* Active Status Badge (Top Left) */}
             {item.is_available ? (
                 <span className="grocery-card-badge">ACTIVE</span>
             ) : (
                 <span className="grocery-card-badge inactive">INACTIVE</span>
             )}
 
-            {/* Image Section */}
+            {/* Image Section - Full Width at Top */}
             <div className="grocery-card-imgbox">
                 {item.image_url ? (
                     <img src={item.image_url} alt={item.name} className="grocery-card-img" />
@@ -20,75 +20,61 @@ const GroceryProductCard = ({ item, onEdit, onDelete, onToggleStatus }) => {
                 )}
             </div>
 
-            {/* Main Content */}
-            <div className="grocery-card-main">
-                {/* Header: Title & Actions */}
-                <div className="grocery-card-header">
-                    <div>
-                        <h3 className="grocery-card-title">{item.name}</h3>
-                        {item.subcategory?.name && (
-                            <p style={{ color: '#6b7280', fontSize: '0.85rem', margin: '2px 0 0 0' }}>
-                                {item.category?.name} › {item.subcategory.name}
-                            </p>
-                        )}
-                    </div>
-                    <div className="grocery-card-actions">
-                        <button
-                            className="icon-btn edit"
-                            title="Edit"
-                            onClick={() => onEdit(item)}
-                        >
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                <path d="M14.7 2.29a1 1 0 0 1 1.42 0l1.59 1.59a1 1 0 0 1 0 1.42l-9.17 9.17-2.12.53.53-2.12 9.17-9.17z" stroke="#b85c1c" strokeWidth="1.5" fill="none" />
-                                <path d="M12.88 4.12l2.12 2.12" stroke="#b85c1c" strokeWidth="1.5" />
-                            </svg>
-                        </button>
-                        <button
-                            className="icon-btn delete"
-                            title="Delete"
-                            onClick={() => onDelete(item.id, item.name)}
-                        >
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                <rect x="5.5" y="8" width="9" height="7" rx="2" stroke="#b85c1c" strokeWidth="1.5" />
-                                <path d="M8 10v3m4-3v3" stroke="#b85c1c" strokeWidth="1.5" />
-                                <rect x="8" y="4" width="4" height="2" rx="1" stroke="#b85c1c" strokeWidth="1.5" />
-                                <path d="M4 6h12" stroke="#b85c1c" strokeWidth="1.5" />
-                            </svg>
-                        </button>
-                    </div>
+            {/* Main Content Below Image */}
+            <div className="grocery-card-content">
+                {/* Title */}
+                <h3 className="grocery-card-title">{item.name}</h3>
+
+                {/* Description/Category */}
+                {item.subcategory?.name ? (
+                    <p className="grocery-card-description">
+                        {item.category?.name} › {item.subcategory.name}
+                    </p>
+                ) : item.description ? (
+                    <p className="grocery-card-description">{item.description}</p>
+                ) : null}
+
+                {/* Stock Status */}
+                <div className="grocery-card-stock">
+                    {item.stock_quantity} {item.unit?.toUpperCase() || 'PIECES'} IN STOCK
                 </div>
 
-                {/* Price Display */}
-                <div className="grocery-card-info">
-                    {/* Replaced 'Half' Price with simple layout logic if needed, but user asked for Half removal and Qty addition */}
-                    <div className="grocery-card-price-tag">
-                        Full: ₹{item.price}
-                    </div>
+                {/* Price */}
+                <div className="grocery-card-price">
+                    ₹{item.price}
                 </div>
 
-                {/* Footer: Best Seller, Qty, Toggle */}
-                <div className="grocery-card-footer">
-                    <label className="bestseller-tag">
-                        {/* Using checkbox for visual consistency with previous design, but readOnly */}
-                        <input type="checkbox" checked={item.is_best_seller || false} readOnly />
-                        <span>Best Seller</span>
-                    </label>
-
-                    <span className="qty-display">
-                        Qty: {item.stock_quantity} {item.unit}
-                    </span>
-
-                    <label className="availability-toggle" title="Toggle Availability">
-                        <span className="toggle-switch">
-                            <input
-                                type="checkbox"
-                                checked={item.is_available}
-                                onChange={() => onToggleStatus(item.id, item.is_available)}
-                            />
-                            <span className="toggle-slider round"></span>
-                        </span>
-                    </label>
+                {/* Action Buttons */}
+                <div className="grocery-card-actions">
+                    <button
+                        className="action-btn edit-btn"
+                        onClick={() => onEdit(item)}
+                    >
+                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                            <path d="M14.7 2.29a1 1 0 0 1 1.42 0l1.59 1.59a1 1 0 0 1 0 1.42l-9.17 9.17-2.12.53.53-2.12 9.17-9.17z" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                            <path d="M12.88 4.12l2.12 2.12" stroke="currentColor" strokeWidth="1.5" />
+                        </svg>
+                        Edit
+                    </button>
+                    <button
+                        className="action-btn delete-btn"
+                        onClick={() => onDelete(item.id, item.name)}
+                    >
+                        <img src="/delete.png" alt="Delete" width="18" height="18" />
+                        Delete
+                    </button>
                 </div>
+
+                {/* Toggle Availability */}
+                <label className="availability-toggle">
+                    <input
+                        type="checkbox"
+                        checked={item.is_available}
+                        onChange={() => onToggleStatus(item.id, item.is_available)}
+                    />
+                    <span className="toggle-slider"></span>
+                    <span className="toggle-label">{item.is_available ? 'Available' : 'Unavailable'}</span>
+                </label>
             </div>
         </div>
     );

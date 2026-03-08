@@ -37,15 +37,14 @@ export default function FooterMobile() {
     <footer className="footer-mobile">
       <Link to="/restaurant/offers" className="footer-link">Offers</Link>
       <Link to="/restaurant/reports" className="footer-link">Reports</Link>
+      <Link to="/restaurant/wallet" className="footer-link">Wallet</Link>
       <button
-        className={`admin-panel-btn ${isShopOpen ? 'open' : 'closed'}`}
+        className={`footer-link admin-panel-btn ${isShopOpen ? 'open' : 'closed'}`}
         onClick={toggleShopStatus}
         disabled={loadingStatus}
-        style={{ minWidth: 0, padding: '8px 18px', fontSize: '1rem' }}
       >
         <span className={isShopOpen ? 'dot-green' : 'dot-red'} />
-        Admin Panel<br />
-        <span className="open-label">{isShopOpen ? 'OPEN' : 'CLOSED'}</span>
+        {isShopOpen ? 'Open' : 'Closed'}
       </button>
     </footer>
   );

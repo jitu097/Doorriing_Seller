@@ -132,41 +132,39 @@ const GroceryCategoryManager = ({ isOpen, categories, onClose, onCategoriesChang
                     <div className="category-list">
                         {categories.map(cat => (
                             <div className="category-card" key={cat.id}>
-                                <img
-                                    src={cat.image_url || fallbackImage}
-                                    alt={cat.name}
-                                    className="category-image"
-                                    loading="lazy"
-                                    decoding="async"
-                                />
+                                <div className="category-image-wrapper">
+                                    <img
+                                        src={cat.image_url || fallbackImage}
+                                        alt={cat.name}
+                                        className="category-image"
+                                        loading="lazy"
+                                        decoding="async"
+                                    />
+                                    
+                                    <div className="category-controls-overlay">
+                                        {/* Toggle */}
+                                        <label className="cat-toggle" title="Toggle Visibility">
+                                            <input
+                                                type="checkbox"
+                                                checked={cat.is_active !== false} // Default to true if undefined
+                                                onChange={() => handleToggleCategory(cat.id, cat.is_active !== false)}
+                                            />
+                                            <span className="cat-slider round"></span>
+                                        </label>
+
+                                        {/* Delete Button */}
+                                        <button
+                                            className="cat-delete-btn"
+                                            onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                                            title="Delete Category"
+                                        >
+                                            <img src="/delete.png" alt="Delete" style={{ width: '20px', height: '20px' }} />
+                                        </button>
+                                    </div>
+                                </div>
+                                
                                 <div className="category-name">
                                     {cat.name}
-                                </div>
-
-                                <div className="category-controls-overlay">
-                                    {/* Toggle */}
-                                    <label className="cat-toggle" title="Toggle Visibility">
-                                        <input
-                                            type="checkbox"
-                                            checked={cat.is_active !== false} // Default to true if undefined
-                                            onChange={() => handleToggleCategory(cat.id, cat.is_active !== false)}
-                                        />
-                                        <span className="cat-slider round"></span>
-                                    </label>
-
-                                    {/* Delete Button (Exact SVG requested) */}
-                                    <button
-                                        className="cat-delete-btn"
-                                        onClick={() => handleDeleteCategory(cat.id, cat.name)}
-                                        title="Delete Category"
-                                    >
-                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                            <rect x="5.5" y="8" width="9" height="7" rx="2" stroke="#b85c1c" strokeWidth="1.5" />
-                                            <path d="M8 10v3m4-3v3" stroke="#b85c1c" strokeWidth="1.5" />
-                                            <rect x="8" y="4" width="4" height="2" rx="1" stroke="#b85c1c" strokeWidth="1.5" />
-                                            <path d="M4 6h12" stroke="#b85c1c" strokeWidth="1.5" />
-                                        </svg>
-                                    </button>
                                 </div>
                             </div>
                         ))}

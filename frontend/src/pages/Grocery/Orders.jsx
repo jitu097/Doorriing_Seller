@@ -129,9 +129,9 @@ export default function Orders() {
 
 								{/* CUSTOMER */}
 								<div className="order-section">
-									<div>👤 {order.customer_name || 'N/A'}</div>
+									<div>👤 {order.customer_name || 'Customer'}</div>
 									<div>📞 {order.customer_phone || 'N/A'}</div>
-									{order.delivery_address && (
+									{order.delivery_address && !order.delivery_address.includes('undefined') && (
 										<div>📍 {order.delivery_address}</div>
 									)}
 								</div>

@@ -1,17 +1,51 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { shopService } from '../../services/shopService';
 import './footer.css';
 
 export default function FooterMobile() {
+	const [isShopOpen, setIsShopOpen] = useState(true);
+	const [loadingStatus, setLoadingStatus] = useState(false);
+
+	useEffect(() => {
+		fetchShopStatus();
+	}, []);
+
+	const fetchShopStatus = async () => {
+		try {
+			const isOpen = await shopService.getShopStatus();
+			setIsShopOpen(isOpen);
+		} catch (error) {
+			// fail silently
+		}
+	};
+
+	const toggleShopStatus = async () => {
+		try {
+			setLoadingStatus(true);
+			const newStatus = !isShopOpen;
+			await shopService.toggleStatus(newStatus);
+			setIsShopOpen(newStatus);
+		} catch (error) {
+			// fail silently
+		} finally {
+			setLoadingStatus(false);
+		}
+	};
+
 	return (
 		<footer className="footer-mobile">
 			<Link to="/grocery/offers" className="footer-link">Offers</Link>
 			<Link to="/grocery/reports" className="footer-link">Reports</Link>
-			<button className="admin-panel-btn open" style={{ minWidth: 0, padding: '8px 18px', fontSize: '1rem' }}>
-				<span className="dot-green" />
-				Admin Panel<br />
-				<span className="open-label">OPEN</span>
+			<Link to="/grocery/wallet" className="footer-link">Wallet</Link>
+			<button
+				className={`footer-link admin-panel-btn ${isShopOpen ? 'open' : 'closed'}`}
+				onClick={toggleShopStatus}
+				disabled={loadingStatus}
+			>
+				<span className={isShopOpen ? 'dot-green' : 'dot-red'} />
+				{isShopOpen ? 'Open' : 'Closed'}
 			</button>
 		</footer>
 	);

@@ -4,11 +4,13 @@ import '../Restaurant/Dashboard.css';
 import { analyticsService } from '../../services/analyticsService';
 import orderService from '../../services/orderService';
 import { bookingService } from '../../services/bookingService';
+import walletService from '../../services/walletService';
 
 function Dashboard() {
 	const [stats, setStats] = useState(null);
 	const [recentOrders, setRecentOrders] = useState([]);
 	const [todayBookings, setTodayBookings] = useState([]);
+	const [walletData, setWalletData] = useState(null);
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
@@ -20,6 +22,10 @@ function Dashboard() {
 			setLoading(true);
 			const data = await analyticsService.getSummary(7);
 			setStats(data);
+
+			// Fetch wallet data
+			const wallet = await walletService.getWalletSummary();
+			setWalletData(wallet);
 
 			// Fetch recent orders
 			const ordersData = await orderService.getOrders({ limit: 5 });
@@ -49,7 +55,7 @@ function Dashboard() {
 	}
 
 	const activeOrdersCount = (stats?.pending_orders || 0);
-	const totalRevenue = stats?.total_revenue || 0;
+	const totalRevenue = walletData?.balance || 0;
 	const deliveredOrders = stats?.completed_orders || 0;
 	const cancelledOrders = stats?.cancelled_orders || 0;
 	return (
@@ -74,7 +80,7 @@ function Dashboard() {
 						<div className="stat-info">
 							<h3>Total Revenue</h3>
 							<p className="stat-value">₹{totalRevenue.toLocaleString()}</p>
-							<span className="stat-hint">Last 7 days</span>
+							<span className="stat-hint">Lifetime earnings</span>
 						</div>
 					</div>
 
@@ -85,7 +91,7 @@ function Dashboard() {
 						<div className="stat-info">
 							<h3>Active Orders</h3>
 							<p className="stat-value">{activeOrdersCount}</p>
-							<span className="stat-hint">Pending orders</span>
+							<span className="stat-hint">In preparation or delivery</span>
 						</div>
 					</div>
 

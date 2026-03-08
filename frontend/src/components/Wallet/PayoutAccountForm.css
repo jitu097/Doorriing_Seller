@@ -1,6 +1,6 @@
 .payout-account-form {
     padding: 20px;
-    background: #fff;
+    background: #fce8d3;
     border-radius: 8px;
 }
 
@@ -19,7 +19,7 @@
     flex: 1;
     padding: 10px;
     border: 1px solid #ddd;
-    background: #f8f9fa;
+    background: #f3e7d7;
     border-radius: 6px;
     cursor: pointer;
     font-weight: 500;
@@ -27,9 +27,9 @@
 }
 
 .type-toggle button.active {
-    background: #007bff;
+    background: rgb(109, 29, 29);
     color: #fff;
-    border-color: #007bff;
+    border-color: rgb(109, 29, 29);
 }
 
 .form-group {
@@ -55,8 +55,8 @@
 
 .form-group input:focus {
     outline: none;
-    border-color: #80bdff;
-    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    border-color: rgb(109, 29, 29);
+    box-shadow: 0 0 0 0.2rem rgba(109, 29, 29, 0.15);
 }
 
 .form-row {
@@ -92,10 +92,16 @@
 }
 
 .btn-save {
-    background: #007bff;
+    background: rgb(109, 29, 29);
     color: #fff;
     border: none;
     flex: 1;
+    box-shadow: 0 2px 8px rgba(109, 29, 29, 0.20);
+    transition: background 0.2s;
+}
+
+.btn-save:hover {
+    background: rgb(89, 19, 19);
 }
 
 .btn-save:hover {
@@ -103,11 +109,11 @@
 }
 
 .btn-cancel {
-    background: #fff;
+    background: #f3e7d7;
     border: 1px solid #ced4da;
     color: #495057;
 }
 
 .btn-cancel:hover {
-    background: #f8f9fa;
+    background: #e5dad0;
 }

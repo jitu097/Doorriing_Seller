@@ -251,15 +251,16 @@ const getOrderStats = async (shopId) => {
     };
 
     data.forEach(order => {
-        if (order.status === 'Pending') stats.pending++;
-        else if (order.status === 'Confirmed') stats.confirmed++;
-        else if (order.status === 'Preparing') stats.preparing++;
-        else if (order.status === 'OutForDelivery') stats.outForDelivery++;
-        else if (order.status === 'Delivered') {
+        const status = order.status.toLowerCase();
+        if (status === 'pending') stats.pending++;
+        else if (status === 'confirmed') stats.confirmed++;
+        else if (status === 'preparing' || status === 'packing') stats.preparing++;
+        else if (status === 'out_for_delivery' || status === 'outfordelivery') stats.outForDelivery++;
+        else if (status === 'delivered') {
             stats.delivered++;
             stats.totalRevenue += parseFloat(order.total_amount || 0);
         }
-        else if (order.status === 'Cancelled') stats.cancelled++;
+        else if (status === 'cancelled') stats.cancelled++;
     });
 
     return stats;

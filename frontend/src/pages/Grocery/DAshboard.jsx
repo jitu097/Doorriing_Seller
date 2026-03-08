@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Dashboard.css';
 import groceryService from '../../services/groceryService';
+import walletService from '../../services/walletService';
 
 function Dashboard() {
 	const [stats, setStats] = useState({
@@ -16,6 +17,7 @@ function Dashboard() {
 		cancelledOrders: 0
 	});
 	const [recentOrders, setRecentOrders] = useState([]);
+	const [walletData, setWalletData] = useState(null);
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
@@ -26,18 +28,28 @@ function Dashboard() {
 					groceryService.getOrders({ limit: 5 })
 				]);
 
+				// Fetch wallet data
+				const wallet = await walletService.getWalletSummary();
+				setWalletData(wallet);
+
 				// transform stats if needed. groceryService.getDashboardStats maps to analytics summary
 				// actually getOrderStats is better for "active" counts.
 				// Let's call getOrderStats as well for real-time counts.
 				// Re-calling to get real-time status counts
 				const statusCounts = await groceryService.getOrderStats();
+				console.log('📊 Grocery Order Stats:', statusCounts);
+				console.log('🚚 Delivered Orders:', statusCounts?.delivered);
 
-				// Merge data
+				// Merge data - use statusCounts for real-time order counts
 				setStats({
-					...statusCounts,
+					pending: statusCounts.pending || 0,
+					confirmed: statusCounts.confirmed || 0,
+					preparing: statusCounts.preparing || 0,
+					outForDelivery: statusCounts.outForDelivery || 0,
+					delivered: statusCounts.delivered || 0,
+					cancelled: statusCounts.cancelled || 0,
 					totalOrders: statsData.totalOrders || 0,
-					totalRevenue: statsData.totalRevenue || 0, // Backend summary keys are camelCase
-					delivered: statsData.completedOrders || statusCounts.delivered || 0
+					totalRevenue: statsData.totalRevenue || 0
 				});
 
 				const orders = ordersData.data?.orders || ordersData.orders || [];
@@ -63,6 +75,7 @@ function Dashboard() {
 						<p>Welcome back! Here's your daily overview.</p>
 					</div>
 					<div className="header-actions">
+						<Link to="/grocery/products" className="manage-orders-btn">Manage Orders</Link>
 						<span className="date-badge">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
 					</div>
 				</header>
@@ -73,36 +86,34 @@ function Dashboard() {
 						<div className="stat-icon revenue-icon"><img src="/potli.png" alt="Total Revenue" style={{ width: 40, height: 40 }} /></div>
 						<div className="stat-info">
 							<h3>Total Revenue</h3>
-							<p className="stat-value">₹{(stats.totalRevenue || 0).toLocaleString()}</p>
-							<span className="stat-hint">Lifetime earnings</span>
-						</div>
+						<p className="stat-value">₹{(walletData?.balance || 0).toLocaleString()}</p>
+						<span className="stat-hint">Lifetime earnings</span>
 					</div>
+				</div>
 
-					<div className="stat-card">
-						<div className="stat-icon orders-icon"><img src="/checkout.png" alt="Active Orders" style={{ width: 40, height: 40 }} /></div>
-						<div className="stat-info">
-							<h3>Active Orders</h3>
-							<p className="stat-value">{activeOrdersCount}</p>
-							<span className="stat-hint">In preparation or delivery</span>
-						</div>
+				<div className="stat-card">
+					<div className="stat-icon orders-icon"><img src="/checkout.png" alt="Active Orders" style={{ width: 40, height: 40 }} /></div>
+					<div className="stat-info">
+						<h3>Active Orders</h3>
+						<p className="stat-value">{activeOrdersCount}</p>
+						<span className="stat-hint">In preparation or delivery</span>
 					</div>
+				</div>
 
-					<div className="stat-card">
-						<div className="stat-icon success-icon"><img src="/delivered.png" alt="Delivered" style={{ width: 40, height: 40 }} /></div>
-						<div className="stat-info">
-							<h3>Delivered</h3>
-							<p className="stat-value">{stats.delivered || 0}</p>
-							<span className="stat-hint">Successfully served</span>
-						</div>
+				<div className="stat-card">
+					<div className="stat-icon success-icon"><img src="/delivered.png" alt="Delivered" style={{ width: 40, height: 40 }} /></div>
+					<div className="stat-info">
+						<h3>Delivered</h3>
+						<p className="stat-value">{stats.delivered || 0}</p>
+						<span className="stat-hint">Successfully served</span>
 					</div>
-
-					<div className="stat-card">
-						<div className="stat-icon cancel-icon"><img src="/cancel.png" alt="Cancelled" style={{ width: 40, height: 40 }} /></div>
-						<div className="stat-info">
-							<h3>Cancelled</h3>
-							<p className="stat-value">{stats.cancelled || 0}</p>
-							<span className="stat-hint">Total cancellations</span>
-						</div>
+				</div>
+				<div className="stat-card">
+					<div className="stat-icon cancel-icon"><img src="/cancel.png" alt="Cancelled" style={{ width: 40, height: 40 }} /></div>
+					<div className="stat-info">
+						<h3>Cancelled</h3>
+						<p className="stat-value">{stats.cancelled || 0}</p>
+						<span className="stat-hint">Total cancellations</span>						</div>
 					</div>
 				</div>
 
