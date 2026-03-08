@@ -4,8 +4,36 @@
   min-height: calc(100vh - 70px);
 }
 
-.wallet-header {
+.wallet-header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 24px;
+}
+
+.wallet-header {
+  margin-bottom: 0;
+}
+
+.btn-withdraw-main {
+  background: #28a745;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-withdraw-main:hover:not(:disabled) {
+  background: #218838;
+}
+
+.btn-withdraw-main:disabled {
+  background: #6c757d;
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .wallet-header h1 {
@@ -136,9 +164,53 @@
   color: #1890ff;
 }
 
-.transaction-type-badge.withdrawal {
+.transaction-type-badge.withdrawal,
+.status-rejected {
   background-color: #fff2e8;
   color: #fa541c;
+}
+
+.status-pending {
+  background-color: #fff8e6;
+  color: #faad14;
+}
+
+.status-completed,
+.status-approved {
+  background-color: #f6ffed;
+  color: #52c41a;
+}
+
+.transactions-tabs {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 8px 0;
+  color: #6c757d;
+  font-weight: 500;
+  font-size: 1rem;
+  cursor: pointer;
+  position: relative;
+}
+
+.tab-btn.active {
+  color: #1890ff;
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #1890ff;
 }
 
 .amount-positive {

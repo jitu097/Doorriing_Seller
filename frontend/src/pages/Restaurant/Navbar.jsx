@@ -149,15 +149,6 @@ export default function Navbar() {
             )
           },
           {
-            path: '/restaurant/wallet', label: 'Wallet', icon: (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="4" width="20" height="16" rx="2" ry="2" />
-                <line x1="2" y1="10" x2="22" y2="10" />
-                <line x1="6" y1="16" x2="6.01" y2="16" />
-              </svg>
-            )
-          },
-          {
             path: '/restaurant/offers', label: 'Offers', icon: (
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>

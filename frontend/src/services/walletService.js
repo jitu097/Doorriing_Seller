@@ -18,10 +18,14 @@ export const getWalletSummary = async () => {
  * Get wallet transaction history
  * @param {number} page - Page number
  * @param {number} limit - Items per page
+ * @param {string} [type] - Optional transaction type filter
  * @returns {Promise<Object>} Transactions and pagination data
  */
-export const getWalletTransactions = async (page = 1, limit = 20) => {
-  return api(`/seller/wallet/transactions?page=${page}&limit=${limit}`, {
+export const getWalletTransactions = async (page = 1, limit = 20, type = null) => {
+  const url = type 
+    ? `/seller/wallet/transactions?page=${page}&limit=${limit}&type=${type}`
+    : `/seller/wallet/transactions?page=${page}&limit=${limit}`;
+  return api(url, {
     method: 'GET'
   });
 };

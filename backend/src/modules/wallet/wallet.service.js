@@ -25,7 +25,7 @@ const getWalletSummary = async (shopId) => {
     return wallet;
 };
 
-const getWalletTransactions = async (shopId, page = 1, limit = 20) => {
+const getWalletTransactions = async (shopId, page = 1, limit = 20, type = null) => {
     const pagination = validatePagination(page, limit);
 
     const { data: wallet, error: walletError } = await supabase
@@ -40,10 +40,16 @@ const getWalletTransactions = async (shopId, page = 1, limit = 20) => {
         throw walletError;
     }
 
-    const { data, error, count } = await supabase
+    let query = supabase
         .from('seller_wallet_transactions')
         .select('*', { count: 'exact' })
-        .eq('wallet_id', wallet.id)
+        .eq('wallet_id', wallet.id);
+
+    if (type) {
+        query = query.eq('type', type);
+    }
+
+    const { data, error, count } = await query
         .order('created_at', { ascending: false })
         .range(pagination.offset, pagination.offset + pagination.limit - 1);
 

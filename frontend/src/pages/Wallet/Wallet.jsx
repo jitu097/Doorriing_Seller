@@ -1,40 +1,83 @@
 import React, { useState, useEffect } from 'react';
 import { walletService } from '../../services/walletService';
+import { payoutService } from '../../services/payoutService';
 import Loader from '../../components/common/Loader';
+import WithdrawModal from '../../components/Wallet/WithdrawModal';
 import './Wallet.css';
 
 const WalletPage = () => {
     const [summary, setSummary] = useState(null);
     const [transactions, setTransactions] = useState([]);
+    const [withdrawRequests, setWithdrawRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
+    
+    // Pagination states
+    const [txPage, setTxPage] = useState(1);
+    const [txTotalPages, setTxTotalPages] = useState(1);
+    const [reqPage, setReqPage] = useState(1);
+    const [reqTotalPages, setReqTotalPages] = useState(1);
+    
+    // UI states
+    const [activeTab, setActiveTab] = useState('earnings'); // 'earnings' or 'withdrawals'
+    const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+    const [showDisclaimer, setShowDisclaimer] = useState(false);
 
     useEffect(() => {
-        fetchWalletData();
-    }, [page]);
+        fetchSummaryData();
+    }, []);
 
-    const fetchWalletData = async () => {
+    useEffect(() => {
+        if (activeTab === 'earnings') {
+            fetchEarningsHistory();
+        } else {
+            fetchWithdrawRequests();
+        }
+    }, [activeTab, txPage, reqPage]);
+
+    const fetchSummaryData = async () => {
         try {
             setLoading(true);
-            setError(null);
-            
-            const [summaryData, txData] = await Promise.all([
-                walletService.getWalletSummary(),
-                walletService.getWalletTransactions(page, 10)
-            ]);
-
+            const summaryData = await walletService.getWalletSummary();
             setSummary(summaryData);
-            if (txData) {
-                setTransactions(txData.transactions || []);
-                setTotalPages(txData.pagination?.totalPages || 1);
-            }
         } catch (err) {
-            console.error('Failed to fetch wallet data', err);
-            setError('Could not load wallet details. ' + (err.message || ''));
+            console.error('Failed to fetch wallet summary', err);
+            setError('Could not load wallet details.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchEarningsHistory = async () => {
+        try {
+            const txData = await walletService.getWalletTransactions(txPage, 10, 'order_earning');
+            if (txData) {
+                setTransactions(txData.transactions || []);
+                setTxTotalPages(txData.pagination?.totalPages || 1);
+            }
+        } catch (err) {
+            console.error('Failed to fetch transactions', err);
+        }
+    };
+
+    const fetchWithdrawRequests = async () => {
+        try {
+            const reqData = await payoutService.getWithdrawRequests(reqPage, 10);
+            if (reqData) {
+                setWithdrawRequests(reqData.requests || []);
+                setReqTotalPages(reqData.pagination?.totalPages || 1);
+            }
+        } catch (err) {
+            console.error('Failed to fetch withdraw requests', err);
+        }
+    };
+
+    const handleWithdrawalSuccess = () => {
+        fetchSummaryData();
+        if (activeTab === 'withdrawals') {
+            fetchWithdrawRequests();
+        } else {
+            setActiveTab('withdrawals'); // switch to withdrawals to see the pending request
         }
     };
 
@@ -52,9 +95,18 @@ const WalletPage = () => {
 
     return (
         <div className="wallet-container">
-            <div className="wallet-header">
-                <h1>Seller Wallet</h1>
-                <p>Manage your earnings and view transaction history</p>
+            <div className="wallet-header-actions">
+                <div className="wallet-header">
+                    <h1>Seller Wallet</h1>
+                    <p>Manage your earnings and request withdrawals</p>
+                </div>
+                <button 
+                    className="btn-withdraw-main" 
+                    onClick={() => setShowDisclaimer(true)}
+                    disabled={currentBalance <= 0}
+                >
+                    + Request Withdrawal
+                </button>
             </div>
 
             <div className="wallet-stats-grid">
@@ -100,60 +152,147 @@ const WalletPage = () => {
             </div>
 
             <div className="wallet-transactions-section">
-                <h2>Transaction History</h2>
-                <div className="transactions-table-container">
-                    <table className="wallet-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Order ID</th>
-                                <th>Type</th>
-                                <th>Amount</th>
-                                <th>Description</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {transactions.length === 0 ? (
-                                <tr>
-                                    <td colSpan="5" className="empty-state">No transactions found</td>
-                                </tr>
-                            ) : (
-                                transactions.map((tx) => (
-                                    <tr key={tx.id}>
-                                        <td>{new Date(tx.created_at).toLocaleString()}</td>
-                                        <td>{tx.order_id ? `#${tx.order_id.substring(0, 8)}` : '-'}</td>
-                                        <td>
-                                            <span className={`transaction-type-badge ${tx.type}`}>
-                                                {tx.type.replace('_', ' ')}
-                                            </span>
-                                        </td>
-                                        <td className={tx.type === 'withdrawal' ? 'amount-negative' : 'amount-positive'}>
-                                            {tx.type === 'withdrawal' ? '-' : '+'}₹{tx.amount?.toLocaleString()}
-                                        </td>
-                                        <td>{tx.description || '-'}</td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                <div className="transactions-tabs">
+                    <button 
+                        className={`tab-btn ${activeTab === 'earnings' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('earnings')}
+                    >
+                        Earnings History
+                    </button>
+                    <button 
+                        className={`tab-btn ${activeTab === 'withdrawals' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('withdrawals')}
+                    >
+                        Withdrawal Requests
+                    </button>
                 </div>
-                
-                {totalPages > 1 && (
-                    <div className="pagination">
-                        <button 
-                            disabled={page === 1} 
-                            onClick={() => setPage(p => p - 1)}>
-                            Previous
-                        </button>
-                        <span>Page {page} of {totalPages}</span>
-                        <button 
-                            disabled={page === totalPages} 
-                            onClick={() => setPage(p => p + 1)}>
-                            Next
-                        </button>
+
+                {activeTab === 'earnings' ? (
+                    <div className="transactions-table-container">
+                        <table className="wallet-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Order ID</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {transactions.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="5" className="empty-state">No earnings found</td>
+                                    </tr>
+                                ) : (
+                                    transactions.map((tx) => (
+                                        <tr key={tx.id}>
+                                            <td>{new Date(tx.created_at).toLocaleString()}</td>
+                                            <td>{tx.order_id ? `#${tx.order_id.substring(0, 8)}` : '-'}</td>
+                                            <td>
+                                                <span className={`transaction-type-badge ${tx.type}`}>
+                                                    {tx.type.replace('_', ' ')}
+                                                </span>
+                                            </td>
+                                            <td className="amount-positive">
+                                                +₹{tx.amount?.toLocaleString()}
+                                            </td>
+                                            <td>{tx.description || '-'}</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+
+                        {txTotalPages > 1 && (
+                            <div className="pagination">
+                                <button disabled={txPage === 1} onClick={() => setTxPage(p => p - 1)}>Previous</button>
+                                <span>Page {txPage} of {txTotalPages}</span>
+                                <button disabled={txPage === txTotalPages} onClick={() => setTxPage(p => p + 1)}>Next</button>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="transactions-table-container">
+                        <table className="wallet-table">
+                            <thead>
+                                <tr>
+                                    <th>Request Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Account Type</th>
+                                    <th>Admin Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {withdrawRequests.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="5" className="empty-state">No withdrawal requests found</td>
+                                    </tr>
+                                ) : (
+                                    withdrawRequests.map((req) => (
+                                        <tr key={req.id}>
+                                            <td>{new Date(req.created_at).toLocaleString()}</td>
+                                            <td className="amount-negative">₹{req.amount.toLocaleString()}</td>
+                                            <td>
+                                                <span className={`transaction-type-badge status-${req.status}`}>
+                                                    {req.status}
+                                                </span>
+                                            </td>
+                                            <td>{req.payout_account?.type === 'upi' ? 'UPI' : 'Bank Transfer'}</td>
+                                            <td className="admin-notes">{req.admin_notes || '-'}</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+
+                        {reqTotalPages > 1 && (
+                            <div className="pagination">
+                                <button disabled={reqPage === 1} onClick={() => setReqPage(p => p - 1)}>Previous</button>
+                                <span>Page {reqPage} of {reqTotalPages}</span>
+                                <button disabled={reqPage === reqTotalPages} onClick={() => setReqPage(p => p + 1)}>Next</button>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
+
+            <WithdrawModal 
+                isOpen={isWithdrawModalOpen}
+                onClose={() => setIsWithdrawModalOpen(false)}
+                walletBalance={currentBalance}
+                onSuccess={handleWithdrawalSuccess}
+            />
+
+            {showDisclaimer && (
+                <div className="modal-overlay">
+                    <div className="modal-content" style={{ padding: '32px', maxWidth: '400px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '3rem', color: '#1890ff', marginBottom: '16px' }}>ℹ️</div>
+                        <h3 style={{ marginBottom: '16px', color: '#212529' }}>Withdrawal Notice</h3>
+                        <p style={{ color: '#495057', fontSize: '1.05rem', marginBottom: '24px', lineHeight: '1.5' }}>
+                            It takes <strong>10 to 24 hours</strong> to credit the amount to your account after a withdrawal request is submitted.
+                        </p>
+                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                            <button 
+                                onClick={() => setShowDisclaimer(false)}
+                                style={{ padding: '12px 24px', border: '1px solid #ced4da', background: '#fff', color: '#495057', borderRadius: '8px', cursor: 'pointer', fontWeight: '500' }}
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    setShowDisclaimer(false);
+                                    setIsWithdrawModalOpen(true);
+                                }}
+                                style={{ padding: '12px 24px', border: 'none', background: '#28a745', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontWeight: '500' }}
+                            >
+                                OK, Proceed
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

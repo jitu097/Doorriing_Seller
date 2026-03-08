@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS public.seller_wallet_transactions (
 );
 
 -- Create a unique index to prevent duplicate 'order_earning' for the same order
-CREATE UNIQUE INDEX idx_unique_order_earning ON public.seller_wallet_transactions (order_id, type) WHERE type = 'order_earning';
+CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_order_earning ON public.seller_wallet_transactions (order_id, type) WHERE type = 'order_earning';
 
 -- Row Level Security
 ALTER TABLE public.seller_wallets ENABLE ROW LEVEL SECURITY;
@@ -30,34 +30,47 @@ ALTER TABLE public.seller_wallet_transactions ENABLE ROW LEVEL SECURITY;
 
 -- 3. Create RPC function to safely process order delivery wallet update
 CREATE OR REPLACE FUNCTION process_delivered_order_wallet(p_order_id UUID, p_shop_id UUID, p_amount NUMERIC)
-RETURNS boolean AS $$
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
 DECLARE
     v_wallet_id UUID;
-    v_existing_tx UUID;
+    v_transaction_exists BOOLEAN;
 BEGIN
-    -- Check if transaction already exists
-    SELECT id INTO v_existing_tx 
-    FROM public.seller_wallet_transactions 
-    WHERE order_id = p_order_id AND type = 'order_earning';
+    SELECT EXISTS (
+        SELECT 1 FROM seller_wallet_transactions
+        WHERE order_id = p_order_id AND type = 'order_earning'
+    ) INTO v_transaction_exists;
 
-    IF v_existing_tx IS NOT NULL THEN
-        RETURN false; -- Transaction already processed
+    IF v_transaction_exists THEN
+        RETURN FALSE;
     END IF;
 
-    -- Upsert the wallet to ensure it exists and we lock it for update
-    INSERT INTO public.seller_wallets (shop_id, balance, total_earnings)
-    VALUES (p_shop_id, p_amount, p_amount)
-    ON CONFLICT (shop_id) DO UPDATE 
-    SET 
-        balance = public.seller_wallets.balance + p_amount,
-        total_earnings = public.seller_wallets.total_earnings + p_amount,
-        updated_at = NOW()
-    RETURNING id INTO v_wallet_id;
+    SELECT id INTO v_wallet_id
+    FROM seller_wallets
+    WHERE shop_id = p_shop_id
+    FOR UPDATE;
 
-    -- Insert the transaction
-    INSERT INTO public.seller_wallet_transactions (wallet_id, shop_id, order_id, amount, type, description)
-    VALUES (v_wallet_id, p_shop_id, p_order_id, p_amount, 'order_earning', 'Earnings for order delivery');
+    IF NOT FOUND THEN
+        INSERT INTO seller_wallets (shop_id, balance, total_earnings)
+        VALUES (p_shop_id, p_amount, p_amount)
+        RETURNING id INTO v_wallet_id;
+    ELSE
+        UPDATE seller_wallets
+        SET 
+            balance = balance + p_amount,
+            total_earnings = total_earnings + p_amount,
+            updated_at = NOW()
+        WHERE id = v_wallet_id;
+    END IF;
 
-    RETURN true;
+    INSERT INTO seller_wallet_transactions (
+        wallet_id, shop_id, order_id, amount, type, description
+    ) VALUES (
+        v_wallet_id, p_shop_id, p_order_id, p_amount, 'order_earning', 'Earnings for order delivery'
+    );
+
+    RETURN TRUE;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;

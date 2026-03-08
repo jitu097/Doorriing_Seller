@@ -12,8 +12,8 @@ const getSummary = async (req, res, next) => {
 
 const getTransactions = async (req, res, next) => {
     try {
-        const { page, limit } = req.query;
-        const result = await walletService.getWalletTransactions(req.shop.id, page, limit);
+        const { page, limit, type } = req.query;
+        const result = await walletService.getWalletTransactions(req.shop.id, page, limit, type);
         successResponse(res, result);
     } catch (error) {
         next(error);
