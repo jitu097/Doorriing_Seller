@@ -13,6 +13,11 @@ const createBooking = async (req, res, next) => {
         
         validateDateFormat(booking_date);
         
+        // Ensure table booking is available
+        if (req.shop.is_booking_enabled === false) {
+            return res.status(400).json({ error: 'Table booking is currently unavailable for this restaurant' });
+        }
+        
         const booking = await bookingService.createBooking(shop_id, {
             customer_name,
             customer_phone,

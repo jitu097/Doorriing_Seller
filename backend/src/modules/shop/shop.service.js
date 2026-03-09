@@ -282,6 +282,24 @@ const uploadCoverImage = async (sellerId, file) => {
     return await uploadShopImage(sellerId, file);
 };
 
+const updateBookingStatusById = async (sellerId, shopId, isBookingEnabled) => {
+    const { data, error } = await supabase
+        .from('shops')
+        .update({
+            is_booking_enabled: isBookingEnabled
+        })
+        .eq('seller_id', sellerId)
+        .eq('id', shopId)
+        .select('id, shop_name, is_booking_enabled')
+        .single();
+
+    if (error) throw error;
+
+    cache.delete(`shop:seller:${sellerId}`);
+
+    return data;
+};
+
 module.exports = {
     createShop,
     getShop,
@@ -289,5 +307,6 @@ module.exports = {
     toggleShopStatus,
     updateShopStatusById,
     uploadShopImage,
-    uploadCoverImage
+    uploadCoverImage,
+    updateBookingStatusById
 };

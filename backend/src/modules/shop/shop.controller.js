@@ -101,6 +101,24 @@ const uploadCoverImage = async (req, res, next) => {
     }
 };
 
+const toggleBookingStatus = async (req, res, next) => {
+    try {
+        const { is_booking_enabled } = req.body;
+        if (typeof is_booking_enabled !== 'boolean') {
+            throw new BadRequestError('is_booking_enabled must be a boolean');
+        }
+
+        const shop = await shopService.updateBookingStatusById(
+            req.seller.id,
+            req.shop.id,
+            is_booking_enabled
+        );
+        successResponse(res, shop, 'Booking availability status updated');
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createShop,
     getShop,
@@ -108,5 +126,6 @@ module.exports = {
     toggleStatus,
     updateStatusById,
     uploadShopImage,
-    uploadCoverImage
+    uploadCoverImage,
+    toggleBookingStatus
 };

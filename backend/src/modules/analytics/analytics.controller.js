@@ -37,7 +37,18 @@ const getSummary = async (req, res, next) => {
     }
 };
 
+const getReports = async (req, res, next) => {
+    try {
+        const { time_range } = req.query;
+        const reports = await analyticsService.getReports(req.shop.id, time_range);
+        successResponse(res, reports);
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     getDailyAnalytics,
-    getSummary
+    getSummary,
+    getReports
 };

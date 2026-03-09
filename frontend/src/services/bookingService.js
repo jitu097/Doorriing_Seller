@@ -25,4 +25,12 @@ export const bookingService = {
       body: JSON.stringify({ status }),
     });
   },
+
+  // Toggle booking status
+  toggleBookingStatus: async (is_booking_enabled) => {
+    return await apiCall('/shop/booking-status', {
+      method: 'PATCH',
+      body: JSON.stringify({ is_booking_enabled })
+    });
+  },
 };

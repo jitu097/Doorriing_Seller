@@ -8,5 +8,6 @@ router.use(verifyToken, loadSeller, loadShop);
 
 router.get('/daily', analyticsController.getDailyAnalytics);
 router.get('/summary', analyticsController.getSummary);
+router.get('/reports', analyticsController.getReports);
 
 module.exports = router;

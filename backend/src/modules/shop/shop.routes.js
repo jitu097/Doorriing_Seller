@@ -11,6 +11,7 @@ router.post('/', upload.single('image'), shopController.createShop);
 router.get('/', shopController.getShop);
 router.patch('/', requireShop, upload.single('image'), shopController.updateShop);
 router.patch('/status', requireShop, shopController.toggleStatus);
+router.patch('/booking-status', requireShop, shopController.toggleBookingStatus);
 router.put('/:id/status', requireShop, shopController.updateStatusById);
 router.post('/image', requireShop, upload.single('image'), shopController.uploadShopImage);
 router.post('/cover', requireShop, upload.single('cover'), shopController.uploadCoverImage);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Reports.css';
 import { analyticsService } from '../../services/analyticsService';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Reports() {
 	const [analytics, setAnalytics] = useState(null);
@@ -14,8 +15,7 @@ export default function Reports() {
 	const fetchAnalytics = async () => {
 		try {
 			setLoading(true);
-			const days = dateRange === '7days' ? 7 : dateRange === '30days' ? 30 : 90;
-			const data = await analyticsService.getSummary(days);
+			const data = await analyticsService.getReports(dateRange);
 			setAnalytics(data);
 		} catch (error) {
 			console.error('Failed to fetch analytics:', error);
@@ -59,8 +59,8 @@ export default function Reports() {
 					>
 						<option value="7days">Last 7 Days</option>
 						<option value="30days">Last 30 Days</option>
-						<option value="90days">Last 90 Days</option>
-						<option value="custom">Custom Range</option>
+						<option value="90days">Last 3 Months</option>
+						<option value="all">All Time</option>
 					</select>
 				</div>
 
@@ -99,23 +99,23 @@ export default function Reports() {
 				{/* Daily Revenue Chart */}
 				<div className="report-section">
 					<h2>📈 Daily Revenue Trend</h2>
-					<div className="chart-container">
-						{analytics.daily_data && analytics.daily_data.length > 0 ? (
-							analytics.daily_data.map((day, index) => {
-								const maxRevenue = Math.max(...analytics.daily_data.map(d => d.revenue || 0));
-								return (
-									<div key={index} className="chart-bar">
-										<div
-											className="bar"
-											style={{ height: `${maxRevenue > 0 ? (day.revenue / maxRevenue) * 100 : 0}%` }}
-											title={`₹${(day.revenue || 0).toLocaleString()}`}
-										></div>
-										<span className="bar-label">
-											{new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
-										</span>
-									</div>
-								);
-							})
+					<div className="chart-container" style={{ height: '300px' }}>
+						{analytics.daily_revenue_data && analytics.daily_revenue_data.length > 0 ? (
+							<ResponsiveContainer width="100%" height="100%">
+								<BarChart data={analytics.daily_revenue_data}>
+									<CartesianGrid strokeDasharray="3 3" vertical={false} />
+									<XAxis
+                                        dataKey="date"
+                                        tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { weekday: 'short' })}
+                                    />
+									<YAxis tickFormatter={(val) => `₹${val}`} />
+									<Tooltip
+										formatter={(value) => [`₹${value}`, 'Revenue']}
+										labelFormatter={(label) => new Date(label).toLocaleDateString()}
+									/>
+									<Bar dataKey="revenue" fill="#ff6b6b" radius={[4, 4, 0, 0]} />
+								</BarChart>
+							</ResponsiveContainer>
 						) : (
 							<div className="no-chart-data">No daily data available</div>
 						)}
@@ -182,12 +182,6 @@ export default function Reports() {
 					</div>
 				</div>
 
-				{/* Export Options */}
-				<div className="export-section">
-					<button className="btn-export">📄 Export PDF</button>
-					<button className="btn-export">📊 Export Excel</button>
-					<button className="btn-export">📧 Email Report</button>
-				</div>
 			</div>
 		</>
 	);

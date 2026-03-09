@@ -5,6 +5,7 @@ import { analyticsService } from '../../services/analyticsService';
 import orderService from '../../services/orderService';
 import { bookingService } from '../../services/bookingService';
 import walletService from '../../services/walletService';
+import { shopService } from '../../services/shopService';
 
 function Dashboard() {
 	const [stats, setStats] = useState(null);
@@ -12,6 +13,8 @@ function Dashboard() {
 	const [todayBookings, setTodayBookings] = useState([]);
 	const [walletData, setWalletData] = useState(null);
 	const [loading, setLoading] = useState(true);
+	const [isBookingEnabled, setIsBookingEnabled] = useState(false);
+	const [bookingToggleLoading, setBookingToggleLoading] = useState(false);
 
 	useEffect(() => {
 		fetchDashboardData();
@@ -33,6 +36,12 @@ function Dashboard() {
 				setRecentOrders(ordersData.orders);
 			}
 
+            // Fetch shop details to get booking status
+            const shop = await shopService.getCurrentShop();
+            if (shop) {
+                setIsBookingEnabled(shop.is_booking_enabled === true);
+            }
+
 			// Fetch today's bookings
 			const bookingsData = await bookingService.getTodayBookings();
 			console.log('📅 Today\'s bookings:', bookingsData);
@@ -53,6 +62,20 @@ function Dashboard() {
 			</>
 		);
 	}
+
+    const handleBookingToggle = async () => {
+        try {
+            setBookingToggleLoading(true);
+            const newValue = !isBookingEnabled;
+            await bookingService.toggleBookingStatus(newValue);
+            setIsBookingEnabled(newValue);
+        } catch (error) {
+            console.error('Failed to toggle booking status:', error);
+            alert('Failed to update booking settings. Please try again.');
+        } finally {
+            setBookingToggleLoading(false);
+        }
+    };
 
 	const activeOrdersCount = (stats?.pending_orders || 0);
 	const totalRevenue = walletData?.balance || 0;
@@ -119,6 +142,39 @@ function Dashboard() {
 				</div>
 
 				<div className="dashboard-content-grid">
+                    {/* Booking Settings Panel */}
+                    <div className="dashboard-panel booking-settings" style={{ gridColumn: '1 / -1', marginBottom: '1.5rem' }}>
+                        <div className="panel-header">
+                            <h2>Booking Settings</h2>
+                        </div>
+                        <div className="setting-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #eee' }}>
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#333' }}>Enable Table Booking</h3>
+                                <p style={{ margin: '0.2rem 0 0', color: '#666', fontSize: '0.9rem' }}>Allow customers to book tables at your restaurant.</p>
+                            </div>
+                            <label style={{ position: 'relative', display: 'inline-block', width: '50px', height: '28px' }}>
+                                <input 
+                                    type="checkbox" 
+                                    checked={isBookingEnabled} 
+                                    onChange={handleBookingToggle}
+                                    disabled={bookingToggleLoading}
+                                    style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
+                                />
+                                <span style={{ 
+                                    position: 'absolute', cursor: bookingToggleLoading ? 'not-allowed' : 'pointer', top: 0, left: 0, right: 0, bottom: 0, 
+                                    backgroundColor: isBookingEnabled ? '#4CAF50' : '#ccc', transition: '.4s', borderRadius: '34px',
+                                    opacity: bookingToggleLoading ? 0.7 : 1
+                                }}>
+                                    <span style={{
+                                        position: 'absolute', content: '""', height: '20px', width: '20px', left: '4px', bottom: '4px',
+                                        backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
+                                        transform: isBookingEnabled ? 'translateX(22px)' : 'translateX(0)'
+                                    }}></span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
 					{/* Recent Orders Panel */}
 					<div className="dashboard-panel recent-orders">
 						<div className="panel-header">

@@ -15,4 +15,9 @@ export const analyticsService = {
   getSummary: async (days = 7) => {
     return await apiCall(`/analytics/summary?days=${days}`);
   },
+
+  // Get reports analytics
+  getReports: async (timeRange = '7days') => {
+    return await apiCall(`/analytics/reports?time_range=${timeRange}`);
+  },
 };
