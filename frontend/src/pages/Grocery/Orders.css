@@ -191,8 +191,47 @@
 	font-weight: 700;
 	color: #1f2937;
 	display: flex;
-	justify-content: space-between;
-	align-items: center;
+	flex-direction: column;
+	gap: 8px;
+	align-items: flex-start;
+}
+
+.order-items-list {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	font-size: 0.9rem;
+	font-weight: 500;
+	color: #374151;
+}
+
+.order-items-title {
+	font-size: 0.75rem;
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: #6b7280;
+}
+
+.order-items-bullets {
+	margin: 0;
+	padding-left: 0;
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.order-items-bullets li {
+	font-weight: 600;
+	color: #1f2937;
+}
+
+.order-items-empty {
+	font-size: 0.85rem;
+	font-weight: 500;
+	color: #9ca3af;
 }
 
 .order-actions {

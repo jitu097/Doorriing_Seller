@@ -9,7 +9,28 @@ const getOrders = async (shopId, page = 1, limit = 20, status = null) => {
 
     let query = supabase
         .from('orders')
-        .select('id,order_number,customer_name,customer_phone,delivery_address,items_total,delivery_charge,total_amount,status,payment_method,payment_status,customer_notes,created_at,confirmed_at,delivered_at,cancellation_reason', { count: 'exact' })
+        .select(`
+            id,
+            order_number,
+            delivery_address,
+            items_total,
+            delivery_charge,
+            total_amount,
+            status,
+            payment_method,
+            payment_status,
+            customer_notes,
+            created_at,
+            confirmed_at,
+            delivered_at,
+            cancellation_reason,
+            order_items:order_items (
+                quantity,
+                items (
+                    name
+                )
+            )
+        `, { count: 'exact' })
         .eq('shop_id', shopId);
 
     if (status) {
@@ -22,8 +43,20 @@ const getOrders = async (shopId, page = 1, limit = 20, status = null) => {
 
     if (error) throw error;
 
+    const sanitizedOrders = (data || []).map(order => {
+        const { order_items: rawItems = [], ...rest } = order;
+
+        return {
+            ...rest,
+            items: rawItems.map(item => ({
+                name: item?.items?.name || 'Item',
+                quantity: item?.quantity || 0
+            }))
+        };
+    });
+
     return {
-        orders: data || [],
+        orders: sanitizedOrders,
         pagination: {
             page: pagination.page,
             limit: pagination.limit,

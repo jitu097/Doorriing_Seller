@@ -129,30 +129,31 @@ export default function Orders() {
 									</span>
 								</div>
 
-								{/* CUSTOMER */}
-								<div className="order-section">
-									<div>👤 {order.customer_name || 'Customer'}</div>
-									<div>📞 {order.customer_phone || 'N/A'}</div>
-									{order.delivery_address && !order.delivery_address.includes('undefined') && (
+								{/* DELIVERY */}
+								{order.delivery_address && !order.delivery_address.includes('undefined') && (
+									<div className="order-section">
 										<div>📍 {order.delivery_address}</div>
-									)}
-								</div>
-
-								{/* ITEMS */}
-								<div className="order-items">
-									{order.items?.map((item, i) => (
-										<div className="order-item" key={i}>
-											<span className="qty">{item.quantity}×</span>
-											<span className="name">{item.name}</span>
-											<span className="price">₹{item.price}</span>
-										</div>
-									))}
-								</div>
+									</div>
+								)}
 
 								{/* SUMMARY */}
 								<div className="order-summary">
 									<div>
 										Total <b>₹{order.total_amount}</b>
+									</div>
+									<div className="order-items-list">
+										<div className="order-items-title">Items</div>
+										{order.items?.length ? (
+											<ul className="order-items-bullets">
+												{order.items.map((item, i) => (
+													<li key={`${order.id}-item-${i}`}>
+														• {item.name} ×{item.quantity}
+													</li>
+												))}
+											</ul>
+										) : (
+											<div className="order-items-empty">No items added</div>
+										)}
 									</div>
 								</div>
 
