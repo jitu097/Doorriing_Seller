@@ -48,12 +48,18 @@
   overflow-x: auto;
   padding-bottom: 8px;
   margin-bottom: 20px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.orders-tabs::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Opera */
 }
 
 .orders-tab {
-  border: 2px solid #ff6b35;
+  border: 2px solid rgb(109, 29, 29);
   background: #fff;
-  color: #ff6b35;
+  color: rgb(109, 29, 29);
   padding: 8px 16px;
   border-radius: 999px;
   font-weight: 700;
@@ -65,12 +71,12 @@
 }
 
 .orders-tab.active {
-  background: linear-gradient(90deg, #ff6b35, #f97316);
+  background: linear-gradient(135deg, rgb(109, 29, 29) 0%, rgb(139, 39, 39) 100%);
   color: #fff;
 }
 
 .tab-count {
-  background: rgba(255,107,53,0.15);
+  background: rgba(109, 29, 29, 0.15);
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 0.8rem;
@@ -132,7 +138,7 @@
 
 .qty {
   font-weight: 800;
-  color: #ff6b35;
+  color: rgb(109, 29, 29);
 }
 
 .price {
@@ -165,8 +171,8 @@
 
 .btn.success { background: #22c55e; }
 .btn.danger { background: #ef4444; }
-.btn.primary { background: #3b82f6; }
-.btn.warning { background: #f97316; }
+.btn.primary { background: rgb(109, 29, 29); }
+.btn.warning { background: rgb(109, 29, 29); }
 
 /* FOOTER */
 .order-footer {
@@ -194,5 +200,11 @@
 
   .orders-title-box h1 {
     font-size: 1.5rem;
+  }
+
+  .orders-tabs {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    padding-bottom: 0;
   }
 }

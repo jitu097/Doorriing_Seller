@@ -39,9 +39,20 @@ const GroceryProductCard = ({ item, onEdit, onDelete, onToggleStatus }) => {
                     {item.stock_quantity} {item.unit?.toUpperCase() || 'PIECES'} IN STOCK
                 </div>
 
-                {/* Price */}
-                <div className="grocery-card-price">
-                    ₹{item.price}
+                {/* Price and Toggle Row */}
+                <div className="grocery-card-price-row">
+                    <div className="grocery-card-price">
+                        ₹{item.price}
+                    </div>
+                    
+                    {/* Toggle Availability */}
+                    <label className="availability-toggle">
+                        <input
+                            type="checkbox"
+                            checked={item.is_available}
+                            onChange={() => onToggleStatus(item.id, item.is_available)}
+                        />
+                    </label>
                 </div>
 
                 {/* Action Buttons */}
@@ -64,17 +75,6 @@ const GroceryProductCard = ({ item, onEdit, onDelete, onToggleStatus }) => {
                         Delete
                     </button>
                 </div>
-
-                {/* Toggle Availability */}
-                <label className="availability-toggle">
-                    <input
-                        type="checkbox"
-                        checked={item.is_available}
-                        onChange={() => onToggleStatus(item.id, item.is_available)}
-                    />
-                    <span className="toggle-slider"></span>
-                    <span className="toggle-label">{item.is_available ? 'Available' : 'Unavailable'}</span>
-                </label>
             </div>
         </div>
     );

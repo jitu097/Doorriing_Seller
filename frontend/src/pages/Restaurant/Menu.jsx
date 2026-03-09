@@ -305,7 +305,6 @@ const Menu = () => {
 						Categories</button>
 					<button className="btn btn-outline" onClick={handleSubcategoryModalOpen}>
 						Subcategories</button>
-					<button className="btn btn-ghost">⏰Prime Hours</button>
 				</div>
 
 				<div className="menu-categories">

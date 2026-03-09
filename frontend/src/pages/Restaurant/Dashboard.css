@@ -155,7 +155,7 @@ html, body {
   padding: 14px;
   background: #f8f9fa;
   border-radius: 10px;
-  border-left: 4px solid #F97316;
+  border-left: 4px solid rgb(109, 29, 29);
   transition: all 0.2s;
 }
 
@@ -180,7 +180,7 @@ html, body {
 
 .time-value {
   font-weight: 700;
-  color: #F97316;
+  color: rgb(109, 29, 29);
   font-size: 0.875rem;
   margin-top: 4px;
 }

@@ -1,6 +1,6 @@
 /* Profile Container */
 .profile-header-card {
-    background: rgb(245, 212, 174);
+    background: #fce8d3;
     border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
     border: 1px solid #eee;
@@ -10,7 +10,7 @@
 
 .profile-cover {
     height: 180px;
-    background: linear-gradient(120deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, rgb(109, 29, 29) 0%, rgb(139, 39, 39) 100%);
     position: relative;
 }
 
@@ -105,14 +105,14 @@
 
 .btn-edit,
 .btn-save {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, rgb(109, 29, 29) 0%, rgb(139, 39, 39) 100%);
     color: white;
     border: none;
     padding: 0.6rem 1.5rem;
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 12px rgba(109, 29, 29, 0.3);
 }
 
 .btn-cancel {
@@ -158,12 +158,12 @@
 
 .sidebar-link:hover {
     background: #f8f9fa;
-    color: #667eea;
+    color: rgb(109, 29, 29);
 }
 
 .sidebar-link.active {
-    background: rgba(102, 126, 234, 0.1);
-    color: #667eea;
+    background: rgba(109, 29, 29, 0.1);
+    color: rgb(109, 29, 29);
 }
 
 .profile-section {
@@ -222,7 +222,7 @@
 .form-group input:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: rgb(109, 29, 29);
 }
 
 .form-group input:disabled,
@@ -280,7 +280,7 @@
 }
 
 input:checked+.slider {
-    background-color: #22d06a;
+    background-color: rgb(109, 29, 29);
 }
 
 input:checked+.slider:before {
@@ -296,7 +296,7 @@ input:checked+.slider:before {
     padding: 0.5rem 1rem;
     border: none;
     border-radius: 6px;
-    background: #667eea;
+    background: rgb(109, 29, 29);
     color: white;
     cursor: pointer;
     font-size: 0.9rem;
@@ -390,9 +390,9 @@ input:checked+.slider:before {
     }
 
     .sidebar-link.active {
-        background: #667eea;
+        background: rgb(109, 29, 29);
         color: white;
-        border-color: #667eea;
+        border-color: rgb(109, 29, 29);
     }
 }
 

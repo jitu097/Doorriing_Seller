@@ -59,9 +59,7 @@ export default function Navbar() {
     { label: 'Menu', path: '/restaurant/menu' },
     { label: 'Orders', path: '/restaurant/orders' },
     { label: 'Bookings', path: '/restaurant/bookings' },
-    { label: 'Offers', path: '/restaurant/offers' },
-    { label: 'Reports', path: '/restaurant/reports' },
-    { label: 'Wallet', path: '/restaurant/wallet' }
+    { label: 'Offers', path: '/restaurant/offers' }
   ];
 
   const mobileNavLabels = ['Dashboard', 'Menu', 'Orders'];
@@ -174,24 +172,6 @@ export default function Navbar() {
                 <circle cx="9" cy="7" r="4"></circle>
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-            )
-          },
-          {
-            path: '/restaurant/wallet', label: 'Wallet', icon: (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>
-                <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
-                <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path>
-              </svg>
-            )
-          },
-          {
-            path: '/restaurant/reports', label: 'Reports', icon: (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="20" x2="18" y2="10"></line>
-                <line x1="12" y1="20" x2="12" y2="4"></line>
-                <line x1="6" y1="20" x2="6" y2="14"></line>
               </svg>
             )
           }

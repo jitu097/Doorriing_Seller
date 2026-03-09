@@ -190,17 +190,6 @@ function Booking() {
 						}}
 					/>
 				</div>
-
-				<button
-					className="filter-clear-btn"
-					onClick={() => {
-						setFilterStatus('');
-						setFilterDate('');
-						setCurrentPage(1);
-					}}
-				>
-					Clear Filters
-				</button>
 			</div>
 
 			{/* Bookings Stats */}

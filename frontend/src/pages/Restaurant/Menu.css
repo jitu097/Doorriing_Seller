@@ -133,7 +133,7 @@
 .add-item-form input:focus,
 .add-item-form textarea:focus,
 .add-item-form select:focus {
-	border: 1.5px solid #ff6b35;
+	border: 1.5px solid rgb(109, 29, 29);
 	outline: none;
 }
 
@@ -177,7 +177,7 @@
 	gap: 8px;
 	font-size: 1.02rem;
 	font-weight: 500;
-	color: #ff6b35;
+	color: rgb(109, 29, 29);
 	margin-top: 8px;
 }
 
@@ -248,11 +248,11 @@
 }
 
 input:checked+.slider {
-	background-color: #22d06a;
+	background-color: rgb(109, 29, 29);
 }
 
 input:focus+.slider {
-	box-shadow: 0 0 1px #22d06a;
+	box-shadow: 0 0 1px rgb(109, 29, 29);
 }
 
 input:checked+.slider:before {
@@ -285,7 +285,7 @@ input:checked+.slider:before {
 	background: #f9fafb;
 	border-radius: 12px;
 	padding: 10px;
-	box-shadow: 0 1px 4px rgba(255, 107, 53, 0.08);
+	box-shadow: 0 1px 4px rgba(109, 29, 29, 0.08);
 }
 
 .menu-title {
@@ -317,23 +317,23 @@ input:checked+.slider:before {
 }
 
 .btn-primary {
-	background: linear-gradient(90deg, #ff6b35 0%, #f7931e 100%);
+	background: linear-gradient(135deg, rgb(109, 29, 29) 0%, rgb(139, 39, 39) 100%);
 	color: #fff;
-	box-shadow: 0 2px 8px rgba(255, 107, 53, 0.10);
+	box-shadow: 0 2px 8px rgba(109, 29, 29, 0.3);
 }
 
 .btn-primary:hover {
-	background: linear-gradient(90deg, #f7931e 0%, #ff6b35 100%);
+	background: linear-gradient(135deg, rgb(139, 39, 39) 0%, rgb(109, 29, 29) 100%);
 }
 
 .btn-outline {
 	background: #fff;
-	color: #ff6b35;
-	border: 2px solid #ff6b35;
+	color: rgb(109, 29, 29);
+	border: 2px solid rgb(109, 29, 29);
 }
 
 .btn-outline:hover {
-	background: #ff6b35;
+	background: rgb(109, 29, 29);
 	color: #fff;
 }
 
@@ -344,7 +344,7 @@ input:checked+.slider:before {
 }
 
 .btn-ghost:hover {
-	background: #ffe5d0;
+	background: #fef3f2;
 }
 
 .menu-categories {
@@ -355,7 +355,7 @@ input:checked+.slider:before {
 }
 
 .category-accordion {
-	background: #f5ccac;
+	background: #fce8d3;
 	border-radius: 12px;
 	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 	overflow: hidden;
@@ -372,11 +372,12 @@ input:checked+.slider:before {
 	color: #23272f;
 	cursor: pointer;
 	user-select: none;
+	background: #e1c2a8;
 }
 
 .category-arrow {
 	font-size: 1.1rem;
-	color: #ff6b35;
+	color: rgb(109, 29, 29);
 	margin-right: 2px;
 }
 
@@ -406,7 +407,7 @@ input:checked+.slider:before {
 }
 
 .category-content {
-	background: #fff;
+	background: #fce8d3;
 	padding: 18px 32px 18px 48px;
 	border-top: 1px solid #f3f4f6;
 	font-size: 1.05rem;
@@ -486,7 +487,7 @@ input:checked+.slider:before {
 	display: flex;
 	align-items: center;
 	gap: 18px;
-	background: #f4f0e6;
+	background: #ffffff;
 	border-radius: 16px;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 	padding: 18px;
@@ -582,8 +583,8 @@ input:checked+.slider:before {
 }
 
 .price-tag.full-price {
-	background: #ffedd5;
-	color: #ea580c;
+	background: rgba(109, 29, 29, 0.1);
+	color: rgb(109, 29, 29);
 }
 
 .price-label {
@@ -642,7 +643,7 @@ input:checked+.slider:before {
 }
 
 .switch-modern input:checked+.slider-modern {
-	background-color: #22c55e;
+	background-color: rgb(109, 29, 29);
 }
 
 .switch-modern input:checked+.slider-modern:before {
@@ -787,8 +788,8 @@ input:checked+.slider:before {
 }
 
 .add-category-input:focus {
-	border-color: #ff6b6b;
-	box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+	border-color: rgb(109, 29, 29);
+	box-shadow: 0 0 0 3px rgba(109, 29, 29, 0.1);
 }
 
 .category-image-upload-icon {
@@ -833,14 +834,14 @@ input:checked+.slider:before {
 }
 
 .add-category-btn {
-	background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+	background: linear-gradient(135deg, rgb(109, 29, 29) 0%, rgb(139, 39, 39) 100%);
 	color: white;
 	border: none;
 	padding: 0 24px;
 	border-radius: 12px;
 	font-weight: 700;
 	cursor: pointer;
-	box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.2);
+	box-shadow: 0 4px 6px -1px rgba(109, 29, 29, 0.3);
 	transition: transform 0.1s;
 	height: 44px;
 }
@@ -949,11 +950,11 @@ input:checked+.slider:before {
 }
 
 input:checked+.cat-slider {
-	background-color: #22d06a;
+	background-color: rgb(109, 29, 29);
 }
 
 input:focus+.cat-slider {
-	box-shadow: 0 0 1px #22d06a;
+	box-shadow: 0 0 1px rgb(109, 29, 29);
 }
 
 input:checked+.cat-slider:before {
