@@ -1,67 +1,94 @@
 const supabase = require('../../config/supabaseClient');
+const cache = require('../../utils/cache');
 
 const getDailyAnalytics = async (shopId, startDate, endDate) => {
+    const cacheKey = `analytics:daily:${shopId}:${startDate || 'none'}:${endDate || 'none'}`;
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
     let query = supabase
         .from('analytics_daily')
-        .select('*')
+        .select('date, total_orders, total_revenue, completed_orders, cancelled_orders')
         .eq('shop_id', shopId)
         .order('date', { ascending: false });
-    
-    if (startDate) {
-        query = query.gte('date', startDate);
-    }
-    
-    if (endDate) {
-        query = query.lte('date', endDate);
-    }
-    
+
+    if (startDate) query = query.gte('date', startDate);
+    if (endDate) query = query.lte('date', endDate);
+
     const { data, error } = await query.limit(30);
-    
     if (error) throw error;
-    
-    return data || [];
+
+    const result = data || [];
+    cache.set(cacheKey, result, 60); // Cache for 60 seconds
+    return result;
 };
 
 const getSummary = async (shopId, days = 7) => {
+    const cacheKey = `analytics:summary:${shopId}:${days}`;
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
     const dateStr = startDate.toISOString().split('T')[0];
-    
+
     const { data, error } = await supabase
         .from('analytics_daily')
         .select('total_orders, total_revenue, completed_orders')
         .eq('shop_id', shopId)
         .gte('date', dateStr);
-    
+
     if (error) throw error;
-    
+
     const summary = {
         totalOrders: 0,
         totalRevenue: 0,
         completedOrders: 0,
         averageOrderValue: 0
     };
-    
+
+    let periodRevenue = 0;
+
     if (data && data.length > 0) {
         data.forEach(day => {
             summary.totalOrders += day.total_orders || 0;
-            summary.totalRevenue += parseFloat(day.total_revenue || 0);
+            periodRevenue += parseFloat(day.total_revenue || 0);
             summary.completedOrders += day.completed_orders || 0;
         });
-        
-        if (summary.totalRevenue > 0 && summary.completedOrders > 0) {
-            summary.averageOrderValue = parseFloat((summary.totalRevenue / summary.completedOrders).toFixed(2));
+
+        if (periodRevenue > 0 && summary.completedOrders > 0) {
+            summary.averageOrderValue = parseFloat((periodRevenue / summary.completedOrders).toFixed(2));
         }
     }
-    
+
+    const { data: walletRow, error: walletError } = await supabase
+        .from('seller_wallets')
+        .select('total_earnings')
+        .eq('shop_id', shopId)
+        .maybeSingle();
+
+    if (walletError) throw walletError;
+
+    const walletEarnings = walletRow?.total_earnings;
+    summary.totalRevenue = walletEarnings != null ? Number(walletEarnings) : periodRevenue;
+
+    cache.set(cacheKey, summary, 120); // Cache for 2 minutes
     return summary;
 };
 
 const getReports = async (shopId, timeRange) => {
+    const cacheKey = `analytics:reports:${shopId}:${timeRange || 'all'}`;
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
+    // Only select the fields needed for reports — avoid SELECT *
     let query = supabase
         .from('orders')
         .select(`
-            *,
+            id,
+            status,
+            total_amount,
+            created_at,
             order_items (
                 quantity,
                 unit_price,
@@ -78,8 +105,7 @@ const getReports = async (shopId, timeRange) => {
         if (days) {
             const startDate = new Date();
             startDate.setDate(startDate.getDate() - days);
-            const dateStr = startDate.toISOString();
-            query = query.gte('created_at', dateStr);
+            query = query.gte('created_at', startDate.toISOString());
         }
     }
 
@@ -112,7 +138,6 @@ const getReports = async (shopId, timeRange) => {
                 dailyDataMap[dateStr].orders_count += 1;
             }
 
-            // Aggregate items
             if (order.order_items && Array.isArray(order.order_items)) {
                 order.order_items.forEach(itemInfo => {
                     const itemName = itemInfo.items?.name || 'Unknown Item';
@@ -134,16 +159,13 @@ const getReports = async (shopId, timeRange) => {
     }
 
     summary.daily_revenue_data = Object.values(dailyDataMap).sort((a, b) => a.date.localeCompare(b.date));
-
-    // Sort items by revenue descending and take top 5
     summary.top_items = Object.values(itemsMap)
         .sort((a, b) => b.total_revenue - a.total_revenue)
         .slice(0, 5);
 
+    cache.set(cacheKey, summary, 90); // Cache for 90 seconds
     return summary;
 };
-
-
 
 module.exports = {
     getDailyAnalytics,

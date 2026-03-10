@@ -1,28 +1,61 @@
 const supabase = require('../../config/supabaseClient');
+const cache = require('../../utils/cache');
 const { validatePagination } = require('../../utils/validators');
 
+const SUMMARY_COLUMNS = 'balance, total_earnings, total_withdrawn, updated_at';
+
+// Expose both camelCase and snake_case to preserve existing clients while supporting new ones.
+const formatSummaryPayload = ({ balance, totalEarned, totalWithdrawn, updatedAt }) => ({
+    balance,
+    total_earnings: totalEarned,
+    totalEarnings: totalEarned,
+    total_withdrawn: totalWithdrawn,
+    totalWithdrawn,
+    updated_at: updatedAt,
+    updatedAt
+});
+
+const buildDefaultSummary = () =>
+    formatSummaryPayload({
+        balance: 0,
+        totalEarned: 0,
+        totalWithdrawn: 0,
+        updatedAt: null
+    });
+
+const normalizeSummary = (wallet) =>
+    formatSummaryPayload({
+        balance: Number(wallet?.balance) || 0,
+        totalEarned: Number(wallet?.total_earnings ?? 0),
+        totalWithdrawn: Number(wallet?.total_withdrawn ?? 0),
+        updatedAt: wallet?.updated_at || null
+    });
+
 const getWalletSummary = async (shopId) => {
-    let { data: wallet, error } = await supabase
-        .from('seller_wallets')
-        .select('*')
-        .eq('shop_id', shopId)
-        .single();
+    const cacheKey = `wallet:summary:${shopId}`;
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
 
-    if (error && error.code === 'PGRST116') {
-        // No wallet exists yet, create one
-        const { data: newWallet, error: createError } = await supabase
+    try {
+        const { data, error } = await supabase
             .from('seller_wallets')
-            .insert([{ shop_id: shopId }])
-            .select()
-            .single();
-        
-        if (createError) throw createError;
-        wallet = newWallet;
-    } else if (error) {
-        throw error;
-    }
+            .select(SUMMARY_COLUMNS)
+            .eq('shop_id', shopId)
+            .maybeSingle();
 
-    return wallet;
+        if (error) throw error;
+
+        const wallet = data || null;
+        const summary = wallet ? normalizeSummary(wallet) : buildDefaultSummary();
+
+        cache.set(cacheKey, summary, 60); // Cache wallet summary for 60 seconds
+        return summary;
+    } catch (error) {
+        console.error('Wallet summary error:', error.message, { shopId });
+        const fallback = buildDefaultSummary();
+        cache.set(cacheKey, fallback, 30);
+        return fallback;
+    }
 };
 
 const getWalletTransactions = async (shopId, page = 1, limit = 20, type = null) => {
@@ -42,8 +75,9 @@ const getWalletTransactions = async (shopId, page = 1, limit = 20, type = null) 
 
     let query = supabase
         .from('seller_wallet_transactions')
-        .select('*', { count: 'exact' })
-        .eq('wallet_id', wallet.id);
+        .select('id, order_id, amount, type, description, created_at', { count: 'exact' })
+        .eq('wallet_id', wallet.id)
+        .eq('shop_id', shopId);
 
     if (type) {
         query = query.eq('type', type);
@@ -81,7 +115,6 @@ const processOrderDelivery = async (orderId, shopId, amount) => {
     });
 
     if (error) {
-        console.error('Wallet update RPC error:', error);
         throw error;
     }
 

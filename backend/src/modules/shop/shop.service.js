@@ -2,6 +2,7 @@ const supabase = require('../../config/supabaseClient');
 const cache = require('../../utils/cache');
 const { ConflictError, NotFoundError, BadRequestError } = require('../../utils/errors');
 const { uploadToCloudinary, deleteFromCloudinary, extractPublicId } = require('../../config/cloudinary');
+const notificationService = require('../notification/notification.service');
 
 const VALID_SHOP_STATUSES = ['open', 'closed'];
 
@@ -102,6 +103,19 @@ const createShop = async (sellerId, shopData, imageFile = null) => {
     }
 
     cache.delete(`shop:seller:${sellerId}`);
+
+    try {
+        await notificationService.createNotification(
+            shop.id,
+            'Seller Account Created',
+            `Welcome aboard! Your shop ${shop.shop_name || shop.name || ''} is now live on BazarSe.`,
+            'seller_onboarding',
+            shop.id,
+            'shop'
+        );
+    } catch (notifyError) {
+        console.error('Failed to create seller onboarding notification', notifyError);
+    }
 
     return shop;
 };

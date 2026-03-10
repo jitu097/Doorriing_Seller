@@ -1,5 +1,6 @@
 const supabase = require('../../config/supabaseClient');
 const { validatePagination } = require('../../utils/validators');
+const notificationService = require('../notification/notification.service');
 
 const getWithdrawRequests = async (shopId, page = 1, limit = 20) => {
     const pagination = validatePagination(page, limit);
@@ -86,6 +87,21 @@ const createWithdrawRequest = async (shopId, amount, payoutAccountId) => {
         .single();
 
     if (error) throw error;
+
+    try {
+        const formattedAmount = Number(amount).toFixed(2);
+        await notificationService.createNotification(
+            shopId,
+            'Withdrawal Request Received',
+            `We received your withdrawal request for ₹${formattedAmount}. Our team will review it shortly.`,
+            'withdraw_submitted',
+            data.id,
+            'withdraw_request'
+        );
+    } catch (notifyError) {
+        console.error('Failed to create withdrawal notification', notifyError);
+    }
+
     return data;
 };
 

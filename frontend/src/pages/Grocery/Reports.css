@@ -1,4 +1,88 @@
-.reports-grid {
+/* ===== Reusable Variables & Page Setup ===== */
+:root {
+    --theme-bg: #f8f5ef;
+    --card-bg: #ffffff;
+    --primary: rgb(109, 29, 29);
+    --primary-light: rgba(109, 29, 29, 0.1);
+    --text-main: #23272f;
+    --text-muted: #6b7280;
+    --shadow-soft: 0 4px 12px rgba(44, 62, 80, 0.06);
+    --shadow-hover: 0 8px 24px rgba(44, 62, 80, 0.1);
+    --radius: 16px;
+
+    --status-completed: #22c55e;
+    --status-pending: #f59e0b;
+    --status-cancelled: #ef4444;
+}
+
+.reports-page-wrapper {
+    width: 100%;
+    min-height: calc(100vh - 72px);
+    background: #fce8d3;
+    padding: 2rem 1rem;
+}
+
+.reports-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ===== Loading & Error states ===== */
+.loading,
+.no-data {
+    text-align: center;
+    padding: 4rem;
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-soft);
+}
+
+/* ===== Header Section ===== */
+.reports-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.reports-header h1 {
+    font-size: 2rem;
+    color: var(--text-main);
+    margin: 0 0 0.5rem 0;
+    font-weight: 800;
+}
+
+.reports-header p {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 1.05rem;
+}
+
+.date-range-select {
+    padding: 0.75rem 1.25rem;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    background: white;
+    outline: none;
+    cursor: pointer;
+    min-width: 160px;
+    transition: all 0.2s ease;
+}
+
+.date-range-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* ===== Metrics Grid ===== */
+.metrics-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 1.5rem;
@@ -6,186 +90,283 @@
 }
 
 .metric-card {
-    background: white;
+    background: var(--card-bg);
+    border-radius: var(--radius);
     padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-    border: 1px solid #eee;
+    box-shadow: var(--shadow-soft);
     display: flex;
     align-items: center;
-    gap: 1rem;
-    transition: transform 0.2s;
+    gap: 1.25rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .metric-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.05);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
 }
 
 .metric-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 12px;
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
-    background: #f8f9fa;
+    font-size: 1.8rem;
+    flex-shrink: 0;
 }
 
-.metric-card.revenue .metric-icon {
-    background: rgba(255, 159, 67, 0.1);
+.metric-icon.revenue {
+    background: #fff3e0;
+    color: #f59e0b;
 }
 
-.metric-card.orders .metric-icon {
-    background: rgba(40, 199, 111, 0.1);
+.metric-icon.orders {
+    background: #e0f2fe;
+    color: #0ea5e9;
 }
 
-.metric-card.aov .metric-icon {
-    background: rgba(0, 207, 232, 0.1);
+.metric-icon.aov {
+    background: #f3e8ff;
+    color: #a855f7;
 }
 
-.metric-card.cancelled .metric-icon {
-    background: rgba(234, 84, 85, 0.1);
+.metric-icon.completed {
+    background: #dcfce7;
+    color: #22c55e;
 }
 
-.metric-content h3 {
-    margin: 0;
+.metric-info h3 {
+    margin: 0 0 0.25rem 0;
     font-size: 0.85rem;
-    color: #888;
-    text-transform: uppercase;
+    color: var(--text-muted);
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .metric-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #2c3e50;
-    margin: 0.25rem 0;
-}
-
-.metric-change {
-    font-size: 0.75rem;
     margin: 0;
-    font-weight: 500;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-main);
 }
 
-.metric-change.positive {
-    color: #28c76f;
-}
-
-.metric-change.negative {
-    color: #ea5455;
-}
-
-.metric-change.neutral {
-    color: #888;
-}
-
-.chart-section,
-.table-section {
-    grid-column: 1 / -1;
-    background: white;
+/* ===== Chart Section ===== */
+.chart-section {
+    background: var(--card-bg);
+    border-radius: var(--radius);
     padding: 1.5rem;
-    border-radius: 12px;
-    border: 1px solid #eee;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+    box-shadow: var(--shadow-soft);
+    margin-bottom: 2rem;
 }
 
-.chart-section h2,
-.table-section h2 {
-    margin-top: 0;
-    margin-bottom: 1.5rem;
-    font-size: 1.1rem;
-    color: #444;
+.chart-section h2 {
+    margin: 0 0 1.5rem 0;
+    color: var(--text-main);
+    font-size: 1.25rem;
+    font-weight: 700;
 }
 
-/* Simple CSS Bar Chart */
-.bar-chart {
-    display: flex;
-    justify-content: space-around;
-    align-items: flex-end;
-    height: 250px;
-    padding-top: 2rem;
-    border-bottom: 1px solid #eee;
+/* 
+   Crucial rule to fix Recharts: 
+   Wrapper must have a fixed min-height and display block/flex to calculate height correctly.
+*/
+.chart-responsive-wrapper {
+    width: 100%;
+    height: 300px;
+    min-height: 300px;
 }
 
-.chart-column {
+/* ===== Bottom Grid layout ===== */
+.reports-bottom-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.report-section-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-soft);
+}
+
+.report-section-card h2 {
+    margin: 0 0 1.5rem 0;
+    color: var(--text-main);
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+/* ===== Modern Table ===== */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.modern-table th {
+    text-align: left;
+    padding: 1rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    border-bottom: 1.5px solid #f3f4f6;
+    background: #f9fafb;
+}
+
+.modern-table td {
+    padding: 1rem;
+    color: var(--text-main);
+    font-weight: 500;
+    border-bottom: 1.5px solid #f9fafb;
+    vertical-align: middle;
+}
+
+.modern-table tr:last-child td {
+    border-bottom: none;
+}
+
+.rank-cell {
+    font-weight: 700 !important;
+    color: var(--primary) !important;
+    width: 60px;
+}
+
+.name-cell {
+    font-weight: 600 !important;
+    min-width: 150px;
+}
+
+.orders-cell {
+    width: 100px;
+    color: var(--text-muted) !important;
+}
+
+.revenue-cell {
+    width: 120px;
+    font-weight: 700 !important;
+}
+
+.no-data-cell {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 2rem !important;
+}
+
+/* ===== Status Progress Breakdown ===== */
+.status-progress-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    gap: 1.5rem;
+}
+
+.status-progress-item {
+    display: flex;
+    flex-direction: column;
     gap: 0.5rem;
+}
+
+.status-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.status-count {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.text-completed {
+    color: var(--status-completed);
+}
+
+.text-pending {
+    color: var(--status-pending);
+}
+
+.text-cancelled {
+    color: var(--status-cancelled);
+}
+
+.status-bar-bg {
     width: 100%;
+    height: 8px;
+    background: #f3f4f6;
+    border-radius: 10px;
+    overflow: hidden;
 }
 
-.bar {
-    width: 30%;
-    background: linear-gradient(180deg, var(--primary-color) 0%, rgba(255, 159, 67, 0.6) 100%);
-    border-radius: 4px 4px 0 0;
-    transition: height 0.5s ease-out;
-    position: relative;
-    min-height: 4px;
-    /* Ensure visibility even if value is low */
+.status-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease-out;
 }
 
-.bar:hover {
-    opacity: 0.9;
+.completed-fill {
+    background: var(--status-completed);
 }
 
-.bar:hover::after {
-    content: attr(data-value);
-    position: absolute;
-    top: -25px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #333;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.75rem;
+.pending-fill {
+    background: var(--status-pending);
 }
 
-.chk-label {
-    font-size: 0.85rem;
-    color: #666;
+.cancelled-fill {
+    background: var(--status-cancelled);
 }
 
-.date-range-select {
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    margin-right: 0.5rem;
-    font-size: 0.9rem;
-}
 
-.export-btn {
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-}
-
-.text-success {
-    color: #28c76f;
-    font-weight: 600;
-}
-
-.text-danger {
-    color: #ea5455;
-    font-weight: 600;
-}
-
-@media (max-width: 1100px) {
-    .reports-grid {
+/* ===== Responsive Fallbacks ===== */
+@media (max-width: 1024px) {
+    .metrics-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .reports-bottom-grid {
+        grid-template-columns: 1fr;
     }
 }
 
-@media (max-width: 600px) {
-    .reports-grid {
+@media (max-width: 700px) {
+    .reports-page-wrapper {
+        padding: 1rem;
+    }
+
+    .reports-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .date-range-select {
+        width: 100%;
+    }
+
+    .metrics-grid {
         grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .chart-responsive-wrapper {
+        height: 250px;
+        min-height: 250px;
+    }
+
+    .reports-bottom-grid {
+        gap: 1rem;
     }
 }

@@ -27,13 +27,13 @@ const Reports = () => {
 
     return (
         <>
-            <div className="admin-container">
-                <header className="admin-header">
-                    <div className="header-content">
-                        <h1>Reports & Analytics</h1>
-                        <p>Insights into your store's performance</p>
-                    </div>
-                    <div className="header-actions">
+            <div className="reports-page-wrapper">
+                <div className="reports-container">
+                    <div className="reports-header">
+                        <div>
+                            <h1>Reports & Analytics</h1>
+                            <p>Insights into your store's performance</p>
+                        </div>
                         <select
                             className="date-range-select"
                             value={dateRange}
@@ -45,105 +45,146 @@ const Reports = () => {
                             <option value="all">All Time</option>
                         </select>
                     </div>
-                </header>
 
-                <div className="reports-grid">
-                    {/* Key Metrics */}
-                    <div className="metric-card revenue">
-                        <div className="metric-icon">💰</div>
-                        <div className="metric-content">
-                            <h3>Total Revenue</h3>
-                            <p className="metric-value">₹{(analytics?.total_revenue || 0).toLocaleString()}</p>
-                            <p className="metric-change positive">--</p>
+                    <div className="metrics-grid">
+                        <div className="metric-card">
+                            <div className="metric-icon revenue">💰</div>
+                            <div className="metric-info">
+                                <h3>Total Revenue</h3>
+                                <p className="metric-value">₹{(analytics?.total_revenue || 0).toLocaleString()}</p>
+                            </div>
                         </div>
-                    </div>
-
-                    <div className="metric-card orders">
-                        <div className="metric-icon">🥡</div>
-                        <div className="metric-content">
-                            <h3>Total Orders</h3>
-                            <p className="metric-value">{analytics?.total_orders || 0}</p>
-                            <p className="metric-change positive">--</p>
+                        <div className="metric-card">
+                            <div className="metric-icon orders">📦</div>
+                            <div className="metric-info">
+                                <h3>Total Orders</h3>
+                                <p className="metric-value">{analytics?.total_orders || 0}</p>
+                            </div>
                         </div>
-                    </div>
-
-                    <div className="metric-card aov">
-                        <div className="metric-icon">📊</div>
-                        <div className="metric-content">
-                            <h3>Avg. Order Value</h3>
-                            <p className="metric-value">₹{(analytics?.avg_order_value || 0).toFixed(0)}</p>
-                            <p className="metric-change neutral">--</p>
+                        <div className="metric-card">
+                            <div className="metric-icon aov">📈</div>
+                            <div className="metric-info">
+                                <h3>Avg. Order Value</h3>
+                                <p className="metric-value">₹{(analytics?.avg_order_value || 0).toFixed(0)}</p>
+                            </div>
                         </div>
-                    </div>
-
-                    <div className="metric-card cancelled">
-                        <div className="metric-icon">✅</div>
-                        <div className="metric-content">
-                            <h3>Completed</h3>
-                            <p className="metric-value">{analytics?.completed_orders || 0}</p>
-                            <p className="metric-change positive">--</p>
+                        <div className="metric-card">
+                            <div className="metric-icon completed">✅</div>
+                            <div className="metric-info">
+                                <h3>Completed Orders</h3>
+                                <p className="metric-value">{analytics?.completed_orders || 0}</p>
+                            </div>
                         </div>
                     </div>
 
                     {/* Sales Chart (Recharts) */}
-                    <div className="chart-section" style={{ height: '400px', width: '100%', marginBottom: '20px' }}>
+                    <div className="chart-section">
                         <h2>Sales Trend (Revenue)</h2>
-                        <div className="chart-container" style={{ width: '100%', height: '300px' }}>
+                        <div className="chart-responsive-wrapper">
                             {(!analytics || !analytics.daily_revenue_data || analytics.daily_revenue_data.length === 0) ? (
-                                <div style={{ width: '100%', textAlign: 'center', padding: '20px' }}>No data for this period</div>
+                                <div className="no-chart-data">No data for this period</div>
                             ) : (
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={analytics.daily_revenue_data}>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <BarChart data={analytics.daily_revenue_data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
                                         <XAxis
                                             dataKey="date"
                                             tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { weekday: 'short' })}
+                                            tick={{ fill: '#6b7280', fontSize: 12 }}
+                                            tickLine={false}
+                                            axisLine={false}
                                         />
-                                        <YAxis tickFormatter={(val) => `₹${val}`} width={80} />
+                                        <YAxis
+                                            tickFormatter={(val) => `₹${val}`}
+                                            tick={{ fill: '#6b7280', fontSize: 12 }}
+                                            tickLine={false}
+                                            axisLine={false}
+                                        />
                                         <Tooltip
                                             formatter={(value) => [`₹${value}`, 'Revenue']}
                                             labelFormatter={(label) => new Date(label).toLocaleDateString()}
-                                            cursor={{fill: 'transparent'}}
+                                            cursor={{ fill: 'rgba(109, 29, 29, 0.05)' }}
+                                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                         />
-                                        <Bar dataKey="revenue" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                                        <Bar dataKey="revenue" fill="rgb(109, 29, 29)" radius={[4, 4, 0, 0]} maxBarSize={50} />
                                     </BarChart>
                                 </ResponsiveContainer>
                             )}
                         </div>
                     </div>
 
-                    {/* Top Products Table */}
-                    <div className="table-section">
-                        <h2>🏆 Top Selling Products</h2>
-                        <div className="table-responsive">
-                            <table className="admin-table">
-                                <thead>
-                                    <tr>
-                                        <th>Rank</th>
-                                        <th>Product Name</th>
-                                        <th>Units Sold</th>
-                                        <th>Revenue</th>
-                                        <th>Growth</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {(!analytics || !analytics.top_items || analytics.top_items.length === 0) ? (
+                    <div className="reports-bottom-grid">
+                        {/* Top Products Table */}
+                        <div className="report-section-card">
+                            <h2>Top Selling Products</h2>
+                            <div className="table-responsive">
+                                <table className="modern-table">
+                                    <thead>
                                         <tr>
-                                            <td colSpan="5" className="text-center">No top items data available.</td>
+                                            <th>Rank</th>
+                                            <th>Product Name</th>
+                                            <th>Units Sold</th>
+                                            <th>Revenue</th>
                                         </tr>
-                                    ) : (
-                                        analytics.top_items.map((item, index) => (
-                                            <tr key={index}>
-                                                <td>#{index + 1}</td>
-                                                <td>{item.item_name}</td>
-                                                <td>{item.total_quantity}</td>
-                                                <td>₹{(item.total_revenue || 0).toLocaleString()}</td>
-                                                <td className="positive">--</td>
+                                    </thead>
+                                    <tbody>
+                                        {(!analytics || !analytics.top_items || analytics.top_items.length === 0) ? (
+                                            <tr>
+                                                <td colSpan="4" className="no-data-cell">No top items data available.</td>
                                             </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
+                                        ) : (
+                                            analytics.top_items.map((item, index) => (
+                                                <tr key={index}>
+                                                    <td className="rank-cell">#{index + 1}</td>
+                                                    <td className="name-cell">{item.item_name}</td>
+                                                    <td className="orders-cell">{item.total_quantity}</td>
+                                                    <td className="revenue-cell">₹{(item.total_revenue || 0).toLocaleString()}</td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Order Status Breakdown Extension Placeholder (so the layout matches 2fr 1fr grid) */}
+                        <div className="report-section-card">
+                            <h2>Order Status Breakdown</h2>
+                            <div className="status-progress-container">
+                                {analytics?.total_orders > 0 ? (
+                                    <>
+                                        <div className="status-progress-item">
+                                            <div className="status-label-row">
+                                                <span className="status-name text-completed">Completed</span>
+                                                <span className="status-count">{analytics.completed_orders || 0}</span>
+                                            </div>
+                                            <div className="status-bar-bg">
+                                                <div className="status-bar-fill completed-fill" style={{ width: `${((analytics.completed_orders || 0) / analytics.total_orders * 100).toFixed(1)}%` }}></div>
+                                            </div>
+                                        </div>
+                                        <div className="status-progress-item">
+                                            <div className="status-label-row">
+                                                <span className="status-name text-pending">Pending</span>
+                                                <span className="status-count">{analytics.pending_orders || 0}</span>
+                                            </div>
+                                            <div className="status-bar-bg">
+                                                <div className="status-bar-fill pending-fill" style={{ width: `${((analytics.pending_orders || 0) / analytics.total_orders * 100).toFixed(1)}%` }}></div>
+                                            </div>
+                                        </div>
+                                        <div className="status-progress-item">
+                                            <div className="status-label-row">
+                                                <span className="status-name text-cancelled">Cancelled</span>
+                                                <span className="status-count">{analytics.cancelled_orders || 0}</span>
+                                            </div>
+                                            <div className="status-bar-bg">
+                                                <div className="status-bar-fill cancelled-fill" style={{ width: `${((analytics.cancelled_orders || 0) / analytics.total_orders * 100).toFixed(1)}%` }}></div>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="no-data-cell">No order data available</div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

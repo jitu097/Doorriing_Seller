@@ -37,8 +37,6 @@ function Dashboard() {
 				// Let's call getOrderStats as well for real-time counts.
 				// Re-calling to get real-time status counts
 				const statusCounts = await groceryService.getOrderStats();
-				console.log('📊 Grocery Order Stats:', statusCounts);
-				console.log('🚚 Delivered Orders:', statusCounts?.delivered);
 
 				// Merge data - use statusCounts for real-time order counts
 				setStats({
@@ -86,34 +84,34 @@ function Dashboard() {
 						<div className="stat-icon revenue-icon"><img src="/potli.png" alt="Total Revenue" style={{ width: 40, height: 40 }} /></div>
 						<div className="stat-info">
 							<h3>Total Revenue</h3>
-						<p className="stat-value">₹{(walletData?.balance || 0).toLocaleString()}</p>
-						<span className="stat-hint">Lifetime earnings</span>
+							<p className="stat-value">₹{(walletData?.balance || 0).toLocaleString()}</p>
+							<span className="stat-hint">Lifetime earnings</span>
+						</div>
 					</div>
-				</div>
 
-				<div className="stat-card">
-					<div className="stat-icon orders-icon"><img src="/checkout.png" alt="Active Orders" style={{ width: 40, height: 40 }} /></div>
-					<div className="stat-info">
-						<h3>Active Orders</h3>
-						<p className="stat-value">{activeOrdersCount}</p>
-						<span className="stat-hint">In preparation or delivery</span>
+					<div className="stat-card">
+						<div className="stat-icon orders-icon"><img src="/checkout.png" alt="Active Orders" style={{ width: 40, height: 40 }} /></div>
+						<div className="stat-info">
+							<h3>Active Orders</h3>
+							<p className="stat-value">{activeOrdersCount}</p>
+							<span className="stat-hint">In preparation or delivery</span>
+						</div>
 					</div>
-				</div>
 
-				<div className="stat-card">
-					<div className="stat-icon success-icon"><img src="/delivered.png" alt="Delivered" style={{ width: 40, height: 40 }} /></div>
-					<div className="stat-info">
-						<h3>Delivered</h3>
-						<p className="stat-value">{stats.delivered || 0}</p>
-						<span className="stat-hint">Successfully served</span>
+					<div className="stat-card">
+						<div className="stat-icon success-icon"><img src="/delivered.png" alt="Delivered" style={{ width: 40, height: 40 }} /></div>
+						<div className="stat-info">
+							<h3>Delivered</h3>
+							<p className="stat-value">{stats.delivered || 0}</p>
+							<span className="stat-hint">Successfully served</span>
+						</div>
 					</div>
-				</div>
-				<div className="stat-card">
-					<div className="stat-icon cancel-icon"><img src="/cancel.png" alt="Cancelled" style={{ width: 40, height: 40 }} /></div>
-					<div className="stat-info">
-						<h3>Cancelled</h3>
-						<p className="stat-value">{stats.cancelled || 0}</p>
-						<span className="stat-hint">Total cancellations</span>						</div>
+					<div className="stat-card">
+						<div className="stat-icon cancel-icon"><img src="/cancel.png" alt="Cancelled" style={{ width: 40, height: 40 }} /></div>
+						<div className="stat-info">
+							<h3>Cancelled</h3>
+							<p className="stat-value">{stats.cancelled || 0}</p>
+							<span className="stat-hint">Total cancellations</span>						</div>
 					</div>
 				</div>
 

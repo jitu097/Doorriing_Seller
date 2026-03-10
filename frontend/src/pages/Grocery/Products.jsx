@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Products.css';
 import groceryService from '../../services/groceryService';
+import { useRealtimeSubscription } from '../../hooks/useRealtimeSubscription';
 import GroceryProductCard from './GroceryProductCard';
 import GroceryProductForm from './GroceryProductForm';
 import GroceryCategoryManager from './GroceryCategoryManager';
@@ -30,7 +31,6 @@ const Products = () => {
 	const [selectedCategory, setSelectedCategory] = useState('');
 	const [subcategoriesList, setSubcategoriesList] = useState([]);
 	const [newSubcategory, setNewSubcategory] = useState('');
-	const [newSubcategoryImage, setNewSubcategoryImage] = useState(null);
 	const [newItem, setNewItem] = useState({
 		name: '',
 		description: '',
@@ -61,6 +61,8 @@ const Products = () => {
 		}
 	};
 
+	useRealtimeSubscription('items', () => { setTimeout(fetchData, 0) });
+
 	useEffect(() => {
 		fetchData();
 	}, []);
@@ -81,9 +83,7 @@ const Products = () => {
 			// Load subcategories when category changes
 			if (name === 'category_id' && value) {
 				try {
-					console.log('Loading subcategories for category:', value);
 					const subs = await subcategoryService.getSubcategories(value);
-					console.log('Loaded subcategories:', subs);
 					setSubcategories(subs || []);
 					setNewItem(prev => ({ ...prev, [name]: value, subcategory_id: '' })); // Update category and reset subcategory
 				} catch (error) {
@@ -255,11 +255,10 @@ const Products = () => {
 				await subcategoryService.createSubcategory({
 					name: newSubcategory,
 					category_id: selectedCategory
-				}, newSubcategoryImage);
+				});
 				const subs = await subcategoryService.getSubcategories(selectedCategory);
 				setSubcategoriesList(subs || []);
 				setNewSubcategory('');
-				setNewSubcategoryImage(null);
 			} catch (error) {
 				console.error('Failed to create subcategory:', error);
 				alert('Failed to create subcategory. Please try again.');
@@ -269,11 +268,7 @@ const Products = () => {
 		}
 	};
 
-	const handleSubcategoryImageChange = (e) => {
-		if (e.target.files && e.target.files[0]) {
-			setNewSubcategoryImage(e.target.files[0]);
-		}
-	};
+
 
 	const handleDeleteSubcategory = async (subcategoryId) => {
 		if (window.confirm('Are you sure you want to delete this subcategory? Items with this subcategory will have it removed.')) {
@@ -380,7 +375,7 @@ const Products = () => {
 							)}
 						</div>
 					))}
-				</div>
+					</div>
 				</div>
 			</div>
 
@@ -440,51 +435,21 @@ const Products = () => {
 											onChange={e => setNewSubcategory(e.target.value)}
 											required
 										/>
-										<label className={`category-image-upload-icon ${newSubcategoryImage ? 'has-file' : ''}`} title="Upload Custom Image (Optional)">
-											<svg width="20" height="20" viewBox="0 0 24 24" fill={newSubcategoryImage ? '#10b981' : 'none'} stroke={newSubcategoryImage ? '#10b981' : '#6b7280'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-												<rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-												<circle cx="8.5" cy="8.5" r="1.5" />
-												<polyline points="21 15 16 10 5 21" />
-											</svg>
-											<input
-												type="file"
-												accept="image/*"
-												className="hidden-file-input"
-												onChange={handleSubcategoryImageChange}
-											/>
-										</label>
-										{newSubcategoryImage && (
-											<button
-												type="button"
-												className="clear-image-btn"
-												onClick={() => setNewSubcategoryImage(null)}
-												title="Remove Custom Image"
-											>
-												&times;
-											</button>
-										)}
 									</div>
 									<button type="submit" className="add-category-btn" disabled={isSubmitting}>Add</button>
 								</form>
 								<hr style={{ margin: '18px 0 10px 0', border: 'none', borderTop: '1.5px solid #f3f4f6' }} />
 								<div style={{ fontWeight: 700, fontSize: '1.15rem', marginBottom: 12 }}>Existing Subcategories</div>
-								<div className="category-list-modal">
+								<div className="subcategory-list-modal-row">
 									{subcategoriesList.length === 0 ? (
 										<div style={{ color: '#6b7280', padding: '12px 0' }}>No subcategories yet. Add one above.</div>
 									) : (
 										subcategoriesList.map((sub) => (
-											<div className="subcategory-card" key={sub.id}>
-												<img
-													src={sub.image_url || fallbackImage}
-													alt={sub.name}
-													className="subcategory-image"
-													loading="lazy"
-													decoding="async"
-												/>
-												<div className="subcategory-name">
+											<div className="subcategory-row-card" key={sub.id}>
+												<div className="subcategory-row-name">
 													{sub.name}
 												</div>
-												<div className="cat-controls-overlay">
+												<div className="subcategory-row-controls">
 													<label className="cat-toggle" title="Toggle Visibility">
 														<input
 															type="checkbox"

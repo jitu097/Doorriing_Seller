@@ -45,14 +45,12 @@ function Booking() {
 				filters.date = filterDate;
 			}
 
-			console.log('📋 Fetching bookings with filters:', filters);
 
 			const response = await bookingService.getBookings(filters);
-			console.log('✅ Received bookings response:', response);
-			
+
 			setBookings(response.bookings || []);
 			setTotalPages(response.pagination?.totalPages || 1);
-			
+
 			if (!response.bookings || response.bookings.length === 0) {
 				console.warn('⚠️ No bookings returned from API');
 			}
@@ -130,34 +128,34 @@ function Booking() {
 					<h1>Table Bookings</h1>
 					<p>Manage your restaurant table reservations</p>
 				</div>
-                <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: '#fff', padding: '0.8rem 1.2rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontWeight: '600', color: '#333' }}>Table Booking</span>
-                        <span style={{ fontSize: '0.85rem', color: isBookingEnabled ? '#4CAF50' : '#f44336' }}>
-                            {isBookingEnabled ? 'Enabled' : 'Disabled'}
-                        </span>
-                    </div>
-                    <label style={{ position: 'relative', display: 'inline-block', width: '50px', height: '28px', margin: 0 }}>
-                        <input 
-                            type="checkbox" 
-                            checked={isBookingEnabled} 
-                            onChange={handleBookingToggle}
-                            disabled={bookingToggleLoading}
-                            style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
-                        />
-                        <span style={{ 
-                            position: 'absolute', cursor: bookingToggleLoading ? 'not-allowed' : 'pointer', top: 0, left: 0, right: 0, bottom: 0, 
-                            backgroundColor: isBookingEnabled ? '#4CAF50' : '#ccc', transition: '.4s', borderRadius: '34px',
-                            opacity: bookingToggleLoading ? 0.7 : 1
-                        }}>
-                            <span style={{
-                                position: 'absolute', content: '""', height: '20px', width: '20px', left: '4px', bottom: '4px',
-                                backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
-                                transform: isBookingEnabled ? 'translateX(22px)' : 'translateX(0)'
-                            }}></span>
-                        </span>
-                    </label>
-                </div>
+				<div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: '#fff', padding: '0.8rem 1.2rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+					<div style={{ display: 'flex', flexDirection: 'column' }}>
+						<span style={{ fontWeight: '600', color: '#333' }}>Table Booking</span>
+						<span style={{ fontSize: '0.85rem', color: isBookingEnabled ? '#4CAF50' : '#f44336' }}>
+							{isBookingEnabled ? 'Enabled' : 'Disabled'}
+						</span>
+					</div>
+					<label style={{ position: 'relative', display: 'inline-block', width: '50px', height: '28px', margin: 0 }}>
+						<input
+							type="checkbox"
+							checked={isBookingEnabled}
+							onChange={handleBookingToggle}
+							disabled={bookingToggleLoading}
+							style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
+						/>
+						<span style={{
+							position: 'absolute', cursor: bookingToggleLoading ? 'not-allowed' : 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+							backgroundColor: isBookingEnabled ? '#4CAF50' : '#ccc', transition: '.4s', borderRadius: '34px',
+							opacity: bookingToggleLoading ? 0.7 : 1
+						}}>
+							<span style={{
+								position: 'absolute', content: '""', height: '20px', width: '20px', left: '4px', bottom: '4px',
+								backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
+								transform: isBookingEnabled ? 'translateX(22px)' : 'translateX(0)'
+							}}></span>
+						</span>
+					</label>
+				</div>
 			</header>
 
 			{/* Filters */}

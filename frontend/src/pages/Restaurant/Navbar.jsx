@@ -59,12 +59,11 @@ export default function Navbar() {
     { label: 'Menu', path: '/restaurant/menu' },
     { label: 'Orders', path: '/restaurant/orders' },
     { label: 'Bookings', path: '/restaurant/bookings' },
-    { label: 'Offers', path: '/restaurant/offers' },
     { label: 'Reports', path: '/restaurant/reports' },
     { label: 'Wallet', path: '/restaurant/wallet' }
   ];
 
-  const mobileNavLabels = ['Dashboard', 'Menu', 'Orders'];
+  const mobileNavLabels = ['Dashboard', 'Menu'];
 
   const handleLogout = async () => {
     if (!window.confirm('Logout?')) return;
@@ -166,14 +165,6 @@ export default function Navbar() {
                 <circle cx="9" cy="7" r="4"></circle>
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-            )
-          },
-          {
-            path: '/restaurant/offers', label: 'Offers', icon: (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
-                <line x1="7" y1="7" x2="7.01" y2="7"></line>
               </svg>
             )
           },

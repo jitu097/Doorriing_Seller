@@ -4,7 +4,8 @@ const { successResponse } = require('../../utils/response');
 const getNotifications = async (req, res, next) => {
     try {
         const { limit } = req.query;
-        const notifications = await notificationService.getNotifications(req.shop.id, limit);
+        const numericLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 50);
+        const notifications = await notificationService.getNotifications(req.shop.id, numericLimit);
         successResponse(res, notifications);
     } catch (error) {
         next(error);

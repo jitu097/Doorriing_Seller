@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import orderService from '../../services/orderService';
+import { useRealtimeSubscription } from '../../hooks/useRealtimeSubscription';
 import './Orders.css';
 
 const orderTabs = [
@@ -27,6 +28,8 @@ export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('all');
+
+  useRealtimeSubscription('orders', () => { setTimeout(fetchOrders, 0) });
 
   useEffect(() => {
     fetchOrders();

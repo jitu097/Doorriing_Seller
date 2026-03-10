@@ -29,6 +29,7 @@ router.use('/discounts', discountRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/bookings', bookingRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/seller/notifications', notificationRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/seller/wallet', walletRoutes);
 

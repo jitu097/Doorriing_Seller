@@ -35,7 +35,8 @@ export default function FooterMobile() {
 
   return (
     <footer className="footer-mobile">
-      <Link to="/restaurant/offers" className="footer-link">Offers</Link>
+      {/* <Link to="/restaurant/offers" className="footer-link">Offers</Link> */}
+      <Link to="/restaurant/orders" className="footer-link">Orders</Link>
       <button
         className={`footer-link admin-panel-btn ${isShopOpen ? 'open' : 'closed'}`}
         onClick={toggleShopStatus}

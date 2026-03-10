@@ -1,12 +1,16 @@
 const supabase = require('../../config/supabaseClient');
 
+const NOTIFICATION_COLUMNS = 'id, shop_id, customer_id, title, message, type, reference_id, reference_type, is_read, read_at, created_at';
+
 const getNotifications = async (shopId, limit = 20) => {
+    const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 50);
+
     const { data, error } = await supabase
         .from('notifications')
-        .select('*')
+        .select(NOTIFICATION_COLUMNS)
         .eq('shop_id', shopId)
         .order('created_at', { ascending: false })
-        .limit(limit);
+        .limit(safeLimit);
 
     if (error) throw error;
 
@@ -71,7 +75,7 @@ const markAllAsRead = async (shopId) => {
 const getUnreadCount = async (shopId) => {
     const { count, error } = await supabase
         .from('notifications')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('shop_id', shopId)
         .eq('is_read', false);
 
