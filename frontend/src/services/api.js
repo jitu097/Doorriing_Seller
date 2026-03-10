@@ -1,9 +1,6 @@
 import { auth } from '../config/firebase';
 
-const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const API_BASE_URL = isLocalhost
-  ? 'http://127.0.0.1:5001/api'
-  : 'https://doorriingseller.up.railway.app/api'; // Live Railway backend
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5001/api';
 
 // Helper function to get auth token
 const getAuthToken = async () => {
