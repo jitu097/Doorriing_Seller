@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { shopService } from '../../services/shopService';
-import './footer.css';
+import './Footer.css';
 
 export default function FooterMobile() {
 	const [isShopOpen, setIsShopOpen] = useState(true);
