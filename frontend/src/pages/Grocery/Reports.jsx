@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import './Reports.css';
 import { analyticsService } from '../../services/analyticsService';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import Loader from '../../components/common/Loader';
 
 const Reports = () => {
     const [dateRange, setDateRange] = useState('7days');
@@ -24,6 +25,8 @@ const Reports = () => {
 
         fetchReports();
     }, [dateRange]);
+
+    if (loading) return <Loader message="Loading reports..." />;
 
     return (
         <>

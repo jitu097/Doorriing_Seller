@@ -4,12 +4,14 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { shopService } from '../services/shopService';
 import Loader from '../components/common/Loader';
+import OrderAlertManager from '../components/Orders/OrderAlertManager';
 
 // Lazy load pages
 const Login = lazy(() => import('../pages/auth/Login'));
 const Register = lazy(() => import('../pages/auth/Register'));
 const Registration = lazy(() => import('../pages/onboarding/Registration'));
 const LandingPage = lazy(() => import('../pages/landing/LandingPage'));
+const TermsAndConditions = lazy(() => import('../pages/legal/TermsAndConditions'));
 
 // Grocery Pages
 const GroceryDashboard = lazy(() => import('../pages/Grocery/DAshboard'));
@@ -79,7 +81,12 @@ const RequireShop = () => {
     }, [navigate]);
 
     if (loading) return <Loader variant="fullscreen" message="Checking shop status..." />;
-    return hasShop ? <Outlet /> : null;
+    return hasShop ? (
+        <>
+            <OrderAlertManager />
+            <Outlet />
+        </>
+    ) : null;
 };
 
 const PublicRoute = () => {
@@ -95,10 +102,11 @@ const AppRoutes = () => {
                 {/* Landing Page */}
                 <Route path="/" element={<LandingPage />} />
 
-                {/* Public Routes (Login, Register) */}
+                {/* Public Routes (Login, Register, Terms) */}
                 <Route element={<PublicRoute />}>
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
                 </Route>
 
                 {/* Protected Routes - Authentication Required */}

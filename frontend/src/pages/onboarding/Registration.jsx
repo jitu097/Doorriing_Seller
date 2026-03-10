@@ -30,6 +30,8 @@ export default function Registration() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [isExistingShop, setIsExistingShop] = useState(false);
 	const [successMessage, setSuccessMessage] = useState('');
+	const [termsAccepted, setTermsAccepted] = useState(false);
+	const [showTermsModal, setShowTermsModal] = useState(false);
 
 	const categories = [
 		'Grocery',
@@ -123,6 +125,13 @@ export default function Registration() {
 			return;
 		}
 
+		// Validate Terms acceptance
+		if (!termsAccepted) {
+			alert('You must accept the Terms & Conditions to register.');
+			setIsSubmitting(false);
+			return;
+		}
+
 		// Submit to backend
 		try {
 			const payload = new FormData();
@@ -137,6 +146,8 @@ export default function Registration() {
 			payload.append('city', formData.city);
 			payload.append('state', formData.state);
 			payload.append('pincode', formData.PINCode);
+			payload.append('termsAccepted', 'true');
+			payload.append('terms_version', 'v1');
 
 			if (formData.shopPhoto) {
 				payload.append('image', formData.shopPhoto);
@@ -357,11 +368,38 @@ export default function Registration() {
 									</div>
 								</div>
 							</div>
+							{/* Terms & Conditions Checkbox */}
+							<div className="register-terms-section">
+								<label className="register-terms-label">
+									<input
+										type="checkbox"
+										checked={termsAccepted}
+										onChange={(e) => setTermsAccepted(e.target.checked)}
+										className="register-terms-checkbox"
+										required
+									/>
+									<span className="register-terms-text">
+										I agree to the{' '}
+										<button
+											type="button"
+											className="register-terms-link"
+											onClick={() => setShowTermsModal(true)}
+										>
+											Terms & Conditions
+										</button>
+									</span>
+								</label>
+							</div>
 							{/* Submit Button */}
 							<div className="register-submit-section">
 								<div className="register-submit-row">
 									<button type="button" className="register-cancel-link" onClick={() => navigate('/')}>Cancel</button>
-									<button type="submit" disabled={isSubmitting} className={`register-submit-button ${isSubmitting ? 'register-loading' : ''}`}>
+									<button
+										type="submit"
+										disabled={isSubmitting || !termsAccepted}
+										className={`register-submit-button ${isSubmitting ? 'register-loading' : ''} ${!termsAccepted ? 'register-submit-disabled' : ''}`}
+										title={!termsAccepted ? 'Please accept the Terms & Conditions to continue' : ''}
+									>
 										{isSubmitting ? (isExistingShop ? 'Updating...' : 'Registering...') : (isExistingShop ? 'Update Shop' : 'Register Shop')}
 									</button>
 								</div>
@@ -371,6 +409,82 @@ export default function Registration() {
 				)}
 			</div>
 			<style>{`.register-input-disabled { background-color: #f0f0f0; cursor: not-allowed; color: #555; }`}</style>
+
+			{/* Terms & Conditions Modal */}
+			{showTermsModal && (
+				<div className="terms-modal-overlay" onClick={() => setShowTermsModal(false)}>
+					<div className="terms-modal" onClick={(e) => e.stopPropagation()}>
+						<div className="terms-modal-header">
+							<h2 className="terms-modal-title">Terms & Conditions</h2>
+							<button className="terms-modal-close" onClick={() => setShowTermsModal(false)} aria-label="Close">✕</button>
+						</div>
+						<div className="terms-modal-body">
+							<p className="terms-modal-meta">Last updated: March 2026 · Version 1.0</p>
+
+							<h3>1. Introduction</h3>
+							<p>Welcome to <strong>Doorriing</strong>. By registering as a seller, you agree to be bound by these Terms & Conditions. Please read them carefully before completing your registration.</p>
+
+							<h3>2. Seller Eligibility</h3>
+							<p>To register as a seller on Doorriing, you must:</p>
+							<ul>
+								<li>Be at least 18 years of age.</li>
+								<li>Operate a legitimate business registered in India.</li>
+								<li>Hold a valid PAN card and Aadhaar number.</li>
+								<li>Agree to conduct business in compliance with all applicable Indian laws.</li>
+							</ul>
+
+							<h3>3. Seller Responsibilities</h3>
+							<p>As a registered seller, you agree to:</p>
+							<ul>
+								<li>Provide accurate and up-to-date information about your shop and products.</li>
+								<li>Maintain sufficient inventory to fulfil customer orders.</li>
+								<li>Fulfill orders in a timely manner as per the platform's delivery standards.</li>
+								<li>Not list any prohibited, illegal, or counterfeit products.</li>
+							</ul>
+
+							<h3>4. Payments & Wallet</h3>
+							<p>Earnings from fulfilled orders are credited to your wallet automatically. Withdrawals are subject to the platform's payout schedule. Doorriing reserves the right to withhold payments in cases of suspected fraud or policy violation.</p>
+
+							<h3>5. Product Listings</h3>
+							<p>All product listings must accurately represent the items being sold. Misleading descriptions or misrepresented products may result in suspension of your account. Doorriing reserves the right to remove any listing that violates community standards.</p>
+
+							<h3>6. Account Suspension & Termination</h3>
+							<p>Doorriing reserves the right to suspend or permanently terminate seller accounts that violate these Terms or engage in fraudulent activity. You will be notified via registered email in case of suspension.</p>
+
+							<h3>7. Data & Privacy</h3>
+							<p>By registering, you consent to the collection and processing of your personal and business data. Your data will not be sold to third parties. We use your information to operate the platform, process transactions, and improve our services.</p>
+
+							<h3>8. Commission & Fees</h3>
+							<p>Doorriing may charge a commission on orders fulfilled through the platform. Any applicable commission rates will be communicated to sellers in advance. The current launch phase operates with zero commission — subject to change with 30 days prior notice.</p>
+
+							<h3>9. Changes to Terms</h3>
+							<p>We may update these Terms from time to time. Sellers will be notified of significant changes via in-app notifications and email.</p>
+
+							<h3>10. Governing Law</h3>
+							<p>These Terms are governed by the laws of India. Any disputes shall be subject to the exclusive jurisdiction of the courts in Jharkhand, India.</p>
+
+							<h3>11. Contact Us</h3>
+							<p>For questions, contact us at <strong>support@doorriing.com</strong>.</p>
+						</div>
+						<div className="terms-modal-footer">
+							<button
+								type="button"
+								className="terms-modal-accept-btn"
+								onClick={() => { setTermsAccepted(true); setShowTermsModal(false); }}
+							>
+								I Accept
+							</button>
+							<button
+								type="button"
+								className="terms-modal-close-btn"
+								onClick={() => setShowTermsModal(false)}
+							>
+								Close
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

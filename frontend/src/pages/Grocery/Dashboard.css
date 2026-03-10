@@ -1,5 +1,6 @@
 /* ===== GLOBAL SAFETY ===== */
-html, body {
+html,
+body {
   width: 100%;
   overflow-x: hidden;
 }
@@ -39,7 +40,7 @@ html, body {
   gap: 12px;
 }
 
-.manage-orders-btn {
+.manage-products-btn {
   background: rgb(109, 29, 29);
   color: white;
   padding: 10px 20px;
@@ -113,6 +114,12 @@ html, body {
 }
 
 /* ===== PANELS ===== */
+.dashboard-content-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
 .dashboard-panel {
   background: #fce8d3;
   border-radius: 14px;

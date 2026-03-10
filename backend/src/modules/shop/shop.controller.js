@@ -6,7 +6,13 @@ const { BadRequestError } = require('../../utils/errors');
 const createShop = async (req, res, next) => {
     try {
         validateRequired(['shop_name', 'owner_name', 'phone', 'category', 'subcategory', 'address'], req.body);
-        
+
+        // Require explicit Terms & Conditions acceptance
+        const termsAccepted = req.body.termsAccepted === 'true' || req.body.termsAccepted === true;
+        if (!termsAccepted) {
+            throw new BadRequestError('You must accept the Terms & Conditions to register your shop.');
+        }
+
         const imageFile = req.file;
         const shop = await shopService.createShop(req.user.id, req.body, imageFile);
         successResponse(res, shop, 'Shop created successfully', 201);

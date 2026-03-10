@@ -65,10 +65,6 @@ const createGroceryItem = async (shopId, itemData) => {
             throw new BadRequestError('Category not found or does not belong to this shop');
         }
 
-        console.log('Validated category for item create', {
-            categoryId: category.id,
-            categoryShop: category.shop_id
-        });
     }
 
     // 3. Validate subcategory if provided
@@ -97,18 +93,10 @@ const createGroceryItem = async (shopId, itemData) => {
         }
 
         itemData.category_id = subcategory.category_id;
-
-        console.log('Resolved category from subcategory during create', {
-            subcategoryId: itemData.subcategory_id,
-            categoryId: itemData.category_id,
-            subcategoryShop: subcategory.shop_id
-        });
     }
 
     // 4. Build Safe Payload
     const payload = buildItemPayload(shopId, itemData);
-
-    console.log('Creating grocery item with payload', payload);
 
     // 3. Insert into Supabase
     const { data, error } = await supabase
@@ -219,10 +207,6 @@ const updateGroceryItem = async (shopId, itemId, updates) => {
             throw new BadRequestError('Category not found or does not belong to this shop');
         }
 
-        console.log('Validated category for item update', {
-            categoryId: category.id,
-            categoryShop: category.shop_id
-        });
     }
 
     // 3. Validate subcategory if provided
@@ -251,12 +235,6 @@ const updateGroceryItem = async (shopId, itemId, updates) => {
         }
 
         updates.category_id = subcategory.category_id;
-
-        console.log('Resolved category from subcategory during update', {
-            subcategoryId: updates.subcategory_id,
-            categoryId: updates.category_id,
-            subcategoryShop: subcategory.shop_id
-        });
     }
 
     const payload = {};
@@ -415,8 +393,6 @@ const getGroceryCategories = async (shopId) => {
         .eq('shop_id', shopId)
         .order('display_order', { ascending: true });
 
-    if (error) throw error;
-    if (error) throw error;
     return data || [];
 };
 

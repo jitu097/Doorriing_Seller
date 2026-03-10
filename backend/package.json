@@ -1,7 +1,7 @@
 {
-  "name": "bazarse-seller-backend",
+  "name": "doorriing-seller-backend",
   "version": "1.0.0",
-  "description": "Seller Backend for BazarSe Delivery Marketplace",
+  "description": "Seller Backend API for Doorriing Delivery Marketplace",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -22,8 +22,7 @@
     "helmet": "^7.1.0",
     "morgan": "^1.10.0",
     "multer": "^2.0.2",
-    "multer-storage-cloudinary": "^4.0.0",
-    "swiper": "^12.1.2"
+    "multer-storage-cloudinary": "^4.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
@@ -39,7 +38,7 @@
     "supabase",
     "firebase"
   ],
-  "author": "BazarSe Team",
+  "author": "Doorriing Team",
   "license": "UNLICENSED",
   "private": true
 }

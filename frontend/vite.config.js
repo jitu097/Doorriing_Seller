@@ -10,6 +10,28 @@ export default defineConfig({
         host: true
     },
 
+    // ─── Preview Server (vite preview) ───────────────────────────────────────
+    // Sets Cache-Control headers for hashed assets when using `vite preview`.
+    // For production (Nginx / Netlify / Vercel), configure headers at the CDN layer:
+    //
+    //  Nginx:
+    //   location /assets/ {
+    //     add_header Cache-Control "public, max-age=31536000, immutable";
+    //   }
+    //
+    //  Netlify (_headers file in /public/):
+    //   /assets/*
+    //     Cache-Control: public, max-age=31536000, immutable
+    //
+    //  Vercel (vercel.json):
+    //   { "headers": [{ "source": "/assets/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] }] }
+    //
+    preview: {
+        headers: {
+            'Cache-Control': 'public, max-age=31536000, immutable'
+        }
+    },
+
     build: {
         // Target modern browsers (good for PWA / Capacitor)
         target: 'es2020',
@@ -41,3 +63,4 @@ export default defineConfig({
         }
     }
 })
+

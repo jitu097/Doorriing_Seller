@@ -1,4 +1,5 @@
 import api from './api';
+import imageCompression from 'browser-image-compression';
 
 /**
  * Item Service - Handles all menu item-related API calls
@@ -83,15 +84,19 @@ export const toggleItem = async (itemId) => {
   });
 };
 
-/**
- * Upload item image
- * @param {string} itemId - Item ID
- * @param {File} imageFile - Image file to upload
- * @returns {Promise<Object>} Image upload response with URL
- */
 export const uploadItemImage = async (itemId, imageFile) => {
+  let fileToUpload = imageFile;
+  if (imageFile instanceof File && imageFile.type.startsWith('image/')) {
+    try {
+      const options = { maxSizeMB: 1, maxWidthOrHeight: 1024, useWebWorker: true };
+      fileToUpload = await imageCompression(imageFile, options);
+    } catch (error) {
+      console.error('Image compression failed:', error);
+    }
+  }
+
   const formData = new FormData();
-  formData.append('image', imageFile);
+  formData.append('image', fileToUpload);
 
   return api(`/items/${itemId}/image`, {
     method: 'POST',

@@ -40,10 +40,12 @@
     border: 2px solid white;
 }
 
+
 .notification-dropdown {
     position: absolute;
     top: 100%;
     right: -10px;
+    left: auto;
     width: 320px;
     background: white;
     border-radius: 12px;
@@ -52,12 +54,21 @@
     z-index: 1000;
     overflow: hidden;
     margin-top: 10px;
+    --dropdown-offset: 0;
+    transform: translateX(var(--dropdown-offset)) translateY(0);
+    transform-origin: top right;
     animation: fadeIn 0.2s ease-out;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateX(var(--dropdown-offset)) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(var(--dropdown-offset)) translateY(0);
+    }
 }
 
 .notification-header {
@@ -143,4 +154,19 @@
     padding: 1rem;
     color: #ea580c;
     font-size: 0.9rem;
+}
+
+@media (max-width: 640px) {
+    .notification-dropdown {
+        position: fixed;
+        top: 76px;
+        left: 50%;
+        right: auto;
+        width: min(92vw, 360px);
+        margin-top: 0;
+        max-height: min(70vh, 420px);
+        --dropdown-offset: -50%;
+        transform-origin: top center;
+        box-shadow: 0 20px 35px rgba(0, 0, 0, 0.2);
+    }
 }

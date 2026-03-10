@@ -65,7 +65,9 @@ export default function Navbar() {
     <>
       <nav className="rest-navbar">
         <div className="rest-navbar-left">
-          <img src="/logo.png" className="rest-navbar-logo" alt="logo" />
+          <Link to="/grocery/dashboard">
+            <img src="/Doorriing.png" className="rest-navbar-logo" alt="logo" />
+          </Link>
           {!isMobile && (
             <button
               className={`admin-panel-btn ${isShopOpen ? 'open' : 'closed'}`}

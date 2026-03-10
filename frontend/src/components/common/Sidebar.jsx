@@ -54,8 +54,12 @@ const Sidebar = ({ isOpen, onClose, menuItems, profilePath }) => {
             </button>
 
             {/* Logo Area */}
-            <div className="sidebar-logo">
-                <img src="/logo.png" alt="Logo" />
+            <div
+                className="sidebar-logo"
+                onClick={() => { navigate(menuItems?.[0]?.path || '/'); handleLinkClick(); }}
+                style={{ cursor: 'pointer' }}
+            >
+                <img src="/Doorriing.png" alt="Logo" />
             </div>
 
             {/* Shop Status Toggle (Admin Panel) */}

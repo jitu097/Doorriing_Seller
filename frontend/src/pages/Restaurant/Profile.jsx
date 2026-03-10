@@ -59,7 +59,7 @@ export default function Profile() {
 	const handleSubmit = async () => {
 		try {
 			setSaving(true);
-			
+
 			// 1. Update shop profile data
 			await apiCall('/shop', {
 				method: 'PATCH',
@@ -121,7 +121,7 @@ export default function Profile() {
 	return (
 		<div className="admin-container">
 			<div className="profile-header-card">
-				<div className="profile-cover" style={{ 
+				<div className="profile-cover" style={{
 					backgroundImage: (previewImage || formData.shop_image_url)
 						? `url(${previewImage || formData.shop_image_url})`
 						: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -140,7 +140,7 @@ export default function Profile() {
 				</div>
 				<div className="profile-info-bar">
 					<div className="profile-avatar">
-					<img src={formData.shop_name ? `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.shop_name)}&background=FF6B6B&color=fff&size=128` : 'https://ui-avatars.com/api/?name=Restaurant&background=FF6B6B&color=fff&size=128'} alt="Shop Logo" />
+						<img src={formData.shop_name ? `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.shop_name)}&background=FF6B6B&color=fff&size=128` : 'https://ui-avatars.com/api/?name=Restaurant&background=FF6B6B&color=fff&size=128'} alt="Shop Logo" />
 					</div>
 					<div className="profile-basics">
 						<h1>{formData.shop_name || 'Restaurant Name'}</h1>
@@ -319,12 +319,12 @@ export default function Profile() {
 										<div className="toggle-switch">
 											<input
 												type="checkbox"
-													checked={isShopOpen(formData)}
+												checked={isShopOpen(formData)}
 												disabled={true}
 											/>
 											<span className="slider round"></span>
 										</div>
-											<span className="status-text">{isShopOpen(formData) ? 'Open for Orders' : 'Temporarily Closed'}</span>
+										<span className="status-text">{isShopOpen(formData) ? 'Open for Orders' : 'Temporarily Closed'}</span>
 									</label>
 									<p style={{ fontSize: '0.8rem', color: '#666', marginTop: '5px' }}>Shop status is controlled from the top Admin Panel toggle.</p>
 								</div>

@@ -8,7 +8,7 @@ const LandingPage = () => {
     return (
         <div className="landing-container">
             <nav className="landing-nav">
-                <div className="brand">BazarSe Seller</div>
+                <div className="brand">Doorriing Seller</div>
                 <div className="nav-links">
                     <Link to="/login" className="nav-btn login-link">Log In</Link>
                     <Link to="/login" className="nav-btn signup-link">Join Now</Link>
@@ -19,11 +19,11 @@ const LandingPage = () => {
                 <div className="hero-content">
                     <h1 className="hero-title">
                         Grow Your Business with <br />
-                        <span>BazarSe Partner</span>
+                        <span>Doorriing Partner</span>
                     </h1>
                     <p className="hero-subtitle">
                         The easiest way to manage your shop, orders, and products online.
-                        Join thousands of sellers who trust BazarSe for their daily operations.
+                        Join thousands of sellers who trust Doorriing for their daily operations.
                     </p>
 
                     <div className="cta-group">

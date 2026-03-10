@@ -248,11 +248,12 @@
 }
 
 input:checked+.slider {
-	background-color: rgb(109, 29, 29);
+	background-color: #6d1d1d;
+	/* Dark Red */
 }
 
 input:focus+.slider {
-	box-shadow: 0 0 1px rgb(109, 29, 29);
+	box-shadow: 0 0 1px #6d1d1d;
 }
 
 input:checked+.slider:before {
@@ -643,7 +644,7 @@ input:checked+.slider:before {
 }
 
 .switch-modern input:checked+.slider-modern {
-	background-color: rgb(109, 29, 29);
+	background-color: #6d1d1d;
 }
 
 .switch-modern input:checked+.slider-modern:before {

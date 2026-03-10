@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import './Dashboard.css';
 import groceryService from '../../services/groceryService';
 import walletService from '../../services/walletService';
+import Loader from '../../components/common/Loader';
 
 function Dashboard() {
 	const [stats, setStats] = useState({
@@ -23,22 +24,16 @@ function Dashboard() {
 	useEffect(() => {
 		const fetchDashboardData = async () => {
 			try {
-				const [statsData, ordersData] = await Promise.all([
-					groceryService.getDashboardStats(), // Map to orderStats or summary
-					groceryService.getOrders({ limit: 5 })
+				// Run all 3 requests in parallel — no waterfall delay
+				const [statsData, ordersData, statusCounts, wallet] = await Promise.all([
+					groceryService.getDashboardStats(),
+					groceryService.getOrders({ limit: 5 }),
+					groceryService.getOrderStats(),
+					walletService.getWalletSummary()
 				]);
 
-				// Fetch wallet data
-				const wallet = await walletService.getWalletSummary();
 				setWalletData(wallet);
 
-				// transform stats if needed. groceryService.getDashboardStats maps to analytics summary
-				// actually getOrderStats is better for "active" counts.
-				// Let's call getOrderStats as well for real-time counts.
-				// Re-calling to get real-time status counts
-				const statusCounts = await groceryService.getOrderStats();
-
-				// Merge data - use statusCounts for real-time order counts
 				setStats({
 					pending: statusCounts.pending || 0,
 					confirmed: statusCounts.confirmed || 0,
@@ -62,6 +57,11 @@ function Dashboard() {
 		fetchDashboardData();
 	}, []);
 
+	if (loading) {
+		return <Loader variant="fullscreen" message="Loading dashboard..." />;
+	}
+
+
 	const activeOrdersCount = (stats.pending || 0) + (stats.confirmed || 0) + (stats.preparing || 0) + (stats.outForDelivery || 0);
 
 	return (
@@ -73,7 +73,7 @@ function Dashboard() {
 						<p>Welcome back! Here's your daily overview.</p>
 					</div>
 					<div className="header-actions">
-						<Link to="/grocery/products" className="manage-orders-btn">Manage Orders</Link>
+						<Link to="/grocery/products" className="manage-products-btn">Manage products</Link>
 						<span className="date-badge">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
 					</div>
 				</header>

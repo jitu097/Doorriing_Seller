@@ -13,6 +13,9 @@ const RestaurantLayout = () => {
                 <main className="layout-content">
                     <Outlet />
                 </main>
+                <footer className="app-footer">
+                    © 2026 All Rights Reserved to Doorriing.com
+                </footer>
             </div>
         </div>
     );

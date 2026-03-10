@@ -20,9 +20,9 @@ const Loader = ({ size = 'medium', message = 'Loading...', variant = 'default' }
 
                 {/* Scooter animation */}
                 <div className="loader-scooter">
-                    <img 
-                        src="/logo.png" 
-                        alt="Loading" 
+                    <img
+                        src="/Doorriing.png"
+                        alt="Loading"
                         className="scooter-image"
                         onError={(e) => {
                             // Fallback if image not found

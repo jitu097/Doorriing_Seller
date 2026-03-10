@@ -6,6 +6,7 @@ import GroceryProductCard from './GroceryProductCard';
 import GroceryProductForm from './GroceryProductForm';
 import GroceryCategoryManager from './GroceryCategoryManager';
 import subcategoryService from '../../services/subcategoryService';
+import Loader from '../../components/common/Loader';
 
 const Products = () => {
 	const [categories, setCategories] = useState([]);
@@ -319,7 +320,7 @@ const Products = () => {
 
 	const groupedData = getGroupedItems();
 
-	if (loading) return <div className="loading-screen">Loading Marketplace...</div>;
+	if (loading) return <Loader message="Loading products..." />;
 	if (error) return <div className="error-screen">Error: {error}</div>;
 
 	return (

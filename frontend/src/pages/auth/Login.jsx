@@ -121,7 +121,7 @@ const Login = () => {
                 </button>
 
                 <p style={{ marginTop: '24px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                    New to BazarSe? <Link to="/register" style={{ color: 'var(--primary-orange)', fontWeight: '600' }}>Register here</Link>
+                    New to Doorriing? <Link to="/register" style={{ color: 'var(--primary-orange)', fontWeight: '600' }}>Register here</Link>
                 </p>
             </div>
         </div>

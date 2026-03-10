@@ -136,7 +136,7 @@ const Profile = () => {
         <>
             <div className="admin-container">
                 <div className="profile-header-card">
-                    <div className="profile-cover" style={{ 
+                    <div className="profile-cover" style={{
                         backgroundImage: previewImage || shopData.imageUrl ? `url(${previewImage || shopData.imageUrl})` : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center'

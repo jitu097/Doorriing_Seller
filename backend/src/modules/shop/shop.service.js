@@ -89,7 +89,11 @@ const createShop = async (sellerId, shopData, imageFile = null) => {
             status: 'open',
             is_open: true,
             is_active: true,
-            is_verified: false
+            is_verified: false,
+            // Terms & Conditions consent (recorded at registration)
+            terms_accepted: shopData.termsAccepted === 'true' || shopData.termsAccepted === true,
+            terms_accepted_at: new Date().toISOString(),
+            terms_version: shopData.terms_version || 'v1'
         })
         .select()
         .single();
@@ -108,7 +112,7 @@ const createShop = async (sellerId, shopData, imageFile = null) => {
         await notificationService.createNotification(
             shop.id,
             'Seller Account Created',
-            `Welcome aboard! Your shop ${shop.shop_name || shop.name || ''} is now live on BazarSe.`,
+            `Welcome aboard! Your shop ${shop.shop_name || shop.name || ''} is now live on Doorriing.`,
             'seller_onboarding',
             shop.id,
             'shop'

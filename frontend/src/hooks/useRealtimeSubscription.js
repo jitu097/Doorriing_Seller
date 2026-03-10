@@ -46,13 +46,13 @@ export const useRealtimeSubscription = (tableName, onRowChange, providedShopId =
         if (!tableName || !shopId) return;
 
         const debouncedCallback = debounce((payload) => {
-            console.log(`Realtime update received on table: ${tableName} for shop ${shopId}`);
             if (callbackRef.current) {
                 callbackRef.current(payload);
             }
         }, debounceMs);
 
-        const channelName = `public:${tableName}:shop_id=eq.${shopId}`;
+        const subscriptionId = Math.random().toString(36).substring(2, 10);
+        const channelName = `public:${tableName}:shop_id=eq.${shopId}-${subscriptionId}`;
 
         const channel = supabase.channel(channelName)
             .on(
@@ -70,11 +70,7 @@ export const useRealtimeSubscription = (tableName, onRowChange, providedShopId =
                 { event: 'DELETE', schema: 'public', table: tableName, filter: `shop_id=eq.${shopId}` },
                 debouncedCallback
             )
-            .subscribe((status) => {
-                if (status === 'SUBSCRIBED') {
-                    console.log(`Successfully subscribed to realtime channel: ${channelName}`);
-                }
-            });
+            .subscribe();
 
         return () => {
             supabase.removeChannel(channel);

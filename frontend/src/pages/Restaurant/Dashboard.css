@@ -1,5 +1,6 @@
 /* ===== GLOBAL SAFETY ===== */
-html, body {
+html,
+body {
   width: 100%;
   overflow-x: hidden;
 }
@@ -91,6 +92,12 @@ html, body {
 }
 
 /* ===== PANELS ===== */
+.dashboard-content-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
 .dashboard-panel {
   background: #fce8d3;
   border-radius: 14px;
@@ -243,8 +250,8 @@ html, body {
     flex-wrap: wrap;
   }
 
-    .booking-meta {
-      flex-direction: column;
-      gap: 4px;
-    }
+  .booking-meta {
+    flex-direction: column;
+    gap: 4px;
   }
+}

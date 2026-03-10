@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import notificationService from '../../services/notificationService';
+import { useRealtimeSubscription } from '../../hooks/useRealtimeSubscription';
 import './NotificationBell.css';
 
 const NotificationBell = () => {
@@ -38,9 +39,16 @@ const NotificationBell = () => {
         }
     };
 
+    // Add realtime subscription for notifications
+    useRealtimeSubscription('notifications', () => {
+        setTimeout(() => {
+            fetchUnreadCount();
+            if (isOpen) fetchNotifications();
+        }, 0);
+    });
+
     useEffect(() => {
         fetchUnreadCount();
-        const interval = setInterval(fetchUnreadCount, 30000); // Poll every 30s
 
         // Close dropdown when clicking outside
         const handleClickOutside = (event) => {
@@ -51,7 +59,6 @@ const NotificationBell = () => {
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => {
-            clearInterval(interval);
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);

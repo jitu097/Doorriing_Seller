@@ -185,7 +185,7 @@
 }
 
 .availability-toggle input[type="checkbox"]:checked {
-    background: rgb(109, 29, 29);
+    background: #6d1d1d;
 }
 
 .availability-toggle input[type="checkbox"]::before {
@@ -221,15 +221,15 @@
     .grocery-card-imgbox {
         height: 100px;
     }
-    
+
     .grocery-card-title {
         font-size: 1rem;
     }
-    
+
     .grocery-card-price {
         font-size: 1.3rem;
     }
-    
+
     .action-btn {
         padding: 8px 12px;
         font-size: 0.85rem;

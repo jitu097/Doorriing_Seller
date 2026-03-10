@@ -1,0 +1,130 @@
+/* ─────────────────────────────────────────────────────
+   Terms & Conditions Page
+   ───────────────────────────────────────────────────── */
+
+.terms-page {
+    min-height: 100vh;
+    background-color: #f8f5f0;
+    padding: 0 16px 48px;
+}
+
+.terms-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Header */
+.terms-header {
+    text-align: center;
+    padding: 32px 0 24px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    margin-bottom: 32px;
+}
+
+.terms-back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #f97316;
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+
+.terms-back-link:hover {
+    opacity: 0.75;
+}
+
+.terms-logo-img {
+    height: 44px;
+    object-fit: contain;
+    margin-bottom: 16px;
+}
+
+.terms-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #111;
+    margin: 0 0 8px;
+}
+
+.terms-subtitle {
+    font-size: 13px;
+    color: #888;
+    margin: 0;
+}
+
+/* Body */
+.terms-body {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.terms-section {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px 28px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.terms-section h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111;
+    margin: 0 0 12px;
+}
+
+.terms-section p {
+    font-size: 14px;
+    line-height: 1.75;
+    color: #444;
+    margin: 0 0 10px;
+}
+
+.terms-section p:last-child {
+    margin-bottom: 0;
+}
+
+.terms-section ul {
+    margin: 8px 0 0 20px;
+    padding: 0;
+}
+
+.terms-section li {
+    font-size: 14px;
+    line-height: 1.75;
+    color: #444;
+    margin-bottom: 6px;
+}
+
+.terms-email-link {
+    color: #f97316;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.terms-email-link:hover {
+    text-decoration: underline;
+}
+
+/* Footer */
+.terms-footer {
+    text-align: center;
+    font-size: 13px;
+    color: #888;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    .terms-section {
+        padding: 18px 16px;
+    }
+
+    .terms-title {
+        font-size: 22px;
+    }
+}

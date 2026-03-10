@@ -76,7 +76,9 @@ export default function Navbar() {
     <>
       <nav className="rest-navbar">
         <div className="rest-navbar-left">
-          <img src="/logo.png" className="rest-navbar-logo" alt="logo" />
+          <Link to="/restaurant/dashboard">
+            <img src="/Doorriing.png" className="rest-navbar-logo" alt="logo" />
+          </Link>
 
           {!isMobile && (
             <button

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { bookingService } from '../../services/bookingService';
 import { shopService } from '../../services/shopService';
+import { useRealtimeSubscription } from '../../hooks/useRealtimeSubscription';
 import './Booking.css';
 
 function Booking() {
@@ -12,6 +13,8 @@ function Booking() {
 	const [totalPages, setTotalPages] = useState(1);
 	const [isBookingEnabled, setIsBookingEnabled] = useState(false);
 	const [bookingToggleLoading, setBookingToggleLoading] = useState(false);
+
+	useRealtimeSubscription('bookings', () => { setTimeout(fetchBookings, 0); });
 
 	useEffect(() => {
 		fetchBookings();

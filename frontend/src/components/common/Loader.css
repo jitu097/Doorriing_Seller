@@ -16,7 +16,8 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(252, 232, 211, 0.95);
+    /* Dashboard beige */
     backdrop-filter: blur(8px);
     z-index: 9999;
 }
@@ -42,18 +43,18 @@
 }
 
 .loader-small {
-    width: 80px;
-    height: 60px;
+    width: 300px;
+    height: 150px;
 }
 
 .loader-medium {
-    width: 120px;
-    height: 90px;
+    width: 450px;
+    height: 200px;
 }
 
 .loader-large {
-    width: 160px;
-    height: 120px;
+    width: 600px;
+    height: 250px;
 }
 
 /* ===========================
@@ -100,12 +101,15 @@
         left: -30%;
         opacity: 0;
     }
+
     20% {
         opacity: 1;
     }
+
     80% {
         opacity: 1;
     }
+
     100% {
         left: 100%;
         opacity: 0;
@@ -129,15 +133,15 @@
 }
 
 .loader-small .scooter-image {
-    max-width: 60px;
+    max-width: 300px;
 }
 
 .loader-medium .scooter-image {
-    max-width: 90px;
+    max-width: 450px;
 }
 
 .loader-large .scooter-image {
-    max-width: 120px;
+    max-width: 600px;
 }
 
 .scooter-fallback {
@@ -154,9 +158,12 @@
 }
 
 @keyframes scooterBounce {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateY(0) rotate(-2deg);
     }
+
     50% {
         transform: translateY(-8px) rotate(-2deg);
     }
@@ -179,11 +186,10 @@
 .speed-line {
     display: block;
     height: 2px;
-    background: linear-gradient(90deg, 
-        transparent 0%, 
-        rgba(255, 107, 53, 0.6) 50%, 
-        transparent 100%
-    );
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 107, 53, 0.6) 50%,
+            transparent 100%);
     border-radius: 2px;
     animation: speedLineMove 0.6s ease-out infinite;
 }
@@ -208,12 +214,15 @@
         transform: translateX(0) scaleX(1);
         opacity: 0;
     }
+
     20% {
         opacity: 1;
     }
+
     80% {
         opacity: 0.8;
     }
+
     100% {
         transform: translateX(-30px) scaleX(0.5);
         opacity: 0;
@@ -232,18 +241,21 @@
     animation: messageFade 1.5s ease-in-out infinite;
 }
 
-.loader-small + .loader-message {
+.loader-small+.loader-message {
     font-size: 0.875rem;
 }
 
-.loader-large + .loader-message {
+.loader-large+.loader-message {
     font-size: 1.125rem;
 }
 
 @keyframes messageFade {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 0.6;
     }
+
     50% {
         opacity: 1;
     }
@@ -259,8 +271,8 @@
     }
 
     .loader-large {
-        width: 120px;
-        height: 90px;
+        width: 450px;
+        height: 200px;
     }
 
     .loader-message {
@@ -272,6 +284,7 @@
    Accessibility & Performance
    =========================== */
 @media (prefers-reduced-motion: reduce) {
+
     .loader-scooter,
     .road-line,
     .speed-line,
@@ -287,18 +300,19 @@
 /* Dark mode support (optional) */
 @media (prefers-color-scheme: dark) {
     .loader-container.fullscreen {
-        background: rgba(18, 18, 18, 0.95);
+        background: rgba(252, 232, 211, 0.95);
+        /* Keep beige in dark mode */
     }
 
     .loader-road {
-        background: linear-gradient(90deg, #2a2a2a 0%, #1a1a1a 100%);
+        background: linear-gradient(90deg, #e0e0e0 0%, #f5f5f5 100%);
     }
 
     .road-line {
-        background: #4a4a4a;
+        background: #bdbdbd;
     }
 
     .loader-message {
-        color: #e0e0e0;
+        color: #424242;
     }
 }

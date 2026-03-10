@@ -5,19 +5,19 @@ const { validateDateFormat } = require('../../utils/validators');
 const createBooking = async (req, res, next) => {
     try {
         const { shop_id, customer_name, customer_phone, number_of_guests, booking_date, booking_time } = req.body;
-        
+
         // Validate required fields
         if (!shop_id || !customer_name || !customer_phone || !number_of_guests || !booking_date || !booking_time) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
-        
+
         validateDateFormat(booking_date);
-        
+
         // Ensure table booking is available
         if (req.shop.is_booking_enabled === false) {
             return res.status(400).json({ error: 'Table booking is currently unavailable for this restaurant' });
         }
-        
+
         const booking = await bookingService.createBooking(shop_id, {
             customer_name,
             customer_phone,
@@ -25,7 +25,7 @@ const createBooking = async (req, res, next) => {
             booking_date,
             booking_time
         });
-        
+
         successResponse(res, booking, 'Booking created successfully', 201);
     } catch (error) {
         next(error);
@@ -35,13 +35,11 @@ const createBooking = async (req, res, next) => {
 const getBookings = async (req, res, next) => {
     try {
         const { page, limit, status, date } = req.query;
-        
-        console.log('🎯 Get Bookings Request - Shop:', req.shop?.name, 'ID:', req.shop?.id);
-        
+
         if (date) {
             validateDateFormat(date);
         }
-        
+
         const result = await bookingService.getBookings(req.shop.id, page, limit, status, date);
         successResponse(res, result);
     } catch (error) {
@@ -54,7 +52,7 @@ const updateStatus = async (req, res, next) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-        
+
         const booking = await bookingService.updateBookingStatus(id, req.shop.id, status);
         successResponse(res, booking, 'Booking status updated');
     } catch (error) {

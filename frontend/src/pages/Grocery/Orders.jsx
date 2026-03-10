@@ -1,8 +1,8 @@
 
-
 import React, { useState, useEffect } from 'react';
 import groceryService from '../../services/groceryService';
 import { useRealtimeSubscription } from '../../hooks/useRealtimeSubscription';
+import Loader from '../../components/common/Loader';
 import './Orders.css';
 
 const orderTabs = [
@@ -35,6 +35,12 @@ export default function Orders() {
 
 	useEffect(() => {
 		fetchOrders();
+
+		const forceRefresh = () => fetchOrders();
+		window.addEventListener('order-alert-action', forceRefresh);
+		return () => {
+			window.removeEventListener('order-alert-action', forceRefresh);
+		};
 		// eslint-disable-next-line
 	}, []);
 
@@ -107,7 +113,7 @@ export default function Orders() {
 
 				{/* CONTENT */}
 				{loading ? (
-					<div className="orders-loading">Loading orders…</div>
+					<Loader message="Loading orders..." />
 				) : filteredOrders.length === 0 ? (
 					<div className="orders-empty">
 						<p>No orders found</p>

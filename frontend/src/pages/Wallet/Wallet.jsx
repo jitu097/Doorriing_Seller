@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { walletService } from '../../services/walletService';
 import { payoutService } from '../../services/payoutService';
+import { useRealtimeSubscription } from '../../hooks/useRealtimeSubscription';
 import Loader from '../../components/common/Loader';
 import WithdrawModal from '../../components/Wallet/WithdrawModal';
 import './Wallet.css';
@@ -22,6 +23,9 @@ const WalletPage = () => {
     const [activeTab, setActiveTab] = useState('earnings'); // 'earnings' or 'withdrawals'
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
     const [showDisclaimer, setShowDisclaimer] = useState(false);
+
+    useRealtimeSubscription('seller_wallets', () => { setTimeout(fetchSummaryData, 0); });
+    useRealtimeSubscription('seller_wallet_transactions', () => { setTimeout(fetchEarningsHistory, 0); });
 
     useEffect(() => {
         fetchSummaryData();

@@ -1,5 +1,6 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import './GroceryProductForm.css';
+import { compressImage } from '../../utils/imageCompressor';
 
 const GroceryProductForm = ({
     isOpen,
@@ -20,6 +21,24 @@ const GroceryProductForm = ({
         if (e.target.className === 'product-form-overlay') {
             onClose();
         }
+    };
+
+    // Compress image before setting it in parent state
+    const handleImageChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const compressed = await compressImage(file);
+
+        // Create a synthetic event-like object to forward to the parent's onChange
+        const syntheticEvent = {
+            target: {
+                name: 'image',
+                type: 'file',
+                files: [compressed]
+            }
+        };
+        onChange(syntheticEvent);
     };
 
     return (
@@ -152,7 +171,7 @@ const GroceryProductForm = ({
                                 type="file"
                                 name="image"
                                 accept="image/*"
-                                onChange={onChange}
+                                onChange={handleImageChange}
                                 className="file-input"
                                 id="file-upload-input"
                             />

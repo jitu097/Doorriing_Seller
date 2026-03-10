@@ -1,4 +1,5 @@
 import api from './api';
+import imageCompression from 'browser-image-compression';
 
 /**
  * Grocery Service - Handles all grocery-related API calls
@@ -108,8 +109,18 @@ export const toggleItemAvailability = async (itemId, is_available) => {
 };
 
 export const uploadItemImage = async (itemId, imageFile) => {
+    let fileToUpload = imageFile;
+    if (imageFile instanceof File && imageFile.type.startsWith('image/')) {
+        try {
+            const options = { maxSizeMB: 1, maxWidthOrHeight: 1024, useWebWorker: true };
+            fileToUpload = await imageCompression(imageFile, options);
+        } catch (error) {
+            console.error('Image compression failed:', error);
+        }
+    }
+
     const formData = new FormData();
-    formData.append('image', imageFile);
+    formData.append('image', fileToUpload);
     return api(`/grocery/items/${itemId}/image`, {
         method: 'POST',
         body: formData

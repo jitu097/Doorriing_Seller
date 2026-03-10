@@ -8,7 +8,7 @@ const getDailyAnalytics = async (shopId, startDate, endDate) => {
 
     let query = supabase
         .from('analytics_daily')
-        .select('date, total_orders, total_revenue, completed_orders, cancelled_orders')
+        .select('date, total_orders, total_revenue, completed_orders')
         .eq('shop_id', shopId)
         .order('date', { ascending: false });
 
@@ -30,13 +30,13 @@ const getSummary = async (shopId, days = 7) => {
 
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
-    const dateStr = startDate.toISOString().split('T')[0];
+    const startIso = startDate.toISOString();
 
-    const { data, error } = await supabase
-        .from('analytics_daily')
-        .select('total_orders, total_revenue, completed_orders')
+    const { data: orders, error } = await supabase
+        .from('orders')
+        .select('status, total_amount, created_at')
         .eq('shop_id', shopId)
-        .gte('date', dateStr);
+        .gte('created_at', startIso);
 
     if (error) throw error;
 
@@ -44,21 +44,32 @@ const getSummary = async (shopId, days = 7) => {
         totalOrders: 0,
         totalRevenue: 0,
         completedOrders: 0,
+        cancelledOrders: 0,
+        pendingOrders: 0,
         averageOrderValue: 0
     };
 
-    let periodRevenue = 0;
+    const normalizedOrders = orders || [];
+    let completedRevenue = 0;
 
-    if (data && data.length > 0) {
-        data.forEach(day => {
-            summary.totalOrders += day.total_orders || 0;
-            periodRevenue += parseFloat(day.total_revenue || 0);
-            summary.completedOrders += day.completed_orders || 0;
-        });
+    summary.totalOrders = normalizedOrders.length;
 
-        if (periodRevenue > 0 && summary.completedOrders > 0) {
-            summary.averageOrderValue = parseFloat((periodRevenue / summary.completedOrders).toFixed(2));
+    normalizedOrders.forEach(order => {
+        const status = (order.status || '').toLowerCase();
+        const amount = Number(order.total_amount) || 0;
+
+        if (status === 'delivered' || status === 'completed') {
+            summary.completedOrders += 1;
+            completedRevenue += amount;
+        } else if (status === 'cancelled' || status === 'canceled') {
+            summary.cancelledOrders += 1;
+        } else {
+            summary.pendingOrders += 1;
         }
+    });
+
+    if (summary.completedOrders > 0 && completedRevenue > 0) {
+        summary.averageOrderValue = parseFloat((completedRevenue / summary.completedOrders).toFixed(2));
     }
 
     const { data: walletRow, error: walletError } = await supabase
@@ -70,10 +81,20 @@ const getSummary = async (shopId, days = 7) => {
     if (walletError) throw walletError;
 
     const walletEarnings = walletRow?.total_earnings;
-    summary.totalRevenue = walletEarnings != null ? Number(walletEarnings) : periodRevenue;
+    summary.totalRevenue = walletEarnings != null ? Number(walletEarnings) : completedRevenue;
 
-    cache.set(cacheKey, summary, 120); // Cache for 2 minutes
-    return summary;
+    const result = {
+        ...summary,
+        total_orders: summary.totalOrders,
+        total_revenue: summary.totalRevenue,
+        completed_orders: summary.completedOrders,
+        cancelled_orders: summary.cancelledOrders,
+        pending_orders: summary.pendingOrders,
+        average_order_value: summary.averageOrderValue
+    };
+
+    cache.set(cacheKey, result, 120); // Cache for 2 minutes
+    return result;
 };
 
 const getReports = async (shopId, timeRange) => {

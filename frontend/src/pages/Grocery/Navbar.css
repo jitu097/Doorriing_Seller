@@ -1,6 +1,6 @@
-
 /* GLOBAL SAFETY */
-html, body {
+html,
+body {
   width: 100%;
   overflow-x: hidden;
 }
@@ -18,7 +18,7 @@ html, body {
   justify-content: space-between;
   padding: 0 16px;
   z-index: 1200;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .rest-navbar-spacer {
@@ -32,10 +32,12 @@ html, body {
 }
 
 .rest-navbar-logo {
-  width: 48px;
-  height: 48px;
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  /* Allow it to slightly break out of the 72px navbar height naturally */
+  margin: -10px 0;
   border-radius: 50%;
-  background: white;
 }
 
 /* CENTER LINKS */
@@ -81,15 +83,22 @@ html, body {
 }
 
 /* DOTS */
-.dot-green, .dot-red {
+.dot-green,
+.dot-red {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   display: inline-block;
   margin-right: 6px;
 }
-.dot-green { background: #22c55e; }
-.dot-red { background: #dc2626; }
+
+.dot-green {
+  background: #22c55e;
+}
+
+.dot-red {
+  background: #dc2626;
+}
 
 /* HAMBURGER */
 .hamburger-btn {
@@ -111,7 +120,7 @@ html, body {
 .sidebar-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   opacity: 0;
   pointer-events: none;
   transition: 0.3s;
@@ -159,5 +168,9 @@ html, body {
   .rest-navbar-link {
     font-size: 0.85rem;
     padding: 6px 10px;
+  }
+
+  .rest-navbar-logo {
+    margin-left: -12px;
   }
 }
