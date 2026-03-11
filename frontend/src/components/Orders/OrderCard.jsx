@@ -1,0 +1,200 @@
+import React, { memo, useMemo } from 'react';
+import './OrderCard.css';
+
+const formatCurrency = (value) => {
+  const amount = Number(value);
+  const safeValue = Number.isFinite(amount) ? amount : 0;
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0
+  }).format(safeValue);
+};
+
+const formatDateTime = (value) => {
+  if (!value) return '--';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '--';
+  return date.toLocaleString();
+};
+
+const statusClassName = (statusMeta, status) => {
+  const config = statusMeta[status];
+  const color = config?.color || '#475569';
+  return {
+    label: config?.label || status.replace(/_/g, ' '),
+    style: { backgroundColor: `${color}1a`, color }
+  };
+};
+
+const toNumber = (value) => {
+  if (value === null || value === undefined) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const resolveItemPrice = (item = {}) => {
+  const quantity = Number(item.quantity) || 1;
+  const lineCandidates = [
+    toNumber(item.total_price),
+    toNumber(item.subtotal),
+    toNumber(item.amount),
+    toNumber(item.line_total),
+    toNumber(item.price_total)
+  ];
+
+  const unitCandidates = [
+    toNumber(item.price),
+    toNumber(item.unit_price),
+    toNumber(item.rate),
+    toNumber(item.base_price)
+  ];
+
+  for (const value of lineCandidates) {
+    if (value !== null) return value;
+  }
+
+  for (const value of unitCandidates) {
+    if (value !== null) return value * quantity;
+  }
+
+  if (item.price_details && typeof item.price_details === 'object') {
+    const details = item.price_details;
+    const detailLine = toNumber(details.total ?? details.amount);
+    if (detailLine !== null) return detailLine;
+    const detailUnit = toNumber(details.unit ?? details.price);
+    if (detailUnit !== null) return detailUnit * quantity;
+  }
+
+  return null;
+};
+
+const OrderCard = ({
+  order,
+  statusMeta,
+  actionState,
+  onAccept,
+  onReject,
+  onStartPreparing,
+  onAssignDriver,
+  onMarkReady
+}) => {
+  const items = useMemo(() => (Array.isArray(order.items) ? order.items : []), [order.items]);
+  const { label, style } = useMemo(
+    () => statusClassName(statusMeta, order.status || 'pending'),
+    [statusMeta, order.status]
+  );
+  const isActionLoading = actionState?.orderId === order.id;
+  const disabled = Boolean(isActionLoading);
+  const orderTotalDisplay = useMemo(() => formatCurrency(order.total_amount), [order.total_amount]);
+  const orderedAtDisplay = useMemo(() => formatDateTime(order.created_at), [order.created_at]);
+  const preparedItems = useMemo(
+    () => items.map((item, index) => ({
+      key: `${order.id}-item-${index}`,
+      name: item.name,
+      quantity: item.quantity,
+      priceAmount: resolveItemPrice(item)
+    })),
+    [items, order.id]
+  );
+
+  return (
+    <article className="seller-order-card">
+      <header className="seller-order-card__header">
+        <div>
+          <p className="seller-order-card__label">Order</p>
+          <h3>#{order.order_number || order.id}</h3>
+        </div>
+        <span className="seller-order-card__status" style={style}>{label}</span>
+      </header>
+
+      <section className="seller-order-card__summary">
+        <p className="seller-order-card__label">Order Total</p>
+        <strong>{orderTotalDisplay}</strong>
+      </section>
+
+      <section className="seller-order-card__items">
+        <p className="seller-order-card__label">Items</p>
+        <ul>
+          {preparedItems.length ? (
+            preparedItems.map(item => (
+              <li key={item.key}>
+                <span>{item.name}</span>
+                <span className="qty">×{item.quantity}</span>
+                <span className="price">{item.priceAmount !== null ? formatCurrency(item.priceAmount) : '--'}</span>
+              </li>
+            ))
+          ) : (
+            <li className="muted">No items available</li>
+          )}
+        </ul>
+      </section>
+
+      {order.driver && (
+        <section className="seller-order-card__driver">
+          <div>
+            <p className="seller-order-card__label">Assigned Driver</p>
+            <strong>{order.driver.name}</strong>
+            {order.driver.phone && <span>{order.driver.phone}</span>}
+          </div>
+          {order.driver.phone && (
+            <a href={`tel:${order.driver.phone}`} className="seller-order-card__driver-call">
+              Call {order.driver.phone}
+            </a>
+          )}
+        </section>
+      )}
+
+      <section className="seller-order-card__actions">
+        {order.status === 'pending' && (
+          <>
+            <button className="solid success" disabled={disabled} onClick={() => onAccept(order.id)}>
+              {isActionLoading && actionState?.type === 'accept' ? 'Accepting…' : 'Accept Order'}
+            </button>
+            <button className="solid danger" disabled={disabled} onClick={() => onReject(order.id)}>
+              {isActionLoading && actionState?.type === 'reject' ? 'Rejecting…' : 'Reject'}
+            </button>
+          </>
+        )}
+
+        {order.status === 'accepted' && (
+          <button className="solid primary" disabled={disabled} onClick={() => onStartPreparing(order.id)}>
+            {isActionLoading && actionState?.type === 'prepare' ? 'Starting…' : 'Start Preparing'}
+          </button>
+        )}
+
+        {order.status === 'preparing' && (
+          <>
+            {!order.driver && (
+              <button className="outline" disabled={disabled} onClick={() => onAssignDriver(order.id)}>
+                Assign Driver
+              </button>
+            )}
+            <button className="solid warning" disabled={disabled} onClick={() => onMarkReady(order.id)}>
+              {isActionLoading && actionState?.type === 'ready' ? 'Updating…' : 'Mark Ready'}
+            </button>
+          </>
+        )}
+
+        {['ready_for_pickup', 'picked_up', 'out_for_delivery', 'delivered'].includes(order.status) && !order.driver && (
+          <p className="seller-order-card__helper muted">Assign a driver to track delivery progress.</p>
+        )}
+      </section>
+
+      <footer className="seller-order-card__footer">
+        Ordered at {orderedAtDisplay}
+      </footer>
+    </article>
+  );
+};
+
+const arePropsEqual = (prev, next) => {
+  if (prev.order.id !== next.order.id) return false;
+  if (prev.order.status !== next.order.status) return false;
+  if ((prev.order.driver?.id || null) !== (next.order.driver?.id || null)) return false;
+  if (prev.actionState?.orderId !== next.actionState?.orderId) return false;
+  if (prev.actionState?.type !== next.actionState?.type) return false;
+  return prev.order.total_amount === next.order.total_amount;
+};
+
+export default memo(OrderCard, arePropsEqual);

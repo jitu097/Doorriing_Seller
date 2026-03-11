@@ -17,8 +17,9 @@ app.use(helmet());
 app.use(compression());
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
+const allowedOrigins = [process.env.CORS_ORIGIN, 'http://localhost:5173'].filter(Boolean);
 const corsOptions = {
-    origin: process.env.CORS_ORIGIN || '*',
+    origin: allowedOrigins.length ? allowedOrigins : '*',
     credentials: true,
     optionsSuccessStatus: 200
 };

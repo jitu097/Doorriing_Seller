@@ -58,13 +58,16 @@ const validatePagination = (page, limit, maxLimit = 100) => {
 };
 
 const validateOrderStatus = (status) => {
+    const normalized = status?.toLowerCase?.();
     const validStatuses = [
-        'pending', 'accepted', 'rejected', 'confirmed',
-        'preparing', 'packing', 'ready', 'out_for_delivery',
-        'delivered', 'cancelled', 'expired'
+        'pending', 'accepted', 'preparing', 'ready_for_pickup',
+        'picked_up', 'out_for_delivery', 'delivered', 'cancelled',
+        'rejected', 'expired'
     ];
-    if (!status || !validStatuses.includes(status.toLowerCase())) {
-        throw new BadRequestError(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+    const legacyStatuses = ['confirmed', 'packing', 'ready', 'outfordelivery'];
+
+    if (!normalized || (!validStatuses.includes(normalized) && !legacyStatuses.includes(normalized))) {
+        throw new BadRequestError(`Invalid status. Must be one of: ${[...validStatuses, ...legacyStatuses].join(', ')}`);
     }
 };
 

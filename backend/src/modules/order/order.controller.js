@@ -46,8 +46,38 @@ const updateStatus = async (req, res, next) => {
         const { id } = req.params;
         const { status } = req.body;
 
-        const order = await orderService.updateOrderStatus(id, req.shop.id, status, req.shop.business_type);
+        const order = await orderService.updateOrderStatus(id, req.shop.id, status, 'seller');
         successResponse(res, order, 'Order status updated successfully');
+    } catch (error) {
+        next(error);
+    }
+};
+
+const getActiveDeliveryPartners = async (req, res, next) => {
+    try {
+        const partners = await orderService.getActiveDeliveryPartners();
+        successResponse(res, partners);
+    } catch (error) {
+        next(error);
+    }
+};
+
+const assignDriver = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { delivery_partner_id } = req.body;
+        const order = await orderService.assignDriver(id, req.shop.id, delivery_partner_id);
+        successResponse(res, order, 'Driver assigned successfully');
+    } catch (error) {
+        next(error);
+    }
+};
+
+const markReady = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const order = await orderService.markReadyForPickup(id, req.shop.id);
+        successResponse(res, order, 'Order marked ready for pickup');
     } catch (error) {
         next(error);
     }
@@ -68,5 +98,8 @@ module.exports = {
     acceptOrder,
     rejectOrder,
     updateStatus,
+    getActiveDeliveryPartners,
+    assignDriver,
+    markReady,
     getStats
 };

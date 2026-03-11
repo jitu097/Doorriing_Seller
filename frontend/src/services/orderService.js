@@ -11,10 +11,14 @@ import api from './api';
  */
 export const getOrders = async (filters = {}) => {
   const queryParams = new URLSearchParams();
+  const { status, page = 1, limit = 20, startDate, endDate } = filters;
 
-  if (filters.status) queryParams.append('status', filters.status);
-  if (filters.startDate) queryParams.append('startDate', filters.startDate);
-  if (filters.endDate) queryParams.append('endDate', filters.endDate);
+  queryParams.append('page', page);
+  queryParams.append('limit', limit);
+
+  if (status && status !== 'all') queryParams.append('status', status);
+  if (startDate) queryParams.append('startDate', startDate);
+  if (endDate) queryParams.append('endDate', endDate);
 
   const queryString = queryParams.toString();
   const endpoint = queryString ? `/seller/orders?${queryString}` : '/seller/orders';
@@ -66,6 +70,25 @@ export const updateOrderStatus = async (orderId, status) => {
   });
 };
 
+export const assignDriver = async (orderId, deliveryPartnerId) => {
+  return api(`/seller/orders/${orderId}/assign-driver`, {
+    method: 'POST',
+    body: JSON.stringify({ delivery_partner_id: deliveryPartnerId })
+  });
+};
+
+export const markOrderReady = async (orderId) => {
+  return api(`/seller/orders/${orderId}/ready`, {
+    method: 'POST'
+  });
+};
+
+export const getActiveDeliveryPartners = async () => {
+  return api('/seller/orders/delivery-partners/active', {
+    method: 'GET'
+  });
+};
+
 /**
  * Get today's orders
  * @returns {Promise<Array>} Array of today's orders
@@ -93,6 +116,9 @@ export default {
   acceptOrder,
   rejectOrder,
   updateOrderStatus,
+  assignDriver,
+  markOrderReady,
+  getActiveDeliveryPartners,
   getTodayOrders,
   getOrderStats
 };
