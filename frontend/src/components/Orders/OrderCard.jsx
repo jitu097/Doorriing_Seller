@@ -97,6 +97,7 @@ const OrderCard = ({
     })),
     [items, order.id]
   );
+  const showDriverInfo = Boolean(order.driver && order.status !== 'delivered');
 
   return (
     <article className="seller-order-card">
@@ -130,7 +131,7 @@ const OrderCard = ({
         </ul>
       </section>
 
-      {order.driver && (
+      {showDriverInfo && (
         <section className="seller-order-card__driver">
           <div>
             <p className="seller-order-card__label">Assigned Driver</p>

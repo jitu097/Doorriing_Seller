@@ -16,6 +16,53 @@ const STATUS_FILTER_COMPAT_MAP = {
     out_for_delivery: ['out_for_delivery', 'outfordelivery']
 };
 
+const ORDER_STATUS_FLOW = [
+    'pending',
+    'accepted',
+    'preparing',
+    'ready_for_pickup',
+    'picked_up',
+    'out_for_delivery',
+    'delivered'
+];
+
+const STATUS_PRIORITY_MAP = ORDER_STATUS_FLOW.reduce((acc, status, index) => {
+    acc[status] = index;
+    return acc;
+}, {});
+
+const getStatusRank = (status) => {
+    if (!status) return -1;
+    const normalized = normalizeOrderStatus(status);
+    return STATUS_PRIORITY_MAP[normalized] ?? -1;
+};
+
+const resolveSellerFacingStatus = (orderRecord = {}, assignment = null) => {
+    let resolved = normalizeOrderStatus(orderRecord?.status) || 'pending';
+
+    const candidateStatuses = [];
+
+    if (assignment) {
+        candidateStatuses.push(assignment.status);
+        if (assignment.picked_up_at) candidateStatuses.push('picked_up');
+        if (assignment.delivered_at) candidateStatuses.push('delivered');
+    }
+
+    if (orderRecord?.out_for_delivery_at) candidateStatuses.push('out_for_delivery');
+    if (orderRecord?.delivered_at) candidateStatuses.push('delivered');
+
+    candidateStatuses.forEach(candidate => {
+        if (!candidate) return;
+        const candidateRank = getStatusRank(candidate);
+        const currentRank = getStatusRank(resolved);
+        if (candidateRank > currentRank) {
+            resolved = normalizeOrderStatus(candidate);
+        }
+    });
+
+    return resolved;
+};
+
 const logError = (scope, error, context = {}) => {
     console.error(`[OrderService] ${scope}`, { error: error?.message, ...context });
 };
@@ -89,13 +136,14 @@ const formatItems = (rawItems = []) => rawItems.map(item => {
     };
 });
 
-const formatDeliveryTimeline = (assignment, orderRecord) => {
+const formatDeliveryTimeline = (assignment, orderRecord, derivedStatus) => {
     if (!assignment && !orderRecord?.out_for_delivery_at && !orderRecord?.delivered_at) {
         return null;
     }
 
     return {
-        status: assignment ? (normalizeOrderStatus(assignment.status) || assignment.status) : normalizeOrderStatus(orderRecord?.status),
+        status: derivedStatus
+            || (assignment ? (normalizeOrderStatus(assignment.status) || assignment.status) : normalizeOrderStatus(orderRecord?.status)),
         assignedAt: assignment?.assigned_at || null,
         acceptedAt: assignment?.accepted_at || orderRecord?.accepted_at || null,
         pickedUpAt: assignment?.picked_up_at || null,
@@ -111,18 +159,18 @@ const formatOrderRecord = (order = {}, { driverMap = new Map() } = {}) => {
         ...rest
     } = order;
 
-    const normalizedStatus = normalizeOrderStatus(rest.status);
     const latestAssignment = getLatestAssignment(assignments);
     const driverFromAssignment = latestAssignment?.partner;
     const fallbackDriver = driverMap.get(rest.delivery_partner_id) || null;
+    const derivedStatus = resolveSellerFacingStatus(rest, latestAssignment);
 
     return {
         ...rest,
-        status: normalizedStatus,
+        status: derivedStatus,
         items: formatItems(rawItems),
         customer: null,
         driver: formatDriver(driverFromAssignment || fallbackDriver),
-        deliveryTimeline: formatDeliveryTimeline(latestAssignment, rest)
+        deliveryTimeline: formatDeliveryTimeline(latestAssignment, rest, derivedStatus)
     };
 };
 

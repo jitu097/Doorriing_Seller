@@ -47,6 +47,53 @@ const ACTION_TYPES = {
 	assign: 'assign-driver'
 };
 
+
+const STATUS_PRIORITY = {
+	delivered: 7,
+	out_for_delivery: 6,
+	picked_up: 5,
+	ready_for_pickup: 4,
+	preparing: 3,
+	accepted: 2,
+	pending: 1,
+	cancelled: 1,
+	rejected: 1
+};
+
+const STATUS_ALIAS_MAP = {
+	ready: 'ready_for_pickup',
+	packing: 'preparing',
+	pickedup: 'picked_up',
+	outfordelivery: 'out_for_delivery',
+	completed: 'delivered',
+	dispatched: 'out_for_delivery',
+	in_transit: 'out_for_delivery'
+};
+
+const normalizeStatusKey = (status) => {
+	const lowered = status?.toString?.().toLowerCase?.() || '';
+	return STATUS_ALIAS_MAP[lowered] || lowered;
+};
+
+const deriveDisplayStatus = (order = {}) => {
+	const timeline = order.deliveryTimeline || {};
+	const candidates = [order.status, timeline.status];
+
+	if (timeline?.deliveredAt || order.delivered_at) candidates.push('delivered');
+	if (timeline?.outForDeliveryAt || order.out_for_delivery_at) candidates.push('out_for_delivery');
+	if (timeline?.pickedUpAt || order.picked_up_at) candidates.push('picked_up');
+	if (order.ready_for_pickup_at) candidates.push('ready_for_pickup');
+
+	const scored = candidates
+		.filter(Boolean)
+		.map(entry => normalizeStatusKey(entry))
+		.filter(Boolean)
+		.map(status => ({ status, score: STATUS_PRIORITY[status] || 0 }));
+
+	if (!scored.length) return 'pending';
+	return scored.sort((a, b) => b.score - a.score)[0].status;
+};
+
 export default function Orders() {
 	const [orders, setOrders] = useState([]);
 	const [statusFilter, setStatusFilter] = useState('all');
@@ -81,7 +128,10 @@ export default function Orders() {
 
 		try {
 			const response = await orderService.getOrders({ page: targetPage, status: targetStatus });
-			const list = Array.isArray(response?.orders) ? response.orders : [];
+			const list = (Array.isArray(response?.orders) ? response.orders : []).map(order => {
+				const computedStatus = deriveDisplayStatus(order);
+				return { ...order, status: computedStatus, computedStatus };
+			});
 			const meta = response?.pagination || {};
 			const nextMeta = {
 				page: meta.page || targetPage,
