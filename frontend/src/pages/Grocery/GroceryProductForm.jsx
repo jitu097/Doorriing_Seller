@@ -8,6 +8,8 @@ const GroceryProductForm = ({
     formData,
     categories,
     subcategories = [],
+    discountOptions = [],
+    derivedFinalPrice = 0,
     onChange,
     onSubmit,
     onClose,
@@ -22,6 +24,18 @@ const GroceryProductForm = ({
             onClose();
         }
     };
+
+    const noDiscountValue = discountOptions?.[0]?.value ?? 'none';
+    const currentDiscountType = formData.discount_type ?? noDiscountValue;
+    const isDiscountActive = currentDiscountType !== noDiscountValue;
+
+    const formatCurrency = (amount) => {
+        const numeric = Number(amount);
+        return `₹${Number.isFinite(numeric) ? numeric.toFixed(2) : '0.00'}`;
+    };
+
+    const basePricePreview = formData.price ? formatCurrency(formData.price) : '₹0.00';
+    const finalPricePreview = formatCurrency(derivedFinalPrice);
 
     // Compress image before setting it in parent state
     const handleImageChange = async (e) => {
@@ -109,6 +123,40 @@ const GroceryProductForm = ({
                                 placeholder="0.00"
                                 required
                             />
+                        </div>
+                    </div>
+
+                    {/* Discount Config */}
+                    <div className="form-group">
+                        <label>Discount / Offer</label>
+                        <div className="discount-row">
+                            <select
+                                name="discount_type"
+                                className="form-control"
+                                value={currentDiscountType}
+                                onChange={onChange}
+                            >
+                                {discountOptions.map(option => (
+                                    <option key={option.value} value={option.value}>{option.label}</option>
+                                ))}
+                            </select>
+                            <input
+                                type="number"
+                                name="discount_value"
+                                className="form-control"
+                                value={formData.discount_value || ''}
+                                onChange={onChange}
+                                placeholder={isDiscountActive ? 'Enter value' : 'Not required'}
+                                disabled={!isDiscountActive}
+                                min="0"
+                            />
+                        </div>
+                        <div className="discount-hint">
+                            {isDiscountActive ? 'Automatically applies at checkout.' : 'Select a discount type to enable offers.'}
+                        </div>
+                        <div className="price-preview">
+                            <span className={`price-original ${isDiscountActive ? 'strike' : ''}`}>{basePricePreview}</span>
+                            <span className="price-final">{finalPricePreview}</span>
                         </div>
                     </div>
 

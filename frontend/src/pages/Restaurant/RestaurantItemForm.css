@@ -1,32 +1,33 @@
-.product-form-overlay {
+.restaurant-form-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.4);
-    z-index: 2000;
+    z-index: 2200;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     backdrop-filter: blur(3px);
+    padding: 60px 16px 24px;
+    box-sizing: border-box;
 }
 
-.product-form-card {
+.restaurant-form-card {
     background: #fff;
     border-radius: 20px;
     width: 100%;
-    max-width: 550px;
+    max-width: 560px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
     overflow: hidden;
-    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: restaurant-form-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     flex-direction: column;
-    max-height: 90vh;
-    /* Prevent it from being taller than screen */
+    max-height: 92vh;
 }
 
-@keyframes slideUp {
+@keyframes restaurant-form-slide-up {
     from {
         opacity: 0;
         transform: translateY(20px);
@@ -38,7 +39,7 @@
     }
 }
 
-.product-form-header {
+.restaurant-form-header {
     padding: 24px 32px 20px 32px;
     display: flex;
     justify-content: space-between;
@@ -46,14 +47,14 @@
     background: #fff;
 }
 
-.product-form-header h2 {
+.restaurant-form-header h2 {
     margin: 0;
     font-size: 1.5rem;
     color: #1f2937;
     font-weight: 800;
 }
 
-.close-btn {
+.restaurant-close-btn {
     background: #f3f4f6;
     border: none;
     border-radius: 50%;
@@ -68,53 +69,51 @@
     transition: background 0.2s, color 0.2s;
 }
 
-.close-btn:hover {
+.restaurant-close-btn:hover {
     background: #e5e7eb;
     color: #111827;
 }
 
-.product-form-divider {
+.restaurant-form-divider {
     height: 1px;
     background: #e5e7eb;
-    margin: 0;
 }
 
-/* Scrollable Body */
-.product-form-body {
+.restaurant-form-body {
     padding: 32px;
     overflow-y: auto;
-    /* Custom scrollbar */
     scrollbar-width: thin;
     scrollbar-color: #d1d5db transparent;
 }
 
-.product-form-body::-webkit-scrollbar {
+.restaurant-form-body::-webkit-scrollbar {
     width: 6px;
 }
 
-.product-form-body::-webkit-scrollbar-track {
+.restaurant-form-body::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.product-form-body::-webkit-scrollbar-thumb {
+.restaurant-form-body::-webkit-scrollbar-thumb {
     background-color: #d1d5db;
     border-radius: 20px;
 }
 
-.form-group {
-    margin-bottom: 24px;
+.restaurant-form-group {
+    margin-bottom: 22px;
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-.form-group label {
+.restaurant-form-group label,
+.restaurant-field-label {
     font-size: 0.95rem;
     font-weight: 600;
     color: #374151;
 }
 
-.form-control {
+.restaurant-form-control {
     width: 100%;
     padding: 12px 16px;
     border: 1px solid #d1d5db;
@@ -125,80 +124,40 @@
     background: #fff;
     font-family: inherit;
     box-sizing: border-box;
-    /* Important for width: 100% */
 }
 
-.form-control:focus {
+.restaurant-form-control:focus {
     outline: none;
     border-color: #f97316;
-    /* Orange brand color */
-    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
 }
 
-.form-control::placeholder {
+.restaurant-form-control::placeholder {
     color: #9ca3af;
 }
 
-textarea.form-control {
+.restaurant-textarea {
     min-height: 100px;
     resize: vertical;
 }
 
-.form-row {
+.restaurant-form-row {
     display: flex;
-    gap: 20px;
+    gap: 18px;
+    flex-wrap: wrap;
 }
 
-.half-width {
+.restaurant-half-width {
     flex: 1;
     min-width: 0;
 }
 
-.discount-row {
-    display: flex;
-    gap: 16px;
-}
-
-.discount-row .form-control {
-    flex: 1;
-}
-
-.discount-hint {
-    font-size: 0.85rem;
-    color: #6b7280;
-    margin-top: 6px;
-}
-
-.price-preview {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-top: 10px;
-    font-weight: 600;
-}
-
-.price-original {
-    color: #6b7280;
-    font-size: 0.95rem;
-}
-
-.price-original.strike {
-    text-decoration: line-through;
-    color: #9ca3af;
-}
-
-.price-final {
-    font-size: 1.2rem;
-    color: #111827;
-}
-
-/* File Upload styling to look like a clean box */
-.file-upload-wrapper {
+.restaurant-file-upload-wrapper {
     position: relative;
     width: 100%;
 }
 
-.file-input {
+.restaurant-file-input {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -209,7 +168,7 @@ textarea.form-control {
     z-index: 2;
 }
 
-.file-upload-box {
+.restaurant-file-upload-box {
     border: 2px dashed #d1d5db;
     border-radius: 12px;
     padding: 24px;
@@ -225,53 +184,110 @@ textarea.form-control {
     font-weight: 500;
 }
 
-.file-input:hover+.file-upload-box,
-.file-input:focus+.file-upload-box {
+.restaurant-file-input:hover + .restaurant-file-upload-box,
+.restaurant-file-input:focus + .restaurant-file-upload-box {
     border-color: #f97316;
     background: #fff7ed;
     color: #c2410c;
 }
 
-.file-name-display {
+.restaurant-file-name-display {
     color: #111827;
     font-weight: 600;
     word-break: break-all;
 }
 
-/* Checkbox specific */
-.checkbox-group {
-    flex-direction: row;
+.restaurant-checkbox-group {
+    display: flex;
     align-items: center;
-    gap: 12px;
-    margin-top: 8px;
+    gap: 10px;
     cursor: pointer;
 }
 
-.styled-checkbox {
+.restaurant-styled-checkbox {
     width: 20px;
     height: 20px;
     accent-color: #f97316;
     cursor: pointer;
 }
 
-.checkbox-label {
-    margin: 0 !important;
-    /* Override form-group label margin */
-    font-weight: 500 !important;
-    cursor: pointer;
+.restaurant-checkbox-label {
+    font-weight: 500;
+    color: #374151;
 }
 
-/* Actions Footer */
-.form-actions {
-    margin-top: 12px;
-    padding-top: 20px;
+.restaurant-form-actions {
+    margin-top: 4px;
+    padding-top: 18px;
     border-top: 1px solid #f3f4f6;
     display: flex;
     justify-content: flex-end;
     gap: 12px;
 }
 
-.submit-btn {
+.restaurant-section-card {
+    border: 1.5px solid #f3f4f6;
+    border-radius: 16px;
+    padding: 18px 20px 14px;
+    background: #fffaf5;
+    margin-bottom: 18px;
+}
+
+.restaurant-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.section-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #1f2937;
+}
+
+.section-subtitle {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.restaurant-price-preview {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px dashed #f3d2bb;
+    margin-top: 4px;
+}
+
+.preview-label {
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.preview-value {
+    font-weight: 800;
+    color: #b45309;
+    font-size: 1.1rem;
+}
+
+.restaurant-cancel-btn {
+    background: #f3f4f6;
+    color: #374151;
+    border: none;
+    padding: 11px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.restaurant-cancel-btn:hover {
+    background: #e5e7eb;
+}
+
+.restaurant-submit-btn {
     background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
     color: white;
     border: none;
@@ -280,24 +296,32 @@ textarea.form-control {
     font-weight: 700;
     font-size: 1rem;
     cursor: pointer;
-    box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.2);
+    box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.25);
     transition: transform 0.1s, box-shadow 0.1s;
-    width: 100%;
-    /* Full width button often looks good in these modals, or auto */
 }
 
-.submit-btn:hover {
+.restaurant-submit-btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 6px 8px -2px rgba(249, 115, 22, 0.3);
 }
 
-.submit-btn:active {
-    transform: translateY(0);
-}
-
-.submit-btn:disabled {
+.restaurant-submit-btn:disabled {
     background: #9ca3af;
     cursor: not-allowed;
-    transform: none;
     box-shadow: none;
+    transform: none;
+}
+
+@media (max-width: 640px) {
+    .restaurant-form-card {
+        margin: 0;
+    }
+
+    .restaurant-form-body {
+        padding: 24px;
+    }
+
+    .restaurant-form-row {
+        flex-direction: column;
+    }
 }

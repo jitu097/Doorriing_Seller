@@ -59,13 +59,25 @@ const getCategories = async (shopId) => {
             id,
             category_id,
             name,
+            description,
             price,
+            final_price,
+            discount_type,
+            discount_value,
+            full_price,
+            full_discount_type,
+            full_discount_value,
+            full_final_price,
             half_portion_price,
+            half_discount_type,
+            half_discount_value,
+            half_portion_final_price,
             stock_quantity,
             unit,
             image_url,
             is_available,
-            is_active
+            is_active,
+            food_type
         `)
         .eq('shop_id', shopId)
         .order('created_at', { ascending: false });

@@ -2,6 +2,15 @@ const supabase = require('../../config/supabaseClient');
 const { uploadToCloudinary, deleteFromCloudinary, extractPublicId } = require('../../config/cloudinary');
 const notificationService = require('../notification/notification.service');
 
+const VALID_DISCOUNT_TYPES = new Set(['percentage', 'flat']);
+const normalizeDiscountType = (value) => (VALID_DISCOUNT_TYPES.has((value || '').toLowerCase()) ? value.toLowerCase() : 'none');
+const normalizeNumber = (value, fallback = 0) => {
+    if (value === null) return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+};
+const normalizeFoodType = (value) => (value && value.toLowerCase() === 'nonveg' ? 'nonveg' : 'veg');
+
 const createItem = async (shopId, itemData) => {
     // Validate category_id is required
     if (!itemData.category_id) {
@@ -38,6 +47,33 @@ const createItem = async (shopId, itemData) => {
         }
     }
 
+    const resolvedFullPrice = normalizeNumber(itemData.full_price ?? itemData.price, 0);
+    const resolvedFullDiscountType = normalizeDiscountType(itemData.full_discount_type ?? itemData.discount_type);
+    const resolvedFullDiscountValue = resolvedFullDiscountType === 'none'
+        ? 0
+        : normalizeNumber(itemData.full_discount_value ?? itemData.discount_value, 0);
+    const resolvedFullFinalPrice = itemData.full_final_price !== undefined
+        ? normalizeNumber(itemData.full_final_price, resolvedFullPrice)
+        : resolvedFullPrice;
+    const resolvedFinalPrice = itemData.final_price !== undefined
+        ? normalizeNumber(itemData.final_price, resolvedFullFinalPrice)
+        : resolvedFullFinalPrice;
+    const resolvedDiscountType = normalizeDiscountType(itemData.discount_type ?? resolvedFullDiscountType);
+    const resolvedDiscountValue = resolvedDiscountType === 'none'
+        ? 0
+        : normalizeNumber(itemData.discount_value ?? resolvedFullDiscountValue, 0);
+    const hasHalfPortion = itemData.half_portion_price !== undefined && itemData.half_portion_price !== null;
+    const resolvedHalfPrice = hasHalfPortion ? normalizeNumber(itemData.half_portion_price, 0) : null;
+    const resolvedHalfDiscountType = hasHalfPortion ? normalizeDiscountType(itemData.half_discount_type) : 'none';
+    const resolvedHalfDiscountValue = hasHalfPortion && resolvedHalfDiscountType !== 'none'
+        ? normalizeNumber(itemData.half_discount_value, 0)
+        : 0;
+    const resolvedHalfFinalPrice = hasHalfPortion
+        ? (itemData.half_portion_final_price !== undefined
+            ? normalizeNumber(itemData.half_portion_final_price, resolvedHalfPrice)
+            : resolvedHalfPrice)
+        : null;
+
     const { data, error } = await supabase
         .from('items')
         .insert({
@@ -45,12 +81,23 @@ const createItem = async (shopId, itemData) => {
             category_id: itemData.category_id,
             subcategory_id: itemData.subcategory_id || null,
             name: itemData.name,
-            // description: itemData.description, // Removed due to schema mismatch error
-            price: itemData.price,
-            half_portion_price: itemData.half_portion_price,
-            stock_quantity: itemData.stock_quantity || 0,
+            description: itemData.description || null,
+            price: resolvedFullPrice,
+            discount_type: resolvedDiscountType,
+            discount_value: resolvedDiscountValue,
+            final_price: resolvedFinalPrice,
+            full_price: resolvedFullPrice,
+            full_discount_type: resolvedFullDiscountType,
+            full_discount_value: resolvedFullDiscountValue,
+            full_final_price: resolvedFullFinalPrice,
+            half_portion_price: resolvedHalfPrice,
+            half_discount_type: resolvedHalfDiscountType,
+            half_discount_value: resolvedHalfDiscountValue,
+            half_portion_final_price: resolvedHalfFinalPrice,
+            stock_quantity: Number(itemData.stock_quantity) || 0,
             unit: itemData.unit,
-            image_url: itemData.image_url,
+            food_type: normalizeFoodType(itemData.food_type),
+            image_url: itemData.image_url || null,
             is_available: itemData.is_available !== undefined ? itemData.is_available : true
         })
         .select()
@@ -73,12 +120,24 @@ const getItems = async (shopId, categoryId = null) => {
             name,
             category_id,
             subcategory_id,
+            description,
             price,
+            final_price,
+            discount_type,
+            discount_value,
+            full_price,
+            full_discount_type,
+            full_discount_value,
+            full_final_price,
             half_portion_price,
+            half_discount_type,
+            half_discount_value,
+            half_portion_final_price,
             stock_quantity,
             unit,
             image_url,
             is_available,
+            food_type,
             created_at,
             category:categories!items_category_id_fkey(id, name),
             subcategory:subcategories(id, name)
@@ -105,12 +164,24 @@ const getItem = async (itemId, shopId) => {
             category_id,
             subcategory_id,
             name,
+            description,
             price,
+            final_price,
+            discount_type,
+            discount_value,
+            full_price,
+            full_discount_type,
+            full_discount_value,
+            full_final_price,
             half_portion_price,
+            half_discount_type,
+            half_discount_value,
+            half_portion_final_price,
             stock_quantity,
             unit,
             image_url,
             is_available,
+            food_type,
             created_at,
             category:categories!items_category_id_fkey(id, name),
             subcategory:subcategories(id, name)
@@ -126,9 +197,18 @@ const getItem = async (itemId, shopId) => {
 
 const updateItem = async (itemId, shopId, updates) => {
     const allowedFields = [
-        'name', /* 'description', */ 'price', 'half_portion_price',
-        'unit', 'image_url', 'category_id', 'subcategory_id'
+        'name', 'description', 'price', 'half_portion_price', 'stock_quantity',
+        'unit', 'image_url', 'category_id', 'subcategory_id', 'is_available',
+        'food_type', 'discount_type', 'discount_value', 'final_price',
+        'full_price', 'full_discount_type', 'full_discount_value', 'full_final_price',
+        'half_discount_type', 'half_discount_value', 'half_portion_final_price'
     ];
+    const numericFields = new Set([
+        'price', 'half_portion_price', 'stock_quantity', 'discount_value', 'final_price',
+        'full_price', 'full_discount_value', 'full_final_price',
+        'half_discount_value', 'half_portion_final_price'
+    ]);
+    const discountTypeFields = new Set(['discount_type', 'full_discount_type', 'half_discount_type']);
 
     // Validate category_id if being updated
     if (updates.category_id) {
@@ -166,7 +246,19 @@ const updateItem = async (itemId, shopId, updates) => {
 
     const filteredUpdates = {};
     Object.keys(updates).forEach(key => {
-        if (allowedFields.includes(key) && updates[key] !== undefined) {
+        if (!allowedFields.includes(key) || updates[key] === undefined) {
+            return;
+        }
+
+        if (updates[key] === null) {
+            filteredUpdates[key] = null;
+        } else if (numericFields.has(key)) {
+            filteredUpdates[key] = normalizeNumber(updates[key], 0);
+        } else if (discountTypeFields.has(key)) {
+            filteredUpdates[key] = normalizeDiscountType(updates[key]);
+        } else if (key === 'food_type') {
+            filteredUpdates[key] = normalizeFoodType(updates[key]);
+        } else {
             filteredUpdates[key] = updates[key];
         }
     });

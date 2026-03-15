@@ -2,6 +2,28 @@ import React from 'react';
 import './GroceryProductCard.css';
 
 const GroceryProductCard = ({ item, onEdit, onDelete, onToggleStatus }) => {
+    const resolveNumber = (value, fallback = 0) => {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : fallback;
+    };
+
+    const basePrice = resolveNumber(item.price ?? item.full_price, 0);
+    const finalPrice = resolveNumber(item.final_price ?? item.full_final_price, basePrice);
+    const hasDiscount = finalPrice > 0 && finalPrice < basePrice;
+    const discountLabelSource = item.discount_type && item.discount_type !== 'none'
+        ? { type: item.discount_type, value: item.discount_value }
+        : item.full_discount_type && item.full_discount_type !== 'none'
+            ? { type: item.full_discount_type, value: item.full_discount_value }
+            : null;
+    const formatDiscountLabel = (source) => {
+        if (!source) return null;
+        const numericValue = resolveNumber(source.value, 0);
+        return source.type === 'percentage'
+            ? `${numericValue}% OFF`
+            : `₹${numericValue.toFixed(0)} OFF`;
+    };
+    const discountLabel = formatDiscountLabel(discountLabelSource);
+
     return (
         <div className="grocery-card">
             {/* Active Status Badge (Top Left) */}
@@ -9,6 +31,10 @@ const GroceryProductCard = ({ item, onEdit, onDelete, onToggleStatus }) => {
                 <span className="grocery-card-badge">ACTIVE</span>
             ) : (
                 <span className="grocery-card-badge inactive">INACTIVE</span>
+            )}
+
+            {hasDiscount && discountLabel && (
+                <span className="grocery-card-discount-chip">{discountLabel}</span>
             )}
 
             {/* Image Section - Full Width at Top */}
@@ -42,7 +68,8 @@ const GroceryProductCard = ({ item, onEdit, onDelete, onToggleStatus }) => {
                 {/* Price and Toggle Row */}
                 <div className="grocery-card-price-row">
                     <div className="grocery-card-price">
-                        ₹{item.price}
+                        {hasDiscount && <span className="price-original">₹{basePrice.toFixed(2)}</span>}
+                        <span className="price-final">₹{finalPrice.toFixed(2)}</span>
                     </div>
                     
                     {/* Toggle Availability */}

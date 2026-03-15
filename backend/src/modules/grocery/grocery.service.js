@@ -4,6 +4,13 @@ const cache = require('../../utils/cache');
 const { uploadToCloudinary, deleteFromCloudinary, extractPublicId } = require('../../config/cloudinary');
 const { fetchImageFromUnsplash } = require('../../services/unsplash.service');
 
+const VALID_DISCOUNT_TYPES = new Set(['percentage', 'flat']);
+const normalizeDiscountType = (value) => (VALID_DISCOUNT_TYPES.has((value || '').toLowerCase()) ? value.toLowerCase() : 'none');
+const normalizeNumber = (value, fallback = 0) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+};
+
 /**
  * Service: Grocery
  * Handles logic for Grocery items, inclusive of optional categories and full schema support.
@@ -17,18 +24,34 @@ const { fetchImageFromUnsplash } = require('../../services/unsplash.service');
  * Omits undefined/null keys to let DB defaults handle them, unless explicitly nullable.
  */
 const buildItemPayload = (shopId, data) => {
+	const resolvedPrice = normalizeNumber(data.price, 0);
+	const resolvedFinalPrice = data.final_price !== undefined ? normalizeNumber(data.final_price, resolvedPrice) : resolvedPrice;
+	const resolvedDiscountType = normalizeDiscountType(data.discount_type);
+	const resolvedDiscountValue = resolvedDiscountType === 'none' ? 0 : normalizeNumber(data.discount_value, 0);
+	const resolvedFullPrice = data.full_price !== undefined ? normalizeNumber(data.full_price, resolvedPrice) : resolvedPrice;
+	const resolvedFullFinalPrice = data.full_final_price !== undefined ? normalizeNumber(data.full_final_price, resolvedFinalPrice) : resolvedFinalPrice;
+	const resolvedFullDiscountType = normalizeDiscountType(data.full_discount_type || resolvedDiscountType);
+	const resolvedFullDiscountValue = resolvedFullDiscountType === 'none' ? 0 : normalizeNumber(data.full_discount_value ?? resolvedDiscountValue, resolvedDiscountValue);
+
     const payload = {
         shop_id: shopId,
         name: data.name,
         description: data.description || null,
         expiry_date: data.expiry_date || null,
-        price: data.price,
+        price: resolvedPrice,
         half_portion_price: data.half_portion_price || null,
         stock_quantity: data.stock_quantity || 0,
         unit: data.unit || null,
         image_url: data.image_url || null,
         is_available: data.is_available !== undefined ? data.is_available : true,
         subcategory_id: data.subcategory_id || null,
+        discount_type: resolvedDiscountType,
+        discount_value: resolvedDiscountValue,
+        final_price: resolvedFinalPrice,
+        full_price: resolvedFullPrice,
+        full_discount_type: resolvedFullDiscountType,
+        full_discount_value: resolvedFullDiscountValue,
+        full_final_price: resolvedFullFinalPrice,
     };
 
     // Category is optional for Grocery
@@ -124,7 +147,17 @@ const getGroceryItems = async (shopId, filters = {}) => {
             name,
             description,
             price,
+            final_price,
+            discount_type,
+            discount_value,
+            full_price,
+            full_discount_type,
+            full_discount_value,
+            full_final_price,
             half_portion_price,
+            half_discount_type,
+            half_discount_value,
+            half_portion_final_price,
             stock_quantity,
             unit,
             image_url,
@@ -164,7 +197,17 @@ const getGroceryItemById = async (shopId, itemId) => {
             name,
             description,
             price,
+            final_price,
+            discount_type,
+            discount_value,
+            full_price,
+            full_discount_type,
+            full_discount_value,
+            full_final_price,
             half_portion_price,
+            half_discount_type,
+            half_discount_value,
+            half_portion_final_price,
             stock_quantity,
             unit,
             image_url,
@@ -191,8 +234,14 @@ const updateGroceryItem = async (shopId, itemId, updates) => {
     const allowedFields = [
         'name', 'description', 'price', 'half_portion_price',
         'stock_quantity', 'unit', 'image_url', 'is_available', 'category_id',
-        'expiry_date', 'subcategory_id'
+        'expiry_date', 'subcategory_id', 'discount_type', 'discount_value',
+        'final_price', 'full_price', 'full_discount_type', 'full_discount_value',
+        'full_final_price'
     ];
+    const numericFields = new Set([
+        'price', 'half_portion_price', 'stock_quantity', 'discount_value',
+        'final_price', 'full_price', 'full_discount_value', 'full_final_price'
+    ]);
 
     // 2. Validate category_id if being updated
     if (updates.category_id) {
@@ -240,7 +289,13 @@ const updateGroceryItem = async (shopId, itemId, updates) => {
     const payload = {};
     allowedFields.forEach(field => {
         if (updates[field] !== undefined) {
-            payload[field] = updates[field];
+            if (numericFields.has(field)) {
+                payload[field] = normalizeNumber(updates[field], 0);
+            } else if (field === 'discount_type' || field === 'full_discount_type') {
+                payload[field] = normalizeDiscountType(updates[field]);
+            } else {
+                payload[field] = updates[field];
+            }
         }
     });
 

@@ -1,7 +1,25 @@
 import React from 'react';
 import './Menu.css';
 
+const formatCurrency = (value) => {
+    const amount = Number(value);
+    if (!Number.isFinite(amount)) {
+        return '₹0';
+    }
+    return `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+};
+
 const MenuItemCard = ({ item, onToggle, onDelete, onEdit }) => {
+    const resolvedFoodType = item?.food_type?.toLowerCase() === 'nonveg' ? 'nonveg' : 'veg';
+    const isNonVeg = resolvedFoodType === 'nonveg';
+    const fullBasePrice = Number(item.full_price ?? item.price ?? 0);
+    const fullFinalPrice = Number(item.full_final_price ?? item.final_price ?? fullBasePrice);
+    const fullHasDiscount = fullBasePrice > 0 && fullFinalPrice < fullBasePrice;
+    const hasHalfPortion = item.half_portion_price !== null && typeof item.half_portion_price !== 'undefined';
+    const halfBasePrice = hasHalfPortion ? Number(item.half_portion_price ?? 0) : 0;
+    const halfFinalPrice = hasHalfPortion ? Number(item.half_portion_final_price ?? item.half_portion_price ?? 0) : 0;
+    const halfHasDiscount = hasHalfPortion && halfBasePrice > 0 && halfFinalPrice < halfBasePrice;
+
     return (
         <div className="item-card-modern">
             <div className="item-image-container">
@@ -16,7 +34,12 @@ const MenuItemCard = ({ item, onToggle, onDelete, onEdit }) => {
             </div>
 
             <div className="item-details">
-                <h3 className="item-name">{item.name}</h3>
+                <div className="item-name-row">
+                    <h3 className="item-name">{item.name}</h3>
+                    <span className={`food-type-pill ${isNonVeg ? 'nonveg' : 'veg'}`}>
+                        {isNonVeg ? '🔴 Non-Veg' : '🟢 Veg'}
+                    </span>
+                </div>
                 {item.subcategory?.name && (
                     <p className="item-subcategory" style={{ color: '#6b7280', fontSize: '0.85rem', margin: '2px 0 6px 0' }}>
                         {item.category?.name} › {item.subcategory.name}
@@ -24,17 +47,27 @@ const MenuItemCard = ({ item, onToggle, onDelete, onEdit }) => {
                 )}
                 <p className="item-description">{item.description}</p>
 
-                <div className="item-prices">
-                    {item.half_portion_price && (
-                        <div className="price-tag half-price">
-                            <span className="price-label">Half</span>
-                            <span className="price-value">₹{item.half_portion_price}</span>
+                <div className="portion-pricing">
+                    <div className="portion-row">
+                        <div>
+                            <div className="portion-label">Full Plate</div>
+                            <div className="portion-values">
+                                {fullHasDiscount && <span className="price-original">{formatCurrency(fullBasePrice)}</span>}
+                                <span className="price-final">{formatCurrency(fullFinalPrice || fullBasePrice)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {hasHalfPortion && (
+                        <div className="portion-row">
+                            <div>
+                                <div className="portion-label">Half Plate</div>
+                                <div className="portion-values">
+                                    {halfHasDiscount && <span className="price-original">{formatCurrency(halfBasePrice)}</span>}
+                                    <span className="price-final">{formatCurrency(halfFinalPrice || halfBasePrice)}</span>
+                                </div>
+                            </div>
                         </div>
                     )}
-                    <div className="price-tag full-price">
-                        <span className="price-label">Full</span>
-                        <span className="price-value">₹{item.price}</span>
-                    </div>
                 </div>
             </div>
 

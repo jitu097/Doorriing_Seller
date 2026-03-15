@@ -8,6 +8,59 @@ import GroceryCategoryManager from './GroceryCategoryManager';
 import subcategoryService from '../../services/subcategoryService';
 import Loader from '../../components/common/Loader';
 
+const DISCOUNT_TYPES = {
+	NONE: 'none',
+	PERCENTAGE: 'percentage',
+	FLAT: 'flat',
+};
+
+const DISCOUNT_OPTIONS = [
+	{ value: DISCOUNT_TYPES.NONE, label: 'No Discount' },
+	{ value: DISCOUNT_TYPES.PERCENTAGE, label: 'Percentage Off' },
+	{ value: DISCOUNT_TYPES.FLAT, label: 'Flat Discount' },
+];
+
+const parseCurrencyInput = (value) => {
+	if (value === '' || value === null || typeof value === 'undefined') {
+		return 0;
+	}
+	const parsed = parseFloat(value);
+	return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const clampToZero = (amount) => (amount < 0 ? 0 : amount);
+
+const calculateFinalPrice = (price, discountType, discountValue) => {
+	const basePrice = clampToZero(parseCurrencyInput(price));
+	const normalizedDiscountValue = clampToZero(parseCurrencyInput(discountValue));
+	if (!basePrice) return 0;
+
+	if (discountType === DISCOUNT_TYPES.PERCENTAGE) {
+		const percentage = Math.min(normalizedDiscountValue, 100);
+		return clampToZero(basePrice - (basePrice * percentage) / 100);
+	}
+
+	if (discountType === DISCOUNT_TYPES.FLAT) {
+		return clampToZero(basePrice - normalizedDiscountValue);
+	}
+
+	return basePrice;
+};
+
+const createInitialItemState = () => ({
+	name: '',
+	description: '',
+	category_id: '',
+	subcategory_id: '',
+	image: null,
+	stock_quantity: '',
+	unit: 'pieces',
+	price: '',
+	discount_type: DISCOUNT_TYPES.NONE,
+	discount_value: '',
+	active: true,
+});
+
 const Products = () => {
 	const [categories, setCategories] = useState([]);
 	const [subcategories, setSubcategories] = useState([]);
@@ -32,17 +85,7 @@ const Products = () => {
 	const [selectedCategory, setSelectedCategory] = useState('');
 	const [subcategoriesList, setSubcategoriesList] = useState([]);
 	const [newSubcategory, setNewSubcategory] = useState('');
-	const [newItem, setNewItem] = useState({
-		name: '',
-		description: '',
-		category_id: '',
-		subcategory_id: '',
-		image: null,
-		stock_quantity: '',
-		unit: 'pieces',
-		price: '',
-		active: true,
-	});
+	const [newItem, setNewItem] = useState(createInitialItemState());
 
 	// --- Data Fetching ---
 	const fetchData = async () => {
@@ -95,6 +138,12 @@ const Products = () => {
 			} else if (name === 'category_id' && !value) {
 				setSubcategories([]);
 				setNewItem(prev => ({ ...prev, [name]: value, subcategory_id: '' }));
+			} else if (name === 'discount_type') {
+				setNewItem(prev => ({
+					...prev,
+					discount_type: value,
+					discount_value: value === DISCOUNT_TYPES.NONE ? '' : prev.discount_value,
+				}));
 			} else {
 				setNewItem({ ...newItem, [name]: value });
 			}
@@ -109,9 +158,7 @@ const Products = () => {
 		setShowModal(false);
 		setEditingItem(null);
 		setSubcategories([]);
-		setNewItem({
-			name: '', description: '', category_id: '', subcategory_id: '', image: null, stock_quantity: '', unit: 'pieces', price: '', active: true
-		});
+		setNewItem(createInitialItemState());
 	};
 
 	const handleEditItem = async (item) => {
@@ -128,6 +175,11 @@ const Products = () => {
 			}
 		}
 
+		const resolvedDiscountType = item.discount_type || item.full_discount_type || DISCOUNT_TYPES.NONE;
+		const resolvedDiscountValue = resolvedDiscountType === DISCOUNT_TYPES.NONE
+			? ''
+			: String(item.discount_value ?? item.full_discount_value ?? '');
+
 		setNewItem({
 			name: item.name,
 			description: item.description || '',
@@ -137,6 +189,8 @@ const Products = () => {
 			stock_quantity: item.stock_quantity,
 			unit: item.unit || 'pieces',
 			price: item.price,
+			discount_type: resolvedDiscountType,
+			discount_value: resolvedDiscountValue,
 			active: item.is_available
 		});
 		setShowModal(true);
@@ -161,29 +215,37 @@ const Products = () => {
 		try {
 			setIsSubmitting(true);
 
+			const { image, ...restFields } = newItem;
+			const priceValue = clampToZero(parseCurrencyInput(restFields.price));
+			const discountType = newItem.discount_type || DISCOUNT_TYPES.NONE;
+			const rawDiscountValue = discountType === DISCOUNT_TYPES.NONE ? 0 : clampToZero(parseCurrencyInput(newItem.discount_value));
+			const finalPrice = calculateFinalPrice(priceValue, discountType, rawDiscountValue);
+
+			const payload = {
+				...restFields,
+				price: priceValue,
+				category_id: restFields.category_id || null,
+				discount_type: discountType,
+				discount_value: discountType === DISCOUNT_TYPES.NONE ? 0 : rawDiscountValue,
+				final_price: finalPrice,
+				full_price: priceValue,
+				full_discount_type: discountType,
+				full_discount_value: discountType === DISCOUNT_TYPES.NONE ? 0 : rawDiscountValue,
+				full_final_price: finalPrice,
+			};
+
+			let targetItemId = editingItem?.id;
 			if (editingItem) {
-				// Update Existing
-				const updatedItem = await groceryService.updateGroceryItem(editingItem.id, {
-					...newItem,
-					category_id: newItem.category_id || null
-				});
-
-				if (newItem.image) {
-					await groceryService.uploadItemImage(editingItem.id, newItem.image);
-				}
+				await groceryService.updateGroceryItem(editingItem.id, payload);
 			} else {
-				// Create New
-				const createdItem = await groceryService.createGroceryItem({
-					...newItem,
-					category_id: newItem.category_id || null
-				});
-
-				if (newItem.image && createdItem.id) {
-					await groceryService.uploadItemImage(createdItem.id, newItem.image);
-				}
+				const createdItem = await groceryService.createGroceryItem(payload);
+				targetItemId = createdItem?.id;
 			}
 
-			// 3. Refresh List
+			if (image && targetItemId) {
+				await groceryService.uploadItemImage(targetItemId, image);
+			}
+
 			await fetchData();
 			handleModalClose();
 		} catch (err) {
@@ -319,6 +381,9 @@ const Products = () => {
 	};
 
 	const groupedData = getGroupedItems();
+	const derivedBasePrice = clampToZero(parseCurrencyInput(newItem.price));
+	const derivedDiscountValue = newItem.discount_type === DISCOUNT_TYPES.NONE ? 0 : clampToZero(parseCurrencyInput(newItem.discount_value));
+	const derivedFinalPrice = calculateFinalPrice(derivedBasePrice, newItem.discount_type, derivedDiscountValue);
 
 	if (loading) return <Loader message="Loading products..." />;
 	if (error) return <div className="error-screen">Error: {error}</div>;
@@ -388,6 +453,8 @@ const Products = () => {
 				formData={newItem}
 				categories={categories}
 				subcategories={subcategories}
+				discountOptions={DISCOUNT_OPTIONS}
+				derivedFinalPrice={derivedFinalPrice}
 				onChange={handleInputChange}
 				onSubmit={handleSaveItem}
 				onClose={handleModalClose}

@@ -1,10 +1,77 @@
 import React, { useState, useEffect } from 'react';
 import './Menu.css';
+import './RestaurantItemForm.css';
 import MenuItemCard from './MenuItemCard';
 import categoryService from '../../services/restaurantCategoryService';
 import { useRealtimeSubscription } from '../../hooks/useRealtimeSubscription';
 import itemService from '../../services/itemService';
 import subcategoryService from '../../services/restaurantSubcategoryService';
+
+const FOOD_TYPE = {
+	VEG: 'veg',
+	NON_VEG: 'nonveg',
+};
+
+const OFFER_TYPES = {
+	NONE: 'none',
+	PERCENTAGE: 'percentage',
+	FLAT: 'flat',
+};
+
+const OFFER_OPTIONS = [
+	{ value: OFFER_TYPES.NONE, label: 'No Offer' },
+	{ value: OFFER_TYPES.PERCENTAGE, label: 'Percentage Discount' },
+	{ value: OFFER_TYPES.FLAT, label: 'Flat Discount' },
+];
+
+const normalizeFoodType = (value) => (
+	value?.toLowerCase() === FOOD_TYPE.NON_VEG ? FOOD_TYPE.NON_VEG : FOOD_TYPE.VEG
+);
+
+const parseCurrencyInput = (value) => {
+	if (value === '' || value === null || typeof value === 'undefined') {
+		return 0;
+	}
+	const parsed = parseFloat(value);
+	return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const clampToZero = (amount) => (amount < 0 ? 0 : amount);
+
+const calculateFinalPrice = (price, discountType, discountValue) => {
+	const basePrice = clampToZero(parseCurrencyInput(price));
+	const normalizedDiscountValue = clampToZero(parseCurrencyInput(discountValue));
+	if (!basePrice) return 0;
+
+	if (discountType === OFFER_TYPES.PERCENTAGE) {
+		const percentage = Math.min(normalizedDiscountValue, 100);
+		return clampToZero(basePrice - (basePrice * percentage) / 100);
+	}
+
+	if (discountType === OFFER_TYPES.FLAT) {
+		return clampToZero(basePrice - normalizedDiscountValue);
+	}
+
+	return basePrice;
+};
+
+const createInitialItemState = () => ({
+	name: '',
+	description: '',
+	category: '',
+	subcategory_id: '',
+	image: null,
+	halfPortion: false,
+	fullPrice: '',
+	fullDiscountType: OFFER_TYPES.NONE,
+	fullDiscountValue: '',
+	halfPrice: '',
+	halfDiscountType: OFFER_TYPES.NONE,
+	halfDiscountValue: '',
+	unit: 'plate',
+	active: true,
+	food_type: FOOD_TYPE.VEG,
+});
 
 const Menu = () => {
 	const [categories, setCategories] = useState([]);
@@ -21,18 +88,8 @@ const Menu = () => {
 	const [newCategory, setNewCategory] = useState('');
 	const [newSubcategory, setNewSubcategory] = useState('');
 	const [categoryImageFile, setCategoryImageFile] = useState(null);
-	const [newItem, setNewItem] = useState({
-		name: '',
-		description: '',
-		category: '',
-		subcategory_id: '',
-		image: null,
-		halfPortion: false,
-		price: '',
-		priceHalf: '',
-		unit: 'plate',
-		active: true,
-	});
+	const [newItem, setNewItem] = useState(createInitialItemState());
+	const [editingItemId, setEditingItemId] = useState(null);
 	const fallbackCategoryImage = '/images/category-placeholder.png';
 
 	useRealtimeSubscription('items', () => { setTimeout(fetchCategories, 0) });
@@ -61,40 +118,79 @@ const Menu = () => {
 
 	const handleInputChange = async (e) => {
 		const { name, value, type, checked, files } = e.target;
+
 		if (type === 'checkbox') {
-			setNewItem({ ...newItem, [name]: checked });
-		} else if (type === 'file') {
-			setNewItem({ ...newItem, image: files[0] });
-		} else {
-			// Load subcategories when category changes
-			if (name === 'category' && value) {
+			if (name === 'halfPortion') {
+				setNewItem((prev) => ({
+					...prev,
+					halfPortion: checked,
+					halfPrice: checked ? prev.halfPrice : '',
+					halfDiscountType: checked ? prev.halfDiscountType : OFFER_TYPES.NONE,
+					halfDiscountValue: checked ? prev.halfDiscountValue : '',
+				}));
+			} else {
+				setNewItem((prev) => ({ ...prev, [name]: checked }));
+			}
+			return;
+		}
+
+		if (type === 'file') {
+			setNewItem((prev) => ({ ...prev, image: files?.[0] || null }));
+			return;
+		}
+
+		if (name === 'category') {
+			if (value) {
 				try {
 					const subs = await subcategoryService.getSubcategories(value);
 					setSubcategories(subs || []);
-					setNewItem(prev => ({ ...prev, [name]: value, subcategory_id: '' })); // Update category and reset subcategory
+					setNewItem((prev) => ({ ...prev, category: value, subcategory_id: '' }));
 				} catch (error) {
 					console.error('Failed to load subcategories:', error);
 					setSubcategories([]);
-					setNewItem({ ...newItem, [name]: value });
+					setNewItem((prev) => ({ ...prev, category: value }));
 				}
-			} else if (name === 'category' && !value) {
-				setSubcategories([]);
-				setNewItem(prev => ({ ...prev, [name]: value, subcategory_id: '' }));
 			} else {
-				setNewItem({ ...newItem, [name]: value });
+				setSubcategories([]);
+				setNewItem((prev) => ({ ...prev, category: '', subcategory_id: '' }));
 			}
+			return;
 		}
+
+		if (name === 'fullDiscountType') {
+			setNewItem((prev) => ({
+				...prev,
+				fullDiscountType: value,
+				fullDiscountValue: value === OFFER_TYPES.NONE ? '' : prev.fullDiscountValue,
+			}));
+			return;
+		}
+
+		if (name === 'halfDiscountType') {
+			setNewItem((prev) => ({
+				...prev,
+				halfDiscountType: value,
+				halfDiscountValue: value === OFFER_TYPES.NONE ? '' : prev.halfDiscountValue,
+			}));
+			return;
+		}
+
+		setNewItem((prev) => ({ ...prev, [name]: value }));
 	};
 
 	const handleModalClose = () => {
 		setShowModal(false);
 		setSubcategories([]);
-		setNewItem({
-			name: '', description: '', category: '', subcategory_id: '', image: null, halfPortion: false, price: '', priceHalf: '', unit: 'plate', active: true
-		});
+		setEditingItemId(null);
+		setNewItem(createInitialItemState());
 	};
 
-	const handleModalOpen = () => setShowModal(true);
+	const handleModalOpen = () => {
+		setEditingItemId(null);
+		setSubcategories([]);
+		setNewItem(createInitialItemState());
+		setShowModal(true);
+	};
 	const handleCategoryModalOpen = () => setShowCategoryModal(true);
 	const handleCategoryModalClose = () => {
 		setShowCategoryModal(false);
@@ -109,39 +205,75 @@ const Menu = () => {
 		setNewSubcategory('');
 	};
 
+	const handleModalOverlayClick = (event) => {
+		if (event.target === event.currentTarget) {
+			handleModalClose();
+		}
+	};
+
 	const handleCategoryImageChange = (e) => {
 		if (e.target.files && e.target.files[0]) {
 			setCategoryImageFile(e.target.files[0]);
 		}
 	};
 
-	const handleCreateItem = async (e) => {
+	const handleSaveItem = async (e) => {
 		e.preventDefault();
+
+		const fullPrice = clampToZero(parseCurrencyInput(newItem.fullPrice));
+		const fullDiscountType = newItem.fullDiscountType || OFFER_TYPES.NONE;
+		const rawFullDiscountValue = fullDiscountType === OFFER_TYPES.NONE ? 0 : parseCurrencyInput(newItem.fullDiscountValue);
+		const fullFinalPrice = calculateFinalPrice(fullPrice, fullDiscountType, rawFullDiscountValue);
+
+		const hasHalfPortion = newItem.halfPortion && newItem.halfPrice !== '';
+		const halfPrice = hasHalfPortion ? clampToZero(parseCurrencyInput(newItem.halfPrice)) : null;
+		const halfDiscountType = hasHalfPortion ? newItem.halfDiscountType || OFFER_TYPES.NONE : OFFER_TYPES.NONE;
+		const rawHalfDiscountValue = hasHalfPortion && halfDiscountType !== OFFER_TYPES.NONE ? parseCurrencyInput(newItem.halfDiscountValue) : 0;
+		const halfFinalPrice = hasHalfPortion ? calculateFinalPrice(halfPrice, halfDiscountType, rawHalfDiscountValue) : null;
+
+		const payload = {
+			name: newItem.name,
+			description: newItem.description,
+			category_id: newItem.category,
+			subcategory_id: newItem.subcategory_id || null,
+			unit: newItem.unit,
+			is_available: newItem.active,
+			food_type: normalizeFoodType(newItem.food_type),
+			// Full portion fields
+			price: fullPrice,
+			discount_type: fullDiscountType,
+			discount_value: fullDiscountType === OFFER_TYPES.NONE ? 0 : rawFullDiscountValue,
+			final_price: fullFinalPrice,
+			full_price: fullPrice,
+			full_discount_type: fullDiscountType,
+			full_discount_value: fullDiscountType === OFFER_TYPES.NONE ? 0 : rawFullDiscountValue,
+			full_final_price: fullFinalPrice,
+			// Half portion fields
+			half_portion_price: hasHalfPortion ? halfPrice : null,
+			half_discount_type: hasHalfPortion ? halfDiscountType : OFFER_TYPES.NONE,
+			half_discount_value: hasHalfPortion && halfDiscountType !== OFFER_TYPES.NONE ? rawHalfDiscountValue : 0,
+			half_portion_final_price: hasHalfPortion ? halfFinalPrice : null,
+		};
+
 		try {
-			const itemData = {
-				name: newItem.name,
-				description: newItem.description,
-				category_id: newItem.category,
-				subcategory_id: newItem.subcategory_id || null,
-				price: parseFloat(newItem.price),
-				half_portion_price: newItem.halfPortion ? parseFloat(newItem.priceHalf || 0) : null,
-				unit: newItem.unit,
-				is_available: newItem.active
-			};
+			let targetItemId = editingItemId;
 
-			const created = await itemService.createItem(itemData);
-
-			// Upload image if provided
-			if (newItem.image && created.id) {
-				await itemService.uploadItemImage(created.id, newItem.image);
+			if (editingItemId) {
+				await itemService.updateItem(editingItemId, payload);
+			} else {
+				const created = await itemService.createItem(payload);
+				targetItemId = created?.id;
 			}
 
-			// Refresh categories to get updated items
+			if (newItem.image && targetItemId) {
+				await itemService.uploadItemImage(targetItemId, newItem.image);
+			}
+
 			fetchCategories();
 			handleModalClose();
 		} catch (error) {
-			console.error('Failed to create item:', error);
-			alert('Failed to create item. Please try again.');
+			console.error(editingItemId ? 'Failed to update item:' : 'Failed to create item:', error);
+			alert(`Failed to ${editingItemId ? 'update' : 'create'} item. Please try again.`);
 		}
 	};
 
@@ -271,6 +403,14 @@ const Menu = () => {
 		}
 	};
 
+	const currentFoodType = normalizeFoodType(newItem.food_type);
+	const derivedFullPrice = clampToZero(parseCurrencyInput(newItem.fullPrice));
+	const derivedFullDiscountValue = newItem.fullDiscountType === OFFER_TYPES.NONE ? 0 : parseCurrencyInput(newItem.fullDiscountValue);
+	const derivedFullFinalPrice = calculateFinalPrice(derivedFullPrice, newItem.fullDiscountType, derivedFullDiscountValue);
+	const derivedHalfPrice = newItem.halfPortion ? clampToZero(parseCurrencyInput(newItem.halfPrice)) : 0;
+	const derivedHalfDiscountValue = newItem.halfPortion && newItem.halfDiscountType !== OFFER_TYPES.NONE ? parseCurrencyInput(newItem.halfDiscountValue) : 0;
+	const derivedHalfFinalPrice = newItem.halfPortion ? calculateFinalPrice(derivedHalfPrice, newItem.halfDiscountType, derivedHalfDiscountValue) : 0;
+
 	if (loading) {
 		return (
 			<>
@@ -347,19 +487,31 @@ const Menu = () => {
 																}
 															}
 
-															setNewItem({
-																name: item.name,
-																description: item.description || '',
-																category: item.category_id || cat.id,
-																subcategory_id: item.subcategory_id || '',
-																image: null,
-																halfPortion: !!item.half_portion_price,
-																price: item.price,
-																priceHalf: item.half_portion_price || '',
-																unit: item.unit || 'plate',
-																active: item.is_available
-															});
-															setShowModal(true);
+												const resolvedFullPrice = item.full_price ?? item.price ?? '';
+												const resolvedFullDiscountType = item.full_discount_type || item.discount_type || OFFER_TYPES.NONE;
+												const resolvedFullDiscountValue = resolvedFullDiscountType === OFFER_TYPES.NONE ? '' : String(item.full_discount_value ?? item.discount_value ?? '');
+												const hasHalfPortion = item.half_portion_price !== null && typeof item.half_portion_price !== 'undefined';
+												const resolvedHalfDiscountType = item.half_discount_type || OFFER_TYPES.NONE;
+
+												setEditingItemId(item.id);
+												setNewItem({
+													name: item.name,
+													description: item.description || '',
+													category: item.category_id || cat.id,
+													subcategory_id: item.subcategory_id || '',
+													image: null,
+													halfPortion: hasHalfPortion,
+													fullPrice: resolvedFullPrice !== null && resolvedFullPrice !== undefined ? String(resolvedFullPrice) : '',
+													fullDiscountType: resolvedFullDiscountType,
+													fullDiscountValue: resolvedFullDiscountValue,
+													halfPrice: hasHalfPortion ? String(item.half_portion_price ?? '') : '',
+													halfDiscountType: hasHalfPortion ? resolvedHalfDiscountType : OFFER_TYPES.NONE,
+													halfDiscountValue: hasHalfPortion && resolvedHalfDiscountType !== OFFER_TYPES.NONE ? String(item.half_discount_value ?? '') : '',
+													unit: item.unit || 'plate',
+													active: item.is_available,
+													food_type: normalizeFoodType(item.food_type)
+												});
+												setShowModal(true);
 														}}
 													/>
 												))}
@@ -375,70 +527,193 @@ const Menu = () => {
 
 			{/* Modals at the top level */}
 			{showModal && (
-				<div className="modal-overlay">
-					<div className="modal-content">
-						<h2 className="modal-title">Add New Item</h2>
-						<form className="add-item-form" onSubmit={handleCreateItem}>
-							<label>Item Name
-								<input type="text" name="name" placeholder="e.g. Butter Chicken" value={newItem.name} onChange={handleInputChange} required />
-							</label>
-							<label>Description
-								<textarea name="description" placeholder="Short description of the item" value={newItem.description} onChange={handleInputChange} />
-							</label>
-							<div className="form-row">
-								<label>Category
-									<select name="category" value={newItem.category} onChange={handleInputChange} required>
+				<div className="restaurant-form-overlay" onClick={handleModalOverlayClick}>
+					<div className="restaurant-form-card">
+						<div className="restaurant-form-header">
+							<h2>{editingItemId ? 'Edit Item' : 'Add New Item'}</h2>
+							<button type="button" className="restaurant-close-btn" onClick={handleModalClose} aria-label="Close item modal">&times;</button>
+						</div>
+						<div className="restaurant-form-divider"></div>
+						<form className="restaurant-form-body" onSubmit={handleSaveItem}>
+							<div className="restaurant-form-group">
+								<label>Item Name</label>
+								<input type="text" name="name" className="restaurant-form-control" placeholder="e.g. Butter Chicken" value={newItem.name} onChange={handleInputChange} required autoFocus />
+							</div>
+							<div className="restaurant-form-group">
+								<label>Description</label>
+								<textarea name="description" className="restaurant-form-control restaurant-textarea" placeholder="Short description of the item" value={newItem.description} onChange={handleInputChange} />
+							</div>
+							<div className="restaurant-form-group">
+								<div className="food-type-selector">
+									<span className="food-type-label">Food Type</span>
+									<div className="food-type-options">
+										<label className={`food-type-option veg ${currentFoodType === FOOD_TYPE.VEG ? 'selected' : ''}`}>
+											<input type="radio" name="food_type" value={FOOD_TYPE.VEG} checked={currentFoodType === FOOD_TYPE.VEG} onChange={handleInputChange} required />
+											<span>🟢 Veg</span>
+										</label>
+										<label className={`food-type-option nonveg ${currentFoodType === FOOD_TYPE.NON_VEG ? 'selected' : ''}`}>
+											<input type="radio" name="food_type" value={FOOD_TYPE.NON_VEG} checked={currentFoodType === FOOD_TYPE.NON_VEG} onChange={handleInputChange} />
+											<span>🔴 Non-Veg</span>
+										</label>
+									</div>
+								</div>
+							</div>
+							<div className="restaurant-form-row">
+								<div className="restaurant-form-group restaurant-half-width">
+									<label>Category</label>
+									<select name="category" className="restaurant-form-control" value={newItem.category} onChange={handleInputChange} required>
 										<option value="">Select Category</option>
 										{categories.map((cat) => (
 											<option key={cat.id} value={cat.id}>{cat.name}</option>
 										))}
 									</select>
-								</label>
-								<label className="half-portion-label">
-									<input type="checkbox" name="halfPortion" checked={newItem.halfPortion} onChange={handleInputChange} style={{ marginLeft: -8 }} /> Enable Half Portion
-								</label>
+								</div>
+								<div className="restaurant-form-group restaurant-half-width">
+									<label>Unit</label>
+									<select name="unit" className="restaurant-form-control" value={newItem.unit} onChange={handleInputChange} required>
+										<option value="plate">Plate</option>
+										<option value="piece">Piece</option>
+										<option value="kg">Kg</option>
+										<option value="gm">Gm</option>
+										<option value="ltr">Ltr</option>
+										<option value="ml">Ml</option>
+									</select>
+								</div>
 							</div>
-							<label>Subcategory (optional)
-								<select name="subcategory_id" value={newItem.subcategory_id} onChange={handleInputChange}>
+							<div className="restaurant-form-group">
+								<label>Subcategory (optional)</label>
+								<select name="subcategory_id" className="restaurant-form-control" value={newItem.subcategory_id} onChange={handleInputChange}>
 									<option value="">None</option>
 									{subcategories.filter(sub => sub.is_active).map((sub) => (
 										<option key={sub.id} value={sub.id}>{sub.name}</option>
 									))}
 								</select>
-							</label>
-							{newItem.halfPortion && (
-								<label>Half Portion Price (₹)
-									<input type="number" name="priceHalf" value={newItem.priceHalf} onChange={handleInputChange} required={newItem.halfPortion} />
-								</label>
-							)}
-							<label>Image
-								<div className="image-upload-box">
-									<input type="file" name="image" accept="image/*" onChange={handleInputChange} />
-									<span>Click to Upload Image</span>
+							</div>
+
+							<div className="restaurant-section-card">
+								<div className="restaurant-section-header">
+									<div>
+										<div className="section-title">Full Portion Pricing</div>
+										<div className="section-subtitle">Applies to classic/full plate</div>
+									</div>
 								</div>
-							</label>
-							<label>Full Price (₹)
-								<input type="number" name="price" value={newItem.price} onChange={handleInputChange} required />
-							</label>
-							<label>Unit
-								<select name="unit" value={newItem.unit} onChange={handleInputChange} required>
-									<option value="plate">Plate</option>
-									<option value="piece">Piece</option>
-									<option value="kg">Kg</option>
-									<option value="gm">Gm</option>
-									<option value="ltr">Ltr</option>
-									<option value="ml">Ml</option>
-								</select>
-							</label>
-							<div className="form-row">
-								<label className="active-checkbox">
-									<input type="checkbox" name="active" checked={newItem.active} onChange={handleInputChange} style={{ marginLeft: 10 }} />
-									<span>Active (Visible to users)</span>
+								<div className="restaurant-form-row">
+									<div className="restaurant-form-group restaurant-half-width">
+										<label>Full Price (₹)</label>
+										<input type="number" name="fullPrice" className="restaurant-form-control" value={newItem.fullPrice} onChange={handleInputChange} min="0" step="0.01" required />
+									</div>
+									<div className="restaurant-form-group restaurant-half-width">
+										<label>Full Offer Type</label>
+										<select name="fullDiscountType" className="restaurant-form-control" value={newItem.fullDiscountType} onChange={handleInputChange}>
+											{OFFER_OPTIONS.map((option) => (
+												<option key={option.value} value={option.value}>{option.label}</option>
+											))}
+										</select>
+									</div>
+								</div>
+								{newItem.fullDiscountType !== OFFER_TYPES.NONE && (
+									<div className="restaurant-form-row">
+										<div className="restaurant-form-group restaurant-half-width">
+											<label>Full Discount Value</label>
+											<input
+												type="number"
+												name="fullDiscountValue"
+												className="restaurant-form-control"
+												value={newItem.fullDiscountValue}
+												onChange={handleInputChange}
+												min="0"
+												max={newItem.fullDiscountType === OFFER_TYPES.PERCENTAGE ? 100 : undefined}
+												step="0.01"
+												required
+											/>
+										</div>
+									</div>
+								)}
+								<div className="restaurant-price-preview">
+									<span className="preview-label">Customer Pays</span>
+									<span className="preview-value">₹{derivedFullFinalPrice.toFixed(2)}</span>
+								</div>
+							</div>
+
+							<div className="restaurant-form-group">
+								<label className="restaurant-checkbox-group">
+									<input type="checkbox" name="halfPortion" className="restaurant-styled-checkbox" checked={newItem.halfPortion} onChange={handleInputChange} />
+									<span className="restaurant-checkbox-label">Enable Half Portion</span>
 								</label>
 							</div>
-							<div className="modal-actions">
-								<button type="button" className="btn btn-cancel" onClick={handleModalClose}>Cancel</button>
-								<button type="submit" className="btn btn-primary">Create Item</button>
+
+							{newItem.halfPortion && (
+								<div className="restaurant-section-card">
+									<div className="restaurant-section-header">
+										<div>
+											<div className="section-title">Half Portion Pricing</div>
+											<div className="section-subtitle">Great for sampler plates</div>
+										</div>
+									</div>
+									<div className="restaurant-form-row">
+										<div className="restaurant-form-group restaurant-half-width">
+											<label>Half Portion Price (₹)</label>
+											<input type="number" name="halfPrice" className="restaurant-form-control" value={newItem.halfPrice} onChange={handleInputChange} min="0" step="0.01" required={newItem.halfPortion} />
+										</div>
+										<div className="restaurant-form-group restaurant-half-width">
+											<label>Half Offer Type</label>
+											<select name="halfDiscountType" className="restaurant-form-control" value={newItem.halfDiscountType} onChange={handleInputChange}>
+												{OFFER_OPTIONS.map((option) => (
+													<option key={option.value} value={option.value}>{option.label}</option>
+												))}
+											</select>
+										</div>
+									</div>
+									{newItem.halfDiscountType !== OFFER_TYPES.NONE && (
+										<div className="restaurant-form-row">
+											<div className="restaurant-form-group restaurant-half-width">
+												<label>Half Discount Value</label>
+												<input
+													type="number"
+													name="halfDiscountValue"
+													className="restaurant-form-control"
+													value={newItem.halfDiscountValue}
+													onChange={handleInputChange}
+													min="0"
+													max={newItem.halfDiscountType === OFFER_TYPES.PERCENTAGE ? 100 : undefined}
+													step="0.01"
+													required={newItem.halfPortion}
+												/>
+											</div>
+										</div>
+									)}
+									<div className="restaurant-price-preview">
+										<span className="preview-label">Customer Pays</span>
+										<span className="preview-value">₹{derivedHalfFinalPrice.toFixed(2)}</span>
+									</div>
+								</div>
+							)}
+
+							<div className="restaurant-form-group">
+								<label>Image</label>
+								<div className="restaurant-file-upload-wrapper">
+									<input type="file" name="image" className="restaurant-file-input" accept="image/*" onChange={handleInputChange} />
+									<div className="restaurant-file-upload-box">
+										{newItem.image ? (
+											<span className="restaurant-file-name-display">Selected: {newItem.image.name}</span>
+										) : (
+											<>
+												<span>Click or Drag to Upload Image</span>
+												<small style={{ color: '#9ca3af' }}>PNG, JPG up to 2MB</small>
+											</>
+										)}
+									</div>
+								</div>
+							</div>
+							<div className="restaurant-form-group">
+								<label className="restaurant-checkbox-group">
+									<input type="checkbox" name="active" className="restaurant-styled-checkbox" checked={newItem.active} onChange={handleInputChange} />
+									<span className="restaurant-checkbox-label">Active (Visible to users)</span>
+								</label>
+							</div>
+							<div className="restaurant-form-actions">
+								<button type="button" className="restaurant-cancel-btn" onClick={handleModalClose}>Cancel</button>
+								<button type="submit" className="restaurant-submit-btn">{editingItemId ? 'Save Changes' : 'Create Item'}</button>
 							</div>
 						</form>
 					</div>

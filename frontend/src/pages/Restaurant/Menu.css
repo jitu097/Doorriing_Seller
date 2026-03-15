@@ -144,6 +144,62 @@
 	margin-bottom: 10px;
 }
 
+.food-type-selector {
+	margin: 6px 0 12px;
+}
+
+.food-type-label {
+	display: block;
+	font-weight: 600;
+	font-size: 0.92rem;
+	color: #23272f;
+	margin-bottom: 6px;
+}
+
+.food-type-options {
+	display: flex;
+	gap: 10px;
+}
+
+.food-type-option {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px;
+	border-radius: 999px;
+	border: 1px solid #e5e7eb;
+	background: #fff;
+	cursor: pointer;
+	font-weight: 600;
+	font-size: 0.9rem;
+	transition: border 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.food-type-option input {
+	display: none;
+}
+
+.food-type-option span {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.food-type-option.selected {
+	border-color: #6d1d1d;
+	box-shadow: 0 2px 8px rgba(109, 29, 29, 0.18);
+}
+
+.food-type-option.veg {
+	color: #0f9d58;
+	background: #ecf8f0;
+}
+
+.food-type-option.nonveg {
+	color: #c62828;
+	background: #fdecec;
+}
+
 .half-portion-label {
 	display: flex;
 	align-items: center;
@@ -553,6 +609,34 @@ input:checked+.slider:before {
 	color: #1f2937;
 }
 
+.item-name-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.food-type-pill {
+	font-size: 0.78rem;
+	font-weight: 700;
+	padding: 2px 8px;
+	border-radius: 999px;
+	letter-spacing: 0.01em;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.food-type-pill.veg {
+	background: #ecf8f0;
+	color: #0f9d58;
+}
+
+.food-type-pill.nonveg {
+	background: #fdecec;
+	color: #b91c1c;
+}
+
 .item-description {
 	color: #4b5563;
 	font-size: 0.95rem;
@@ -564,33 +648,43 @@ input:checked+.slider:before {
 	overflow: hidden;
 }
 
-.item-prices {
+.portion-pricing {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.portion-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 8px 10px;
+	border-radius: 10px;
+	background: #fdf3ed;
+}
+
+.portion-label {
+	font-weight: 700;
+	color: #4b5563;
+	font-size: 0.95rem;
+}
+
+.portion-values {
 	display: flex;
 	gap: 8px;
+	align-items: baseline;
 }
 
-.price-tag {
-	display: flex;
-	align-items: center;
-	border-radius: 8px;
-	padding: 4px 12px;
+.price-original {
+	text-decoration: line-through;
+	color: #9ca3af;
 	font-weight: 600;
-	font-size: 0.9rem;
 }
 
-.price-tag.half-price {
-	background: #e0edff;
-	color: #2563eb;
-}
-
-.price-tag.full-price {
-	background: rgba(109, 29, 29, 0.1);
-	color: rgb(109, 29, 29);
-}
-
-.price-label {
-	margin-right: 6px;
-	opacity: 0.8;
+.price-final {
+	font-weight: 800;
+	color: #8b1d1d;
+	font-size: 1.05rem;
 }
 
 .item-actions {

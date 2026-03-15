@@ -1,6 +1,26 @@
 import { auth } from '../config/firebase';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5001/api';
+const resolveApiBaseUrl = () => {
+  const {
+    VITE_API_URL,
+    VITE_LOCAL_API_URL,
+  } = import.meta.env;
+
+  const localFallback = VITE_LOCAL_API_URL || 'http://127.0.0.1:5001/api';
+
+  if (typeof window !== 'undefined') {
+    const hostname = window.location?.hostname || '';
+    const isLocalHost = ['localhost', '127.0.0.1', '0.0.0.0', '::1'].includes(hostname) || hostname.endsWith('.local');
+
+    if (isLocalHost) {
+      return localFallback;
+    }
+  }
+
+  return VITE_API_URL || localFallback;
+};
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 // Helper function to get auth token
 const getAuthToken = async () => {

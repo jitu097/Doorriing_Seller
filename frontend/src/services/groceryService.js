@@ -6,6 +6,13 @@ import imageCompression from 'browser-image-compression';
  * Now expanded to cover Orders, Offers, and Profile
  */
 
+const parseNumber = (value, fallback = 0) => {
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const DEFAULT_DISCOUNT_TYPE = 'none';
+
 // --- ITEMS ---
 
 /**
@@ -32,14 +39,30 @@ export const getGroceryItemById = async (itemId) => {
  * Create a new grocery item
  */
 export const createGroceryItem = async (itemData) => {
+	const basePrice = parseNumber(itemData.price, 0);
+	const discountType = itemData.discount_type || DEFAULT_DISCOUNT_TYPE;
+	const discountValue = discountType === DEFAULT_DISCOUNT_TYPE ? 0 : parseNumber(itemData.discount_value, 0);
+	const finalPrice = itemData.final_price !== undefined ? parseNumber(itemData.final_price, basePrice) : basePrice;
+	const fullPrice = itemData.full_price !== undefined ? parseNumber(itemData.full_price, basePrice) : basePrice;
+	const fullDiscountType = itemData.full_discount_type || discountType;
+	const fullDiscountValue = fullDiscountType === DEFAULT_DISCOUNT_TYPE ? 0 : parseNumber(itemData.full_discount_value ?? discountValue, discountValue);
+	const fullFinalPrice = itemData.full_final_price !== undefined ? parseNumber(itemData.full_final_price, finalPrice) : finalPrice;
+
     // Sanitize Payload
     const payload = {
         name: itemData.name,
         description: itemData.description || null,
-        price: parseFloat(itemData.price),
+        price: basePrice,
         stock_quantity: parseInt(itemData.stock_quantity || 0, 10),
         unit: itemData.unit,
         is_available: itemData.active !== undefined ? itemData.active : true,
+        discount_type: discountType,
+        discount_value: discountValue,
+        final_price: finalPrice,
+        full_price: fullPrice,
+        full_discount_type: fullDiscountType,
+        full_discount_value: fullDiscountValue,
+        full_final_price: fullFinalPrice,
     };
 
     if (itemData.category_id && itemData.category_id !== "") {
@@ -68,11 +91,18 @@ export const updateGroceryItem = async (itemId, updates) => {
     const payload = {};
     if (updates.name !== undefined) payload.name = updates.name;
     if (updates.description !== undefined) payload.description = updates.description;
-    if (updates.price !== undefined) payload.price = parseFloat(updates.price);
+    if (updates.price !== undefined) payload.price = parseNumber(updates.price, 0);
     if (updates.stock_quantity !== undefined) payload.stock_quantity = parseInt(updates.stock_quantity, 10);
     if (updates.unit !== undefined) payload.unit = updates.unit;
     if (updates.image_url !== undefined) payload.image_url = updates.image_url;
     if (updates.active !== undefined) payload.is_available = updates.active;
+    if (updates.discount_type !== undefined) payload.discount_type = updates.discount_type;
+    if (updates.discount_value !== undefined) payload.discount_value = parseNumber(updates.discount_value, 0);
+    if (updates.final_price !== undefined) payload.final_price = parseNumber(updates.final_price, 0);
+    if (updates.full_price !== undefined) payload.full_price = parseNumber(updates.full_price, 0);
+    if (updates.full_discount_type !== undefined) payload.full_discount_type = updates.full_discount_type;
+    if (updates.full_discount_value !== undefined) payload.full_discount_value = parseNumber(updates.full_discount_value, 0);
+    if (updates.full_final_price !== undefined) payload.full_final_price = parseNumber(updates.full_final_price, 0);
 
     if (updates.category_id !== undefined) {
         payload.category_id = updates.category_id === "" ? null : updates.category_id;
