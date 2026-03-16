@@ -385,7 +385,6 @@ export default function Registration() {
 					</div>
 				</div>
 			</div>
-			<style>{`.register-input-disabled { background-color: #f0f0f0; cursor: not-allowed; color: #555; }`}</style>
 
 			{/* Terms & Conditions Modal */}
 			{showTermsModal && (
