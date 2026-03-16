@@ -21,7 +21,9 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5001/api'
 Created a dedicated production environment file so Vite embeds the correct API url at build time.
 **Added:**
 ```env
-VITE_API_URL=https://doorriingseller.up.railway.app/api
+VITE_API_URL=https://doorring-seller-production.up.railway.app/api
+
+
 ```
 
 ### 3. Backend CORS Configuration (`backend/.env` & `app.js`)
