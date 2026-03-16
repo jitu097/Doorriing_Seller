@@ -1,38 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../config/firebase';
-import { shopService } from '../../services/shopService';
 import './Sidebar.css';
 
 const Sidebar = ({ isOpen, onClose, menuItems, profilePath }) => {
     const navigate = useNavigate();
-    const [isShopOpen, setIsShopOpen] = useState(true);
-    const [loadingStatus, setLoadingStatus] = useState(false);
-
-    useEffect(() => {
-        fetchShopStatus();
-    }, []);
-
-    const fetchShopStatus = async () => {
-        try {
-            const isOpen = await shopService.getShopStatus();
-            setIsShopOpen(isOpen);
-        } catch (e) {
-            console.error(e);
-        }
-    };
-
-    const toggleShopStatus = async () => {
-        try {
-            setLoadingStatus(true);
-            const newStatus = !isShopOpen;
-            await shopService.toggleStatus(newStatus);
-            setIsShopOpen(newStatus);
-        } finally {
-            setLoadingStatus(false);
-        }
-    };
 
     const handleLogout = async () => {
         if (!window.confirm('Logout?')) return;
@@ -60,18 +33,6 @@ const Sidebar = ({ isOpen, onClose, menuItems, profilePath }) => {
                 style={{ cursor: 'pointer' }}
             >
                 <img src="/Doorriing.png" alt="Logo" />
-            </div>
-
-            {/* Shop Status Toggle (Admin Panel) */}
-            <div className="shop-status-toggle">
-                <button
-                    className={`status-btn ${isShopOpen ? 'open' : 'closed'}`}
-                    onClick={toggleShopStatus}
-                    disabled={loadingStatus}
-                >
-                    <span className={`status-dot ${isShopOpen ? 'green' : 'red'}`}></span>
-                    {isShopOpen ? 'Shop Open' : 'Shop Closed'}
-                </button>
             </div>
 
             {/* Navigation Links */}
