@@ -43,7 +43,6 @@ const getBookings = async (req, res, next) => {
         const result = await bookingService.getBookings(req.shop.id, page, limit, status, date);
         successResponse(res, result);
     } catch (error) {
-        console.error('❌ Error in getBookings controller:', error);
         next(error);
     }
 };

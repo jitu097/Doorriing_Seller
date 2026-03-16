@@ -7,7 +7,7 @@ const walletService = require('../wallet/wallet.service');
 
 const SELLER_MUTABLE_STATUSES = ['pending', 'accepted', 'preparing'];
 const SELLER_ALLOWED_TARGET_STATUSES = ['preparing'];
-const DRIVER_ASSIGNABLE_STATUSES = ['accepted', 'preparing'];
+const DRIVER_ASSIGNABLE_STATUSES = ['preparing'];
 
 const STATUS_FILTER_COMPAT_MAP = {
     accepted: ['accepted', 'confirmed'],
@@ -479,7 +479,7 @@ const assignDriver = async (orderId, shopId, deliveryPartnerId) => {
 
     const normalizedStatus = normalizeOrderStatus(order.status);
     if (!DRIVER_ASSIGNABLE_STATUSES.includes(normalizedStatus)) {
-        throw new BadRequestError('Driver can only be assigned to accepted or preparing orders');
+        throw new BadRequestError('Driver can only be assigned after the order enters preparing status');
     }
 
     const { data: driver, error: driverError } = await supabase

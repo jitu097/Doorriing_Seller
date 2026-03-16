@@ -3,6 +3,18 @@ const { successResponse } = require('../../utils/response');
 const { validateRequired } = require('../../utils/validators');
 const { BadRequestError } = require('../../utils/errors');
 
+const ensureStatusPayloadProvided = (status, isOpen) => {
+    if (typeof isOpen !== 'boolean' && typeof status !== 'string') {
+        throw new BadRequestError('Either status or is_open is required');
+    }
+};
+
+const ensureImageFileProvided = (file, fieldName = 'image') => {
+    if (!file) {
+        throw new BadRequestError(`No ${fieldName} file provided`);
+    }
+};
+
 const createShop = async (req, res, next) => {
     try {
         validateRequired(['shop_name', 'owner_name', 'phone', 'category', 'subcategory', 'address'], req.body);
@@ -53,9 +65,7 @@ const updateShop = async (req, res, next) => {
 const toggleStatus = async (req, res, next) => {
     try {
         const { status, is_open } = req.body;
-        if (typeof is_open !== 'boolean' && typeof status !== 'string') {
-            throw new BadRequestError('Either status or is_open is required');
-        }
+        ensureStatusPayloadProvided(status, is_open);
 
         const shop = await shopService.updateShopStatusById(
             req.seller.id,
@@ -74,6 +84,8 @@ const updateStatusById = async (req, res, next) => {
         const { id } = req.params;
         const { status, is_open } = req.body;
 
+        ensureStatusPayloadProvided(status, is_open);
+
         const shop = await shopService.updateShopStatusById(req.seller.id, id, status, is_open);
         successResponse(res, shop, 'Shop status updated');
     } catch (error) {
@@ -83,9 +95,7 @@ const updateStatusById = async (req, res, next) => {
 
 const uploadShopImage = async (req, res, next) => {
     try {
-        if (!req.file) {
-            throw new Error('No image file provided');
-        }
+        ensureImageFileProvided(req.file);
 
         const shop = await shopService.uploadShopImage(req.seller.id, req.file);
         successResponse(res, shop, 'Shop image uploaded successfully');
@@ -96,11 +106,9 @@ const uploadShopImage = async (req, res, next) => {
 
 const uploadCoverImage = async (req, res, next) => {
     try {
-        if (!req.file) {
-            throw new Error('No image file provided');
-        }
+        ensureImageFileProvided(req.file, 'cover');
 
-        const shop = await shopService.uploadShopImage(req.seller.id, req.file);
+        const shop = await shopService.uploadCoverImage(req.seller.id, req.file);
         successResponse(res, shop, 'Shop image uploaded successfully');
     } catch (error) {
         next(error);

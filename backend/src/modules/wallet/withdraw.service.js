@@ -28,9 +28,18 @@ const getWithdrawRequests = async (shopId, page = 1, limit = 20) => {
     };
 };
 
+const logWithdrawAlert = (scope, error) => {
+    console.error(`[WithdrawService] ${scope}`, error);
+};
+
+const parseAmount = (value) => {
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : NaN;
+};
+
 const createWithdrawRequest = async (shopId, amount, payoutAccountId) => {
-    // Basic validation
-    if (!amount || isNaN(amount) || amount <= 0) {
+    const requestedAmount = parseAmount(amount);
+    if (!requestedAmount || Number.isNaN(requestedAmount) || requestedAmount <= 0) {
         throw new Error('Invalid withdrawal amount');
     }
 
@@ -52,7 +61,8 @@ const createWithdrawRequest = async (shopId, amount, payoutAccountId) => {
     }
 
     // 2. Validate balance
-    if (parseFloat(wallet.balance) < parseFloat(amount)) {
+    const walletBalance = parseAmount(wallet.balance);
+    if (Number.isNaN(walletBalance) || walletBalance < requestedAmount) {
         throw new Error('Insufficient wallet balance for this withdrawal');
     }
 
@@ -68,8 +78,11 @@ const createWithdrawRequest = async (shopId, amount, payoutAccountId) => {
         
     if (pendingError) throw pendingError;
     
-    const totalPending = pendingRequests.reduce((sum, req) => sum + parseFloat(req.amount), 0);
-    if ((totalPending + parseFloat(amount)) > parseFloat(wallet.balance)) {
+    const totalPending = pendingRequests.reduce((sum, req) => {
+        const pendingAmount = parseAmount(req.amount);
+        return sum + (Number.isNaN(pendingAmount) ? 0 : pendingAmount);
+    }, 0);
+    if ((totalPending + requestedAmount) > walletBalance) {
         throw new Error('Sum of pending withdrawals exceeds available balance');
     }
 
@@ -80,7 +93,7 @@ const createWithdrawRequest = async (shopId, amount, payoutAccountId) => {
             shop_id: shopId,
             wallet_id: wallet.id,
             payout_account_id: payoutAccountId,
-            amount: parseFloat(amount),
+            amount: requestedAmount,
             status: 'pending'
         }])
         .select()
@@ -89,7 +102,7 @@ const createWithdrawRequest = async (shopId, amount, payoutAccountId) => {
     if (error) throw error;
 
     try {
-        const formattedAmount = Number(amount).toFixed(2);
+        const formattedAmount = requestedAmount.toFixed(2);
         await notificationService.createNotification(
             shopId,
             'Withdrawal Request Received',
@@ -99,7 +112,7 @@ const createWithdrawRequest = async (shopId, amount, payoutAccountId) => {
             'withdraw_request'
         );
     } catch (notifyError) {
-        console.error('Failed to create withdrawal notification', notifyError);
+        logWithdrawAlert('notification.create', notifyError);
     }
 
     return data;

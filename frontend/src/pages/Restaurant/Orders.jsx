@@ -227,9 +227,11 @@ export default function Orders() {
     }, {})
   ), [orders]);
 
-  const visibleOrders = statusFilter === 'all'
-    ? orders
-    : orders.filter(order => order.status === statusFilter);
+  const visibleOrders = useMemo(() => (
+    statusFilter === 'all'
+      ? orders
+      : orders.filter(order => order.status === statusFilter)
+  ), [statusFilter, orders]);
 
   const selectedOrderForModal = useMemo(
     () => orders.find(order => order.id === driverModal.orderId) || null,

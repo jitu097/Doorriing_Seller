@@ -2,6 +2,10 @@ const supabase = require('../../config/supabaseClient');
 
 const NOTIFICATION_COLUMNS = 'id, shop_id, customer_id, title, message, type, reference_id, is_read, created_at';
 
+const logServiceError = (scope, error) => {
+    console.error(`[NotificationService] ${scope}`, error);
+};
+
 const getNotifications = async (shopId, limit = 20) => {
     const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 50);
 
@@ -17,7 +21,7 @@ const getNotifications = async (shopId, limit = 20) => {
 
         return data || [];
     } catch (error) {
-        console.error('Failed to fetch notifications', error);
+        logServiceError('getNotifications', error);
         throw new Error('Unable to load notifications at this time');
     }
 };
@@ -37,7 +41,7 @@ const createNotification = async (shopId, title, message, type, referenceId) => 
         .single();
 
     if (error) {
-        console.error('Error creating notification:', error);
+        logServiceError('createNotification', error);
         return null; // Silent failure
     }
 
@@ -58,7 +62,7 @@ const markAsRead = async (notificationId, shopId) => {
 
         return data;
     } catch (error) {
-        console.error('Failed to mark notification as read', error);
+        logServiceError('markAsRead', error);
         throw new Error('Unable to mark notification as read');
     }
 };
@@ -75,7 +79,7 @@ const markAllAsRead = async (shopId) => {
 
         return { success: true };
     } catch (error) {
-        console.error('Failed to mark all notifications as read', error);
+        logServiceError('markAllAsRead', error);
         throw new Error('Unable to mark notifications as read');
     }
 };
@@ -92,7 +96,7 @@ const getUnreadCount = async (shopId) => {
 
         return { count };
     } catch (error) {
-        console.error('Failed to fetch notification unread count', error);
+        logServiceError('getUnreadCount', error);
         throw new Error('Unable to load unread notifications');
     }
 };

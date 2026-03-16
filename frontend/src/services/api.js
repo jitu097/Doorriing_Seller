@@ -15,7 +15,6 @@ const resolveApiBaseUrl = () => {
     if (isLocalHost) {
       return localFallback;
     }
-    ///jjj
   }
 
   return VITE_API_URL || localFallback;
@@ -67,11 +66,6 @@ const apiCall = async (endpoint, options = {}) => {
     console.error('API Error:', error);
     throw error;
   }
-  ///jitu
 };
 
 export default apiCall;
-
-
-
-// jitu

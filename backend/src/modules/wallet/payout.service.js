@@ -62,10 +62,12 @@ const deletePayoutAccount = async (shopId, accountId) => {
 };
 
 const setAllToNonDefault = async (shopId) => {
-    await supabase
+    const { error } = await supabase
         .from('seller_payout_accounts')
         .update({ is_default: false })
         .eq('shop_id', shopId);
+
+    if (error) throw error;
 };
 
 module.exports = {

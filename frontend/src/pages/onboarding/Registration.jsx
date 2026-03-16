@@ -27,9 +27,6 @@ export default function Registration() {
 	});
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [photoPreview, setPhotoPreview] = useState(null);
-	const [isLoading, setIsLoading] = useState(false);
-	const [isExistingShop, setIsExistingShop] = useState(false);
-	const [successMessage, setSuccessMessage] = useState('');
 	const [termsAccepted, setTermsAccepted] = useState(false);
 	const [showTermsModal, setShowTermsModal] = useState(false);
 
@@ -234,27 +231,7 @@ export default function Registration() {
 				</div>
 			</header>
 			<div className="register-main">
-				{isLoading ? (
-					<div style={{ textAlign: 'center', padding: '50px' }}>
-						<p>Loading shop data...</p>
-					</div>
-				) : (
-					<div className="register-card">
-						{successMessage && (
-							<div style={{
-								padding: '16px',
-								marginBottom: '20px',
-								backgroundColor: '#4caf50',
-								color: 'white',
-								borderRadius: '8px',
-								textAlign: 'center',
-								fontWeight: '500',
-								fontSize: '1rem',
-								animation: 'slideIn 0.3s ease-out'
-							}}>
-								{successMessage}
-							</div>
-						)}
+				<div className="register-card">
 						<form onSubmit={handleSubmit} className="register-form">
 							{/* Basic Information */}
 							<div className="register-section">
@@ -400,13 +377,13 @@ export default function Registration() {
 										className={`register-submit-button ${isSubmitting ? 'register-loading' : ''} ${!termsAccepted ? 'register-submit-disabled' : ''}`}
 										title={!termsAccepted ? 'Please accept the Terms & Conditions to continue' : ''}
 									>
-										{isSubmitting ? (isExistingShop ? 'Updating...' : 'Registering...') : (isExistingShop ? 'Update Shop' : 'Register Shop')}
+										{isSubmitting ? 'Registering...' : 'Register Shop'}
 									</button>
 								</div>
 							</div>
 						</form>
 					</div>
-				)}
+				</div>
 			</div>
 			<style>{`.register-input-disabled { background-color: #f0f0f0; cursor: not-allowed; color: #555; }`}</style>
 

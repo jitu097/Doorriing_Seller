@@ -4,6 +4,10 @@ const { validatePagination } = require('../../utils/validators');
 
 const SUMMARY_COLUMNS = 'balance, total_earnings, total_withdrawn, updated_at';
 
+const logWalletServiceError = (scope, error, context = {}) => {
+    console.error(`[WalletService] ${scope}`, { error: error?.message, ...context });
+};
+
 // Expose both camelCase and snake_case to preserve existing clients while supporting new ones.
 const formatSummaryPayload = ({ balance, totalEarned, totalWithdrawn, updatedAt }) => ({
     balance,
@@ -51,7 +55,7 @@ const getWalletSummary = async (shopId) => {
         cache.set(cacheKey, summary, 60); // Cache wallet summary for 60 seconds
         return summary;
     } catch (error) {
-        console.error('Wallet summary error:', error.message, { shopId });
+        logWalletServiceError('getWalletSummary', error, { shopId });
         const fallback = buildDefaultSummary();
         cache.set(cacheKey, fallback, 30);
         return fallback;
@@ -89,13 +93,16 @@ const getWalletTransactions = async (shopId, page = 1, limit = 20, type = null) 
 
     if (error) throw error;
 
+    const safeCount = typeof count === 'number' ? count : (Array.isArray(data) ? data.length : 0);
+    const totalPages = safeCount > 0 ? Math.ceil(safeCount / pagination.limit) : 0;
+
     return {
         transactions: data || [],
         pagination: {
             page: pagination.page,
             limit: pagination.limit,
-            total: count,
-            totalPages: Math.ceil(count / pagination.limit)
+            total: safeCount,
+            totalPages
         }
     };
 };
@@ -115,6 +122,7 @@ const processOrderDelivery = async (orderId, shopId, amount) => {
     });
 
     if (error) {
+        logWalletServiceError('processOrderDelivery', error, { orderId, shopId });
         throw error;
     }
 

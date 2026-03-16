@@ -1,6 +1,10 @@
 const payoutService = require('./payout.service');
 const { successResponse } = require('../../utils/response');
 
+const VALID_PAYOUT_TYPES = ['upi', 'bank'];
+const isValidAccountType = (type) => VALID_PAYOUT_TYPES.includes(type);
+const sendBadRequest = (res, message) => res.status(400).json({ success: false, message });
+
 const getPayoutAccounts = async (req, res, next) => {
     try {
         const accounts = await payoutService.getPayoutAccounts(req.shop.id);
@@ -14,8 +18,8 @@ const addPayoutAccount = async (req, res, next) => {
     try {
         // Validate request body depending on 'type' (upi vs bank)
         const accountData = req.body;
-        if (!accountData.type || !['upi', 'bank'].includes(accountData.type)) {
-            return res.status(400).json({ success: false, message: 'Invalid payout account type' });
+        if (!isValidAccountType(accountData.type)) {
+            return sendBadRequest(res, 'Invalid payout account type');
         }
 
         const newAccount = await payoutService.addPayoutAccount(req.shop.id, accountData);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import '../Restaurant/Dashboard.css';
 import { analyticsService } from '../../services/analyticsService';
@@ -17,11 +17,7 @@ function Dashboard() {
 	const [isBookingEnabled, setIsBookingEnabled] = useState(false);
 	const [bookingToggleLoading, setBookingToggleLoading] = useState(false);
 
-	useEffect(() => {
-		fetchDashboardData();
-	}, []);
-
-	const fetchDashboardData = async () => {
+	const fetchDashboardData = useCallback(async () => {
 		try {
 			setLoading(true);
 
@@ -53,7 +49,11 @@ function Dashboard() {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
+
+	useEffect(() => {
+		fetchDashboardData();
+	}, [fetchDashboardData]);
 
 	if (loading) {
 		return <Loader variant="fullscreen" message="Loading dashboard..." />;
