@@ -220,7 +220,8 @@ export default function Registration() {
 	};
 
 	return (
-		<div className="register-container">
+		<>
+			<div className="register-container">
 			<header className="register-header">
 				<div className="register-header-content">
 					<div className="register-header-inner">
@@ -232,7 +233,7 @@ export default function Registration() {
 			</header>
 			<div className="register-main">
 				<div className="register-card">
-						<form onSubmit={handleSubmit} className="register-form">
+					<form onSubmit={handleSubmit} className="register-form">
 							{/* Basic Information */}
 							<div className="register-section">
 								<h3 className="register-section-title">Basic Information</h3>
@@ -278,23 +279,31 @@ export default function Registration() {
 									<div className="register-form-group register-grid-span-2">
 										<label className="register-label">Shop Photo</label>
 										<div className="photo-upload-container">
+											<input
+												type="file"
+												id="shopPhoto"
+												name="shopPhoto"
+												accept="image/*"
+												onChange={handlePhotoChange}
+												className="photo-upload-input"
+											/>
 											{!photoPreview ? (
-												<div>
-													<input type="file" id="shopPhoto" name="shopPhoto" accept="image/*" onChange={handlePhotoChange} className="photo-upload-input" />
-													<label htmlFor="shopPhoto" className="photo-upload-label">
-														<div className="photo-upload-icon">
-															<svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-															</svg>
-														</div>
-														<div className="photo-upload-text">Click to upload shop photo</div>
-														<div className="photo-upload-subtext">PNG, JPG, WebP up to 5MB</div>
-													</label>
-												</div>
+												<label htmlFor="shopPhoto" className="photo-upload-label">
+													<div className="photo-upload-icon">
+														<svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+														</svg>
+													</div>
+													<p className="photo-upload-title">Upload a shop photo</p>
+													<span className="photo-upload-hint">PNG, JPG or JPEG up to 5MB</span>
+												</label>
 											) : (
-												<div>
-													<img src={photoPreview} alt="Shop preview" className="photo-preview" />
-													<button type="button" onClick={removePhoto} className="register-submit-button" style={{ marginTop: '1rem', background: '#ef4444' }}>Remove Photo</button>
+												<div className="photo-preview-wrapper">
+													<img src={photoPreview} alt="Shop preview" className="photo-preview-image" />
+													<div className="photo-preview-actions">
+														<label htmlFor="shopPhoto" className="photo-change-label">Change Photo</label>
+														<button type="button" onClick={removePhoto} className="photo-remove-button">Remove Photo</button>
+													</div>
 												</div>
 											)}
 										</div>
@@ -381,87 +390,87 @@ export default function Registration() {
 									</button>
 								</div>
 							</div>
-						</form>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		{/* Terms & Conditions Modal */}
+		{showTermsModal && (
+			<div className="terms-modal-overlay" onClick={() => setShowTermsModal(false)}>
+				<div className="terms-modal" onClick={(e) => e.stopPropagation()}>
+					<div className="terms-modal-header">
+						<h2 className="terms-modal-title">Terms & Conditions</h2>
+						<button className="terms-modal-close" onClick={() => setShowTermsModal(false)} aria-label="Close">✕</button>
+					</div>
+					<div className="terms-modal-body">
+						<p className="terms-modal-meta">Last updated: March 2026 · Version 1.0</p>
+
+						<h3>1. Introduction</h3>
+						<p>Welcome to <strong>Doorriing</strong>. By registering as a seller, you agree to be bound by these Terms & Conditions. Please read them carefully before completing your registration.</p>
+
+						<h3>2. Seller Eligibility</h3>
+						<p>To register as a seller on Doorriing, you must:</p>
+						<ul>
+							<li>Be at least 18 years of age.</li>
+							<li>Operate a legitimate business registered in India.</li>
+							<li>Hold a valid PAN card and Aadhaar number.</li>
+							<li>Agree to conduct business in compliance with all applicable Indian laws.</li>
+						</ul>
+
+						<h3>3. Seller Responsibilities</h3>
+						<p>As a registered seller, you agree to:</p>
+						<ul>
+							<li>Provide accurate and up-to-date information about your shop and products.</li>
+							<li>Maintain sufficient inventory to fulfil customer orders.</li>
+							<li>Fulfill orders in a timely manner as per the platform's delivery standards.</li>
+							<li>Not list any prohibited, illegal, or counterfeit products.</li>
+						</ul>
+
+						<h3>4. Payments & Wallet</h3>
+						<p>Earnings from fulfilled orders are credited to your wallet automatically. Withdrawals are subject to the platform's payout schedule. Doorriing reserves the right to withhold payments in cases of suspected fraud or policy violation.</p>
+
+						<h3>5. Product Listings</h3>
+						<p>All product listings must accurately represent the items being sold. Misleading descriptions or misrepresented products may result in suspension of your account. Doorriing reserves the right to remove any listing that violates community standards.</p>
+
+						<h3>6. Account Suspension & Termination</h3>
+						<p>Doorriing reserves the right to suspend or permanently terminate seller accounts that violate these Terms or engage in fraudulent activity. You will be notified via registered email in case of suspension.</p>
+
+						<h3>7. Data & Privacy</h3>
+						<p>By registering, you consent to the collection and processing of your personal and business data. Your data will not be sold to third parties. We use your information to operate the platform, process transactions, and improve our services.</p>
+
+						<h3>8. Commission & Fees</h3>
+						<p>Doorriing may charge a commission on orders fulfilled through the platform. Any applicable commission rates will be communicated to sellers in advance. The current launch phase operates with zero commission — subject to change with 30 days prior notice.</p>
+
+						<h3>9. Changes to Terms</h3>
+						<p>We may update these Terms from time to time. Sellers will be notified of significant changes via in-app notifications and email.</p>
+
+						<h3>10. Governing Law</h3>
+						<p>These Terms are governed by the laws of India. Any disputes shall be subject to the exclusive jurisdiction of the courts in Jharkhand, India.</p>
+
+						<h3>11. Contact Us</h3>
+						<p>For questions, contact us at <strong>support@doorriing.com</strong>.</p>
+					</div>
+					<div className="terms-modal-footer">
+						<button
+							type="button"
+							className="terms-modal-accept-btn"
+							onClick={() => { setTermsAccepted(true); setShowTermsModal(false); }}
+						>
+							I Accept
+						</button>
+						<button
+							type="button"
+							className="terms-modal-close-btn"
+							onClick={() => setShowTermsModal(false)}
+						>
+							Close
+						</button>
 					</div>
 				</div>
 			</div>
-
-			{/* Terms & Conditions Modal */}
-			{showTermsModal && (
-				<div className="terms-modal-overlay" onClick={() => setShowTermsModal(false)}>
-					<div className="terms-modal" onClick={(e) => e.stopPropagation()}>
-						<div className="terms-modal-header">
-							<h2 className="terms-modal-title">Terms & Conditions</h2>
-							<button className="terms-modal-close" onClick={() => setShowTermsModal(false)} aria-label="Close">✕</button>
-						</div>
-						<div className="terms-modal-body">
-							<p className="terms-modal-meta">Last updated: March 2026 · Version 1.0</p>
-
-							<h3>1. Introduction</h3>
-							<p>Welcome to <strong>Doorriing</strong>. By registering as a seller, you agree to be bound by these Terms & Conditions. Please read them carefully before completing your registration.</p>
-
-							<h3>2. Seller Eligibility</h3>
-							<p>To register as a seller on Doorriing, you must:</p>
-							<ul>
-								<li>Be at least 18 years of age.</li>
-								<li>Operate a legitimate business registered in India.</li>
-								<li>Hold a valid PAN card and Aadhaar number.</li>
-								<li>Agree to conduct business in compliance with all applicable Indian laws.</li>
-							</ul>
-
-							<h3>3. Seller Responsibilities</h3>
-							<p>As a registered seller, you agree to:</p>
-							<ul>
-								<li>Provide accurate and up-to-date information about your shop and products.</li>
-								<li>Maintain sufficient inventory to fulfil customer orders.</li>
-								<li>Fulfill orders in a timely manner as per the platform's delivery standards.</li>
-								<li>Not list any prohibited, illegal, or counterfeit products.</li>
-							</ul>
-
-							<h3>4. Payments & Wallet</h3>
-							<p>Earnings from fulfilled orders are credited to your wallet automatically. Withdrawals are subject to the platform's payout schedule. Doorriing reserves the right to withhold payments in cases of suspected fraud or policy violation.</p>
-
-							<h3>5. Product Listings</h3>
-							<p>All product listings must accurately represent the items being sold. Misleading descriptions or misrepresented products may result in suspension of your account. Doorriing reserves the right to remove any listing that violates community standards.</p>
-
-							<h3>6. Account Suspension & Termination</h3>
-							<p>Doorriing reserves the right to suspend or permanently terminate seller accounts that violate these Terms or engage in fraudulent activity. You will be notified via registered email in case of suspension.</p>
-
-							<h3>7. Data & Privacy</h3>
-							<p>By registering, you consent to the collection and processing of your personal and business data. Your data will not be sold to third parties. We use your information to operate the platform, process transactions, and improve our services.</p>
-
-							<h3>8. Commission & Fees</h3>
-							<p>Doorriing may charge a commission on orders fulfilled through the platform. Any applicable commission rates will be communicated to sellers in advance. The current launch phase operates with zero commission — subject to change with 30 days prior notice.</p>
-
-							<h3>9. Changes to Terms</h3>
-							<p>We may update these Terms from time to time. Sellers will be notified of significant changes via in-app notifications and email.</p>
-
-							<h3>10. Governing Law</h3>
-							<p>These Terms are governed by the laws of India. Any disputes shall be subject to the exclusive jurisdiction of the courts in Jharkhand, India.</p>
-
-							<h3>11. Contact Us</h3>
-							<p>For questions, contact us at <strong>support@doorriing.com</strong>.</p>
-						</div>
-						<div className="terms-modal-footer">
-							<button
-								type="button"
-								className="terms-modal-accept-btn"
-								onClick={() => { setTermsAccepted(true); setShowTermsModal(false); }}
-							>
-								I Accept
-							</button>
-							<button
-								type="button"
-								className="terms-modal-close-btn"
-								onClick={() => setShowTermsModal(false)}
-							>
-								Close
-							</button>
-						</div>
-					</div>
-				</div>
-			)}
-		</div>
+		)}
+		</>
 	);
 }
 
