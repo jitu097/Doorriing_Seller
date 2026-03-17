@@ -431,12 +431,10 @@ const Menu = () => {
 						</div>
 					</div>
 				</div>
-				<div className="menu-actions-row">
+				<div className="menu-actions">
+					<button className="btn btn-outline" onClick={handleCategoryModalOpen}>Manage Categories</button>
+					<button className="btn btn-outline" onClick={handleSubcategoryModalOpen}>Manage Subcategories</button>
 					<button className="btn btn-primary" onClick={handleModalOpen}>+ Add New Item</button>
-					<button className="btn btn-outline" onClick={handleCategoryModalOpen}>
-						Categories</button>
-					<button className="btn btn-outline" onClick={handleSubcategoryModalOpen}>
-						Subcategories</button>
 				</div>
 
 				<div className="menu-categories">

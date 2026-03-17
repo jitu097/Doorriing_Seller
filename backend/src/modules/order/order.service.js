@@ -78,15 +78,15 @@ const computeRemainingTimeMs = (order, nowMs = Date.now()) => {
     return timestamp - nowMs;
 };
 
+// Only expire if deadline is NOT NULL and passed. If NULL, never expire (backward compatibility)
 const shouldExpireOrder = (order, nowMs = Date.now()) => {
     if (!order) return false;
     if (normalizeOrderStatus(order.status) !== 'pending') return false;
-    const { timestamp, iso } = deriveDeadlineInfo(order, nowMs);
-    if (timestamp === null) return false;
-    if (!order.acceptance_deadline && iso) {
-        order.acceptance_deadline = iso;
-    }
-    return nowMs >= timestamp;
+    // If deadline is null, never expire
+    if (!order.acceptance_deadline) return false;
+    const ts = parseTimestamp(order.acceptance_deadline);
+    if (ts === null) return false;
+    return nowMs > ts;
 };
 
 const autoExpireOrders = async (orders = [], shopId) => {
@@ -396,25 +396,42 @@ const getOrderDetails = async (orderId, shopId) => {
     return formatOrderRecord(evaluatedOrder, { driverMap });
 };
 
+// Used for accept/reject: only expire if deadline is set and passed
 const checkExpiry = async (orderId, shopId) => {
     let order = await fetchOrderForShop(orderId, shopId, 'id, status, acceptance_deadline, order_number, created_at');
-    [order] = await autoExpireOrders([order], shopId);
-
-    if (normalizeOrderStatus(order.status) === 'expired') {
-        throw new BadRequestError('Order has expired and can no longer be updated.');
+    // Only expire if deadline is not null and passed
+    if (order.acceptance_deadline) {
+        const ts = parseTimestamp(order.acceptance_deadline);
+        if (normalizeOrderStatus(order.status) === 'pending' && ts !== null && Date.now() > ts) {
+            // Mark as expired in DB
+            await supabase.from('orders').update({ status: 'expired' }).eq('id', orderId).eq('shop_id', shopId);
+            order.status = 'expired';
+        }
     }
-
+    if (normalizeOrderStatus(order.status) === 'expired') {
+        throw new BadRequestError('Order expired. Cannot accept.');
+    }
     return order;
 };
 
 const acceptOrder = async (orderId, shopId) => {
     const order = await checkExpiry(orderId, shopId);
     const normalizedStatus = normalizeOrderStatus(order.status);
-
-    if (normalizedStatus !== 'pending') {
-        throw new BadRequestError(`Cannot accept order with status: ${order.status}`);
+    // Only allow accept if pending and (no deadline or not expired)
+    let canAccept = false;
+    if (normalizedStatus === 'pending') {
+        if (!order.acceptance_deadline) {
+            canAccept = true;
+        } else {
+            const ts = parseTimestamp(order.acceptance_deadline);
+            if (ts !== null && Date.now() <= ts) {
+                canAccept = true;
+            }
+        }
     }
-
+    if (!canAccept) {
+        throw new BadRequestError('Order expired. Cannot accept.');
+    }
     const now = new Date().toISOString();
     const { data, error } = await supabase
         .from('orders')
@@ -427,9 +444,7 @@ const acceptOrder = async (orderId, shopId) => {
         .eq('shop_id', shopId)
         .select()
         .single();
-
     if (error) throw error;
-
     try {
         await notificationService.createNotification(
             shopId,
@@ -442,18 +457,21 @@ const acceptOrder = async (orderId, shopId) => {
     } catch (err) {
         logError('notification.acceptOrder', err, { orderId });
     }
-
-    return data;
+    // Always return order_status and acceptance_deadline
+    return {
+        ...data,
+        order_status: data.status,
+        acceptance_deadline: data.acceptance_deadline ?? null
+    };
 };
 
 const rejectOrder = async (orderId, shopId) => {
-    const order = await checkExpiry(orderId, shopId);
+    const order = await fetchOrderForShop(orderId, shopId, 'id, status, acceptance_deadline, order_number, created_at');
     const normalizedStatus = normalizeOrderStatus(order.status);
-
+    // Only allow reject if pending (even if expired, do not allow reject for accepted/expired)
     if (normalizedStatus !== 'pending') {
         throw new BadRequestError(`Cannot reject order with status: ${order.status}`);
     }
-
     const { data, error } = await supabase
         .from('orders')
         .update({
@@ -464,9 +482,7 @@ const rejectOrder = async (orderId, shopId) => {
         .eq('shop_id', shopId)
         .select()
         .single();
-
     if (error) throw error;
-
     try {
         await notificationService.createNotification(
             shopId,
@@ -479,8 +495,12 @@ const rejectOrder = async (orderId, shopId) => {
     } catch (err) {
         logError('notification.rejectOrder', err, { orderId });
     }
-
-    return data;
+    // Always return order_status and acceptance_deadline
+    return {
+        ...data,
+        order_status: data.status,
+        acceptance_deadline: data.acceptance_deadline ?? null
+    };
 };
 
 const updateOrderStatus = async (orderId, shopId, newStatus, actor = 'seller') => {

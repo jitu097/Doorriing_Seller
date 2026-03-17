@@ -3,6 +3,49 @@ import './Profile.css';
 import apiCall from '../../services/api';
 import { shopService } from '../../services/shopService';
 
+const SUBSCRIPTION_STATUS_META = {
+	active: {
+		label: 'Active',
+		badgeClass: 'active',
+		helper: 'Your plan is active and billing is up to date.'
+	},
+	expired: {
+		label: 'Expired',
+		badgeClass: 'expired',
+		helper: 'Access expired. Renew to continue receiving seller benefits.'
+	},
+	'not_subscribed': {
+		label: 'Not Subscribed',
+		badgeClass: 'not-subscribed',
+		helper: 'No plan is linked yet. Choose a plan to unlock dashboard features.'
+	}
+};
+
+const formatBillingDate = (dateString) => {
+	if (!dateString) return '—';
+	const parsed = new Date(dateString);
+	if (Number.isNaN(parsed.getTime())) {
+		return dateString;
+	}
+	return parsed.toLocaleDateString('en-IN', {
+		day: '2-digit',
+		month: 'long',
+		year: 'numeric'
+	});
+};
+
+const formatPrice = (value) => {
+	const numericValue = Number(value);
+	if (Number.isNaN(numericValue)) {
+		return '₹0';
+	}
+	return new Intl.NumberFormat('en-IN', {
+		style: 'currency',
+		currency: 'INR',
+		maximumFractionDigits: 0
+	}).format(numericValue);
+};
+
 export default function Profile() {
 	const [formData, setFormData] = useState({});
 	const [loading, setLoading] = useState(true);
@@ -11,6 +54,18 @@ export default function Profile() {
 	const [activeSection, setActiveSection] = useState('shop');
 	const [selectedImageFile, setSelectedImageFile] = useState(null);
 	const [previewImage, setPreviewImage] = useState('');
+	const [subscriptionInfo] = useState({
+		planName: 'Seller Plan',
+		price: 99,
+		status: 'active',
+		nextBilling: '2026-03-25'
+	});
+
+	const normalizedSubscriptionStatus = String(subscriptionInfo.status || 'not_subscribed').toLowerCase();
+	const statusMeta = SUBSCRIPTION_STATUS_META[normalizedSubscriptionStatus] || SUBSCRIPTION_STATUS_META['not_subscribed'];
+	const showRenewButton = normalizedSubscriptionStatus !== 'active';
+	const formattedPrice = `${formatPrice(subscriptionInfo.price)}/month`;
+	const nextBillingLabel = formatBillingDate(subscriptionInfo.nextBilling);
 
 	const isShopOpen = (shop) => {
 		if (shop?.status) return String(shop.status).toLowerCase() === 'open';
@@ -331,6 +386,50 @@ export default function Profile() {
 							</div>
 						</div>
 					)}
+
+					<div className="profile-section subscription-section">
+						<div className="subscription-header">
+							<div>
+								<h2>Subscription Details</h2>
+								<p className="subscription-subtext">Keep track of your seller plan before enabling wallet-driven billing.</p>
+							</div>
+							<span className={`subscription-status badge-${statusMeta.badgeClass}`}>
+								<span className="status-dot"></span>
+								{statusMeta.label}
+							</span>
+						</div>
+						<div className="subscription-details-grid">
+							<div className="subscription-field">
+								<p className="field-label">Plan Name</p>
+								<p className="field-value">{subscriptionInfo.planName}</p>
+							</div>
+							<div className="subscription-field">
+								<p className="field-label">Price</p>
+								<p className="field-value">{formattedPrice}</p>
+							</div>
+							<div className="subscription-field">
+								<p className="field-label">Status</p>
+								<p className="field-value">
+									<span className={`subscription-badge badge-${statusMeta.badgeClass}`}>
+										<span className="status-dot"></span>
+										{statusMeta.label}
+									</span>
+								</p>
+								<p className="field-helper">{statusMeta.helper}</p>
+							</div>
+							<div className="subscription-field">
+								<p className="field-label">Next Billing Date</p>
+								<p className="field-value">{nextBillingLabel}</p>
+							</div>
+						</div>
+						<div className="subscription-cta">
+							{showRenewButton ? (
+								<button type="button" className="btn-renew">Renew Subscription</button>
+							) : (
+								<button type="button" className="btn-active-plan" disabled>Active Plan</button>
+							)}
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>

@@ -137,39 +137,114 @@ body,
 
 .photo-upload-container {
 	display: flex;
-	align-items: center;
+	flex-direction: column;
+	align-items: flex-start;
 	gap: 1rem;
 }
 
+.photo-upload-input {
+	display: none;
+}
+
 .photo-upload-label {
+	width: 100%;
 	display: flex;
-	flex-direction: column;
 	align-items: center;
+	gap: 1rem;
+	border: 2px dashed #ffd1b3;
+	border-radius: 18px;
+	padding: 18px;
+	background: #fffdf9;
 	cursor: pointer;
-	margin-top: 0.5rem;
+	transition: border-color 0.2s, background 0.2s;
+}
+
+.photo-upload-label:hover {
+	border-color: #ff6600;
+	background: #fff7ef;
 }
 
 .photo-upload-icon {
+	width: 56px;
+	height: 56px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 16px;
+	background: #fff3ea;
 	color: #ff6600;
-	margin-bottom: 0.3rem;
 }
 
-.photo-upload-text {
+.photo-upload-icon svg {
+	width: 32px;
+	height: 32px;
+}
+
+.photo-upload-title {
 	font-size: 1rem;
-	color: #333;
+	font-weight: 600;
+	color: #1f2937;
+	margin: 0;
 }
 
-.photo-upload-subtext {
+.photo-upload-hint {
 	font-size: 0.9rem;
-	color: #888;
+	color: #6b7280;
 }
 
-.photo-preview {
-	width: 80px;
-	height: 80px;
+.photo-preview-wrapper {
+	width: 100%;
+	border: 1px solid #f0f0f0;
+	border-radius: 18px;
+	padding: 16px;
+	background: #fffdf9;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.photo-preview-image {
+	width: 100%;
+	max-height: 220px;
 	object-fit: cover;
-	border-radius: 8px;
-	border: 1px solid #eee;
+	border-radius: 14px;
+	border: 1px solid #f2f2f2;
+}
+
+.photo-preview-actions {
+	display: flex;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.photo-change-label,
+.photo-remove-button {
+	font-size: 0.95rem;
+	font-weight: 600;
+	padding: 10px 16px;
+	border-radius: 10px;
+	border: none;
+	cursor: pointer;
+}
+
+.photo-change-label {
+	background: #fff3ea;
+	color: #ff6600;
+	border: 1px solid #ffd1b3;
+}
+
+.photo-remove-button {
+	background: #fee2e2;
+	color: #b91c1c;
+	border: 1px solid #fecaca;
+}
+
+.photo-change-label:hover {
+	background: #ffe5d0;
+}
+
+.photo-remove-button:hover {
+	background: #fecaca;
 }
 
 .register-textarea {

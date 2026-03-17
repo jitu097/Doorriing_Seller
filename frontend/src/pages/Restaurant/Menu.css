@@ -7,21 +7,6 @@
 	letter-spacing: 0.01em;
 }
 
-/* Ensure gap between action buttons in menu-actions-row */
-.menu-actions-row>.btn,
-.menu-actions-row>.btn-primary,
-.menu-actions-row>.btn-outline,
-.menu-actions-row>.btn-ghost {
-	margin-right: 14px;
-}
-
-.menu-actions-row>.btn:last-child,
-.menu-actions-row>.btn-primary:last-child,
-.menu-actions-row>.btn-outline:last-child,
-.menu-actions-row>.btn-ghost:last-child {
-	margin-right: 0;
-}
-
 /* Manage Categories Modal Styles */
 .category-list-modal {
 	display: flex;
@@ -359,8 +344,15 @@ input:checked+.slider:before {
 
 .menu-actions {
 	display: flex;
-	gap: 6px;
-	margin-bottom: 8px;
+	gap: 14px;
+	margin-bottom: 28px;
+	align-items: stretch;
+}
+
+.menu-actions .btn {
+	flex: 1 1 0;
+	min-width: 0;
+	text-align: center;
 }
 
 .btn {
@@ -500,8 +492,8 @@ input:checked+.slider:before {
 	}
 
 	.menu-actions {
-		flex-direction: column;
-		gap: 8px;
+		flex-direction: row;
+		gap: 10px;
 		margin-bottom: 18px;
 	}
 
@@ -511,21 +503,7 @@ input:checked+.slider:before {
 	}
 
 	.category-content {
-		padding: 10px 10px 10px 24px;
-	}
-
-	/* Add this for the row layout */
-	.menu-actions-row {
-		display: flex;
-		gap: 18px;
-		flex-wrap: wrap;
-		margin-bottom: 18px;
-		position: sticky;
-	}
-
-	.menu-actions-row {
-		gap: 0px;
-		margin-bottom: 12px;
+		padding: 10px 6px 10px 10px;
 	}
 
 	.btn,
@@ -536,6 +514,19 @@ input:checked+.slider:before {
 		font-size: 0.95rem !important;
 		min-width: unset !important;
 		border-radius: 8px !important;
+	}
+
+	.menu-actions .btn {
+		flex: 1 1 0;
+		min-width: 0;
+		padding: 8px 10px !important;
+		font-size: 0.9rem !important;
+	}
+
+	.item-card-modern {
+		margin-left: 0;
+		margin-right: 0;
+		width: 100%;
 	}
 }
 

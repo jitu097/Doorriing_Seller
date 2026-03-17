@@ -26,28 +26,47 @@ const GroceryProductCard = ({ item, onEdit, onDelete, onToggleStatus }) => {
 
     return (
         <div className="grocery-card">
-            {/* Active Status Badge (Top Left) */}
-            {item.is_available ? (
-                <span className="grocery-card-badge">ACTIVE</span>
-            ) : (
-                <span className="grocery-card-badge inactive">INACTIVE</span>
-            )}
-
-            {hasDiscount && discountLabel && (
-                <span className="grocery-card-discount-chip">{discountLabel}</span>
-            )}
-
-            {/* Image Section - Full Width at Top */}
-            <div className="grocery-card-imgbox">
-                {item.image_url ? (
-                    <img src={item.image_url} alt={item.name} className="grocery-card-img" />
-                ) : (
-                    <span className="grocery-card-placeholder">🛒</span>
-                )}
-            </div>
-
-            {/* Main Content Below Image */}
             <div className="grocery-card-content">
+                <div className="grocery-card-side">
+                    <div className="grocery-card-side-meta">
+                        {hasDiscount && discountLabel && (
+                            <span className="grocery-card-discount-chip">{discountLabel}</span>
+                        )}
+                        <span className={`grocery-card-status ${item.is_available ? '' : 'inactive'}`}>
+                            {item.is_available ? 'ACTIVE' : 'INACTIVE'}
+                        </span>
+                    </div>
+
+                    <div className="grocery-card-imgbox">
+                        {item.image_url ? (
+                            <img src={item.image_url} alt={item.name} className="grocery-card-img" />
+                        ) : (
+                            <span className="grocery-card-placeholder">🛒</span>
+                        )}
+                    </div>
+
+                    <div className="grocery-card-side-actions">
+                        <button
+                            className="action-btn delete-btn compact"
+                            onClick={() => onDelete(item.id, item.name)}
+                        >
+                            <img src="/delete.png" alt="Delete" width="18" height="18" />
+                            Delete
+                        </button>
+                        <button
+                            className="action-btn edit-btn compact"
+                            onClick={() => onEdit(item)}
+                        >
+                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                                <path d="M14.7 2.29a1 1 0 0 1 1.42 0l1.59 1.59a1 1 0 0 1 0 1.42l-9.17 9.17-2.12.53.53-2.12 9.17-9.17z" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                                <path d="M12.88 4.12l2.12 2.12" stroke="currentColor" strokeWidth="1.5" />
+                            </svg>
+                            Edit
+                        </button>
+                    </div>
+                </div>
+
+                <div className="grocery-card-body">
                 {/* Title */}
                 <h3 className="grocery-card-title">{item.name}</h3>
 
@@ -71,36 +90,18 @@ const GroceryProductCard = ({ item, onEdit, onDelete, onToggleStatus }) => {
                         {hasDiscount && <span className="price-original">₹{basePrice.toFixed(2)}</span>}
                         <span className="price-final">₹{finalPrice.toFixed(2)}</span>
                     </div>
-                    
-                    {/* Toggle Availability */}
-                    <label className="availability-toggle">
-                        <input
-                            type="checkbox"
-                            checked={item.is_available}
-                            onChange={() => onToggleStatus(item.id, item.is_available)}
-                        />
-                    </label>
+
+                    <div className="grocery-card-switches">
+                        <label className="availability-toggle" title="Toggle availability">
+                            <input
+                                type="checkbox"
+                                checked={item.is_available}
+                                onChange={() => onToggleStatus(item.id, item.is_available)}
+                            />
+                        </label>
+                    </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="grocery-card-actions">
-                    <button
-                        className="action-btn edit-btn"
-                        onClick={() => onEdit(item)}
-                    >
-                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                            <path d="M14.7 2.29a1 1 0 0 1 1.42 0l1.59 1.59a1 1 0 0 1 0 1.42l-9.17 9.17-2.12.53.53-2.12 9.17-9.17z" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                            <path d="M12.88 4.12l2.12 2.12" stroke="currentColor" strokeWidth="1.5" />
-                        </svg>
-                        Edit
-                    </button>
-                    <button
-                        className="action-btn delete-btn"
-                        onClick={() => onDelete(item.id, item.name)}
-                    >
-                        <img src="/delete.png" alt="Delete" width="18" height="18" />
-                        Delete
-                    </button>
                 </div>
             </div>
         </div>
