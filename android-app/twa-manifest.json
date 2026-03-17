@@ -1,0 +1,29 @@
+{
+  "packageName": "com.doorriing.seller",
+  "name": "Doorriing Seller",
+  "shortName": "Doorriing Seller",
+  "themeColor": "#ff6b00",
+  "navigationColor": "#000000",
+  "backgroundColor": "#ffffff",
+  "startUrl": "/",
+  "iconUrl": "http://localhost:9090/store_icon.png",
+  "maskableIconUrl": "http://localhost:9090/store_icon.png",
+  "appVersion": "1.0.0",
+  "appVersionCode": 1,
+  "bundleId": "com.doorriing.seller",
+  "host": "seller.doorriing.com",
+  "enableNotifications": true,
+  "shortcuts": [],
+  "webManifestUrl": "https://seller.doorriing.com/manifest.json",
+  "id": "com.doorriing.seller",
+  "minSdkVersion": 19,
+  "targetSdkVersion": 34,
+  "display": "standalone",
+  "orientation": "portrait",
+  "fingerprints": [],
+  "generatorApp": "bubblewrap",
+  "signingKey": {
+    "path": "android.keystore",
+    "alias": "android"
+  }
+}

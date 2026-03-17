@@ -25,7 +25,10 @@ module.exports = {
     firebase: {
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/^["']|["']$/g, '').replace(/\\n/g, '\n')
+        privateKey: (process.env.FIREBASE_PRIVATE_KEY || '')
+            .replace(/^["']|["']$/g, '')
+            .replace(/\\n/g, '\n')
+            .replace(/\r/g, '')
     },
     CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
     CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,

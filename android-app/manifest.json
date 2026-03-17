@@ -1,0 +1,19 @@
+{
+  "name": "Doorriing Seller",
+  "short_name": "Doorriing Seller",
+  "description": "Doorriing Seller Dashboard",
+  "start_url": "https://seller.doorriing.com/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#ff6b00",
+  "icons": [
+    {
+      "src": "store_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
