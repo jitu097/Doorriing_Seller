@@ -156,7 +156,7 @@ export default function Orders() {
 
 	useEffect(() => {
 		fetchOrders({ page: 1, status: 'all' });
-	}, [fetchOrders]);
+	}, []); // Only fetch on mount
 
 	const refreshSilently = useCallback(() => fetchOrders({ silent: true }), [fetchOrders]);
 	useRealtimeSubscription('orders', refreshSilently);
@@ -240,7 +240,7 @@ export default function Orders() {
 	), [performOrderAction]);
 
 	const handleMarkReady = useCallback((orderId) => performOrderAction(
-		() => orderService.markOrderReady(orderId),
+		() => orderService.markReadyForPickup(orderId),
 		ACTION_TYPES.ready,
 		orderId,
 		{ nextStatus: 'ready_for_pickup' }

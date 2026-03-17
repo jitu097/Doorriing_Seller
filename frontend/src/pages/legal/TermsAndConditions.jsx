@@ -1,14 +1,15 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './TermsAndConditions.css';
 
 const TermsAndConditions = () => {
+    const navigate = useNavigate();
     return (
         <div className="terms-page">
             <div className="terms-container">
                 {/* Header */}
                 <header className="terms-header">
-                    <Link to="/" className="terms-back-link">← Back to Home</Link>
+                    <button onClick={() => navigate(-1)} className="terms-back-link">← Go Back</button>
                     <div className="terms-logo">
                         <img src="/Doorriing.png" alt="Doorriing" className="terms-logo-img" />
                     </div>

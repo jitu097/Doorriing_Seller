@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Footer from '../../components/common/Footer';
 import './LandingPage.css';
 
 const LandingPage = () => {
@@ -23,7 +24,7 @@ const LandingPage = () => {
                     </h1>
                     <p className="hero-subtitle">
                         The easiest way to manage your shop, orders, and products online.
-                        Join thousands of sellers who trust Doorriing for their daily operations.
+
                     </p>
 
                     <div className="cta-group">
@@ -36,6 +37,7 @@ const LandingPage = () => {
                     </div>
                 </div>
             </section>
+            <Footer />
         </div>
     );
 };

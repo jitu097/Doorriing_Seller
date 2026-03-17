@@ -28,10 +28,15 @@ const ORDER_STATUS_FLOW = [
     'delivered'
 ];
 
-const STATUS_PRIORITY_MAP = ORDER_STATUS_FLOW.reduce((acc, status, index) => {
-    acc[status] = index;
-    return acc;
-}, {});
+const STATUS_PRIORITY_MAP = {
+    pending: 0,
+    accepted: 1,
+    preparing: 2,
+    ready_for_pickup: 3,
+    picked_up: 4,
+    out_for_delivery: 5,
+    delivered: 6
+};
 
 const getStatusRank = (status) => {
     if (!status) return -1;
@@ -362,26 +367,23 @@ const getOrders = async (shopId, page = 1, limit = 20, status = null) => {
         }
     }
 
-    const { data, error, count } = await query
+    const { data: rawOrders, error, count } = await query
         .order('created_at', { ascending: false })
         .range(pagination.offset, pagination.offset + pagination.limit - 1);
 
     if (error) throw error;
 
-    const rawOrders = data || [];
-    const evaluatedOrders = await autoExpireOrders(rawOrders, shopId);
+    const evaluatedOrders = await autoExpireOrders(rawOrders || [], shopId);
     const driverMap = await buildDriverMap(evaluatedOrders);
     const sanitizedOrders = evaluatedOrders.map(order => formatOrderRecord(order, { driverMap }));
-    const total = typeof count === 'number' ? count : sanitizedOrders.length;
-    const totalPages = Math.max(1, Math.ceil(Math.max(total, 1) / pagination.limit));
-
+    
     return {
         orders: sanitizedOrders,
         pagination: {
             page: pagination.page,
             limit: pagination.limit,
-            total,
-            totalPages
+            total: typeof count === 'number' ? count : sanitizedOrders.length,
+            totalPages: Math.ceil(Math.max(count || sanitizedOrders.length, 1) / pagination.limit)
         }
     };
 };

@@ -9,11 +9,25 @@ const bootstrapSeller = async (firebaseUid, email) => {
         .single();
     
     if (existingUser) {
-        const { data: shop } = await supabase
+        let { data: shop } = await supabase
             .from('shops')
-            .select('id, shop_name, category, subcategory, is_open, is_accepting_orders')
+            .select('id, shop_name, category, subcategory, is_open, is_accepting_orders, business_type')
             .eq('seller_id', existingUser.id)
             .single();
+        
+        // --- Demo Account Bypass ---
+        const config = require('../../config/env');
+        const userEmail = email?.toLowerCase();
+        if (!shop && userEmail) {
+            if (userEmail === config.demo.grocery.email?.toLowerCase()) {
+                const { data: demoShop } = await supabase.from('shops').select('id, shop_name, category, subcategory, is_open, is_accepting_orders, business_type').eq('id', config.demo.grocery.shopId).maybeSingle();
+                if (demoShop) shop = demoShop;
+            } else if (userEmail === config.demo.restaurant.email?.toLowerCase()) {
+                const { data: demoShop } = await supabase.from('shops').select('id, shop_name, category, subcategory, is_open, is_accepting_orders, business_type').eq('id', config.demo.restaurant.shopId).maybeSingle();
+                if (demoShop) shop = demoShop;
+            }
+        }
+        // ---------------------------
         
         return {
             user: existingUser,

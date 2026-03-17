@@ -36,8 +36,8 @@ const OrderAlertOverlay = ({ orders, onAccept, onDecline, onExpire, loading }) =
     const orderStatus = (order.status || order.order_status)?.toLowerCase?.() || '';
     const isPendingLike = ['pending', 'new', ''].includes(orderStatus);
     const hasTimerSource = isPendingLike;
-    const timerActive = hasTimerSource && typeof remainingMs === 'number' && remainingMs > 0;
     const isExpired = isPendingLike && typeof remainingMs === 'number' && remainingMs <= 0;
+    const timerActive = isPendingLike && typeof remainingMs === 'number' && remainingMs > 0;
     const timerVariant = timerActive ? resolveTimerVariant(remainingMs) : 'neutral';
     const safeRemainingMs = clampRemainingMs(remainingMs) ?? 0;
     const countdownDisplay = hasTimerSource ? formatCountdown(safeRemainingMs) : null;
@@ -53,15 +53,15 @@ const OrderAlertOverlay = ({ orders, onAccept, onDecline, onExpire, loading }) =
     // for all orders in the queue.
 
     useEffect(() => {
-        if (!isPendingLike) return;
-        if (typeof remainingMs !== 'number') return;
-        if (remainingMs > 0) return;
-        if (expireNotifiedRef.current === order.id) return;
-        expireNotifiedRef.current = order.id;
-        if (typeof onExpire === 'function') {
-            onExpire(order.id);
+        if (isPendingLike && typeof remainingMs === 'number' && remainingMs <= 0) {
+            if (expireNotifiedRef.current !== order.id) {
+                expireNotifiedRef.current = order.id;
+                if (typeof onExpire === 'function') {
+                    onExpire(order.id);
+                }
+            }
         }
-    }, [isPendingLike, remainingMs, onExpire, order]);
+    }, [isPendingLike, remainingMs, onExpire, order.id]);
 
     const timerStatusText = isExpired ? 'Time Over ⏳' : 'Time left ⏳';
 

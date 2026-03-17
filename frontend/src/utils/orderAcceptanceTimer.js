@@ -25,9 +25,11 @@ export const parseTimestampToMs = (value) => {
 export const deriveAcceptanceDeadlineMs = (order = {}) => {
   const explicit = parseTimestampToMs(order.acceptance_deadline || order.acceptanceDeadline);
   if (explicit !== null) return explicit;
+  
   const created = parseTimestampToMs(order.created_at || order.createdAt);
-  if (created === null) return null;
-  return created + ACCEPTANCE_WINDOW_MS;
+  if (created !== null) return created + ACCEPTANCE_WINDOW_MS;
+  
+  return null;
 };
 
 export const deriveInitialRemainingMs = (order = {}) => {
@@ -73,9 +75,8 @@ export const isPendingOrderExpired = (order = {}, remainingMs = null) => {
 
 export const shouldStartTimer = (order = {}) => {
   const status = (order.status || order.order_status)?.toLowerCase?.() || '';
-  if (status !== 'pending') return false;
-  const deadline = deriveAcceptanceDeadlineMs(order);
-  if (deadline !== null) return deadline > Date.now();
+  if (status !== 'pending' && status !== 'new') return false;
+  
   const remaining = deriveInitialRemainingMs(order);
   return typeof remaining === 'number' && remaining > 0;
 };

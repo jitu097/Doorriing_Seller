@@ -1,0 +1,87 @@
+/* Common Styles for Legal Pages */
+.legal-page {
+    background: #f8fafc;
+    min-height: 100vh;
+    padding: 60px 20px;
+    font-family: 'Inter', sans-serif;
+    color: #1e293b;
+}
+
+.legal-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.legal-header {
+    text-align: center;
+    margin-bottom: 40px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 20px;
+    position: relative;
+}
+
+.legal-back-link {
+    position: absolute;
+    left: 0;
+    top: 10px;
+    text-decoration: none;
+    color: #64748b;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+}
+
+.legal-back-link:hover {
+    color: #334155;
+}
+
+.legal-logo-img {
+    height: 48px;
+    margin-bottom: 16px;
+}
+
+.legal-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 8px;
+}
+
+.legal-body {
+    line-height: 1.6;
+}
+
+.legal-section {
+    margin-bottom: 30px;
+}
+
+.legal-section h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 12px;
+}
+
+.legal-section p {
+    margin-bottom: 12px;
+}
+
+@media (max-width: 640px) {
+    .legal-container {
+        padding: 24px;
+    }
+    
+    .legal-back-link {
+        position: static;
+        display: block;
+        margin-bottom: 20px;
+    }
+}

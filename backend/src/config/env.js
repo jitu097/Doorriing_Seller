@@ -29,5 +29,15 @@ module.exports = {
     },
     CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
     CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
-    CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET
+    CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+    demo: {
+        grocery: {
+            email: process.env.GROCERY_DEMO_EMAIL,
+            shopId: process.env.GROCERY_DEMO_SHOP_ID
+        },
+        restaurant: {
+            email: process.env.RESTAURANT_DEMO_EMAIL,
+            shopId: process.env.RESTAURANT_DEMO_SHOP_ID
+        }
+    }
 };

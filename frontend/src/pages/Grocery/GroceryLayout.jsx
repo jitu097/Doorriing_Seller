@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
+import Footer from '../../components/common/Footer';
 import './GroceryLayout.css';
 
 const GroceryLayout = () => {
@@ -13,9 +14,7 @@ const GroceryLayout = () => {
                 <main className="layout-content">
                     <Outlet />
                 </main>
-                <footer className="app-footer">
-                    © 2026 All Rights Reserved to Doorriing.com
-                </footer>
+                <Footer />
             </div>
         </div>
     );

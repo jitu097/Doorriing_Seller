@@ -35,11 +35,26 @@ const loadSellerContext = async (req, res, next) => {
         }
 
         // Step 2: Check if shop exists (DO NOT CREATE)
-        const { data: shop } = await supabase
+        let { data: shop } = await supabase
             .from('shops')
             .select('*')
             .eq('seller_id', user.id)
             .maybeSingle();
+
+        // --- Demo Account Bypass ---
+        const config = require('../config/env');
+        const email = req.email?.toLowerCase();
+        
+        if (!shop && email) {
+            if (email === config.demo.grocery.email?.toLowerCase()) {
+                const { data: demoShop } = await supabase.from('shops').select('*').eq('id', config.demo.grocery.shopId).maybeSingle();
+                if (demoShop) shop = demoShop;
+            } else if (email === config.demo.restaurant.email?.toLowerCase()) {
+                const { data: demoShop } = await supabase.from('shops').select('*').eq('id', config.demo.restaurant.shopId).maybeSingle();
+                if (demoShop) shop = demoShop;
+            }
+        }
+        // ---------------------------
 
         // Attach to request
         req.user = user;

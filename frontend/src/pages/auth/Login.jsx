@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../../config/firebase';
 import { shopService } from '../../services/shopService';
@@ -13,6 +13,41 @@ const Login = () => {
     const [error, setError] = useState('');
 
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // Auto-login for demo users via URL param: ?demo=grocery or ?demo=restaurant
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const demoType = params.get('demo');
+
+        if (demoType) {
+            let demoEmail = '';
+            let demoPassword = '';
+
+            if (demoType === 'grocery') {
+                demoEmail = import.meta.env.VITE_GROCERY_DEMO_EMAIL;
+                demoPassword = import.meta.env.VITE_GROCERY_DEMO_PASSWORD;
+            } else if (demoType === 'restaurant') {
+                demoEmail = import.meta.env.VITE_RESTAURANT_DEMO_EMAIL;
+                demoPassword = import.meta.env.VITE_RESTAURANT_DEMO_PASSWORD;
+            }
+
+            if (demoEmail && demoPassword) {
+                const performDemoLogin = async () => {
+                    try {
+                        setLoading(true);
+                        await signInWithEmailAndPassword(auth, demoEmail, demoPassword);
+                        await handleLoginSuccess();
+                    } catch (err) {
+                        console.error('Demo login failed:', err);
+                        setError('Demo credentials expired or invalid.');
+                        setLoading(false);
+                    }
+                };
+                performDemoLogin();
+            }
+        }
+    }, [location.search]);
 
     /**
      * CRITICAL: LOGIN REDIRECT LOGIC

@@ -12,6 +12,10 @@ const Register = lazy(() => import('../pages/auth/Register'));
 const Registration = lazy(() => import('../pages/onboarding/Registration'));
 const LandingPage = lazy(() => import('../pages/landing/LandingPage'));
 const TermsAndConditions = lazy(() => import('../pages/legal/TermsAndConditions'));
+const AboutUs = lazy(() => import('../pages/legal/AboutUs'));
+const ContactUs = lazy(() => import('../pages/legal/ContactUs'));
+const PrivacyPolicy = lazy(() => import('../pages/legal/PrivacyPolicy'));
+const RefundCancellation = lazy(() => import('../pages/legal/RefundCancellation'));
 
 // Grocery Pages
 const GroceryDashboard = lazy(() => import('../pages/Grocery/DAshboard'));
@@ -107,6 +111,10 @@ const AppRoutes = () => {
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+                    <Route path="/about" element={<AboutUs />} />
+                    <Route path="/contact" element={<ContactUs />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                    <Route path="/refund-cancellation" element={<RefundCancellation />} />
                 </Route>
 
                 {/* Protected Routes - Authentication Required */}

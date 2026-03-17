@@ -33,17 +33,14 @@ const OrderAlertManager = () => {
 
                 if (chronologicalOrders.length > 0) {
                     setOrderQueue(prevQueue => {
-                        const newQueue = [...prevQueue];
-                        chronologicalOrders.forEach(order => {
-                            if (!newQueue.some(o => o.id === order.id)) {
-                                const initialRemaining = deriveInitialRemainingMs(order);
-                                newQueue.push({ 
-                                    ...order, 
-                                    remainingMs: typeof initialRemaining === 'number' ? initialRemaining : null 
-                                });
-                            }
-                        });
-                        return newQueue;
+                        const existingIds = new Set(prevQueue.map(o => o.id));
+                        const toAdd = chronologicalOrders
+                            .filter(order => !existingIds.has(order.id))
+                            .map(order => ({ 
+                                ...order, 
+                                remainingMs: deriveInitialRemainingMs(order)
+                            }));
+                        return toAdd.length ? [...prevQueue, ...toAdd] : prevQueue;
                     });
                 }
             } catch (error) {
@@ -92,21 +89,15 @@ const OrderAlertManager = () => {
 
                 let mutated = false;
                 const updated = prev.map(order => {
-                    const status = (order.status || order.order_status)?.toLowerCase?.() || '';
-                    if (status !== 'pending') return order;
+                    const status = (order.status || order.order_status)?.toLowerCase?.();
+                    if (status !== 'pending' && status !== 'new' && status !== '') return order;
                     
-                    if (typeof order.remainingMs === 'number') {
-                        const nextMs = Math.max(0, order.remainingMs - 1000);
+                    const currentMs = typeof order.remainingMs === 'number' ? order.remainingMs : deriveInitialRemainingMs(order);
+                    if (typeof currentMs === 'number') {
+                        const nextMs = Math.max(0, currentMs - 1000);
                         if (nextMs !== order.remainingMs) {
                             mutated = true;
                             return { ...order, remainingMs: nextMs };
-                        }
-                    } else {
-                        // If no remainingMs, try to derive it once
-                        const derived = deriveInitialRemainingMs(order);
-                        if (typeof derived === 'number') {
-                            mutated = true;
-                            return { ...order, remainingMs: derived };
                         }
                     }
                     return order;

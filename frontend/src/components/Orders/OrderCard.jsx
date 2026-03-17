@@ -87,10 +87,9 @@ const OrderCard = ({
   onAssignDriver,
   onMarkReady
 }) => {
-  const deadlineMs = useMemo(() => deriveAcceptanceDeadlineMs(order), [order.acceptance_deadline, order.created_at, order.id]);
   const initialRemainingMs = useMemo(
     () => clampRemainingMs(deriveInitialRemainingMs(order)),
-    [order.id, order.acceptance_deadline, order.remaining_time, order.created_at]
+    [order]
   );
   const [remainingMs, setRemainingMs] = useState(initialRemainingMs);
 
@@ -119,7 +118,7 @@ const OrderCard = ({
   const isPending = order.status === 'pending' || order.order_status === 'pending';
   const derivedExpired = order.status === 'expired' || order.order_status === 'expired' || isPendingOrderExpired(order, remainingMs);
   const timerActive = isPending && !derivedExpired && typeof remainingMs === 'number' && remainingMs > 0;
-  const hasTimerSource = isPending && (deadlineMs !== null || (typeof initialRemainingMs === 'number' && initialRemainingMs > 0) || (typeof order.remainingMs === 'number'));
+  const hasTimerSource = isPending && ((typeof initialRemainingMs === 'number' && initialRemainingMs > 0) || (typeof order.remainingMs === 'number'));
   const shouldRunTimer = isPending && !derivedExpired && hasTimerSource;
 
   useEffect(() => {

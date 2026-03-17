@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const routes = require('./routes');
+const supabase = require('./config/supabaseClient');
 const errorHandler = require('./middlewares/error.middleware');
 
 const app = express();
@@ -68,8 +69,24 @@ const reportsLimiter = rateLimit({
 });
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/health', async (req, res) => {
+    try {
+        // Simple probe to ensure DB is reachable
+        const { error } = await supabase.from('shop').select('id').limit(1);
+        if (error) throw error;
+
+        res.status(200).json({
+            status: 'ok',
+            database: 'connected',
+            timestamp: new Date().toISOString()
+        });
+    } catch (err) {
+        res.status(503).json({
+            status: 'error',
+            database: 'disconnected',
+            timestamp: new Date().toISOString()
+        });
+    }
 });
 
 // ─── Apply Limiters ───────────────────────────────────────────────────────────
