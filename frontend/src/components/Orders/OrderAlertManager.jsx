@@ -32,13 +32,15 @@ const OrderAlertManager = () => {
                 const chronologicalOrders = [...existingPending].reverse();
 
                 if (chronologicalOrders.length > 0) {
+                    const serverTime = response.serverTime || response.data?.serverTime;
                     setOrderQueue(prevQueue => {
                         const existingIds = new Set(prevQueue.map(o => o.id));
                         const toAdd = chronologicalOrders
                             .filter(order => !existingIds.has(order.id))
                             .map(order => ({ 
                                 ...order, 
-                                remainingMs: deriveInitialRemainingMs(order)
+                                serverTime, // Attach server snapshot time
+                                remainingMs: deriveInitialRemainingMs(order, serverTime)
                             }));
                         return toAdd.length ? [...prevQueue, ...toAdd] : prevQueue;
                     });
@@ -62,12 +64,14 @@ const OrderAlertManager = () => {
 
                 const status = (orderData.status || orderData.order_status)?.toLowerCase() || '';
                 if (orderData && ['pending', 'new'].includes(status)) {
+                    const serverTime = response.serverTime || response.data?.serverTime || new Date().toISOString(); 
                     setOrderQueue(prevQueue => {
                         // Prevent duplicate alerts for the exact same order id
                         if (prevQueue.some(o => o.id === orderData.id)) return prevQueue;
-                        const initialRemaining = deriveInitialRemainingMs(orderData);
+                        const initialRemaining = deriveInitialRemainingMs(orderData, serverTime);
                         return [...prevQueue, { 
                             ...orderData, 
+                            serverTime,
                             remainingMs: typeof initialRemaining === 'number' ? initialRemaining : null 
                         }];
                     });
@@ -92,7 +96,7 @@ const OrderAlertManager = () => {
                     const status = (order.status || order.order_status)?.toLowerCase?.();
                     if (status !== 'pending' && status !== 'new' && status !== '') return order;
                     
-                    const currentMs = typeof order.remainingMs === 'number' ? order.remainingMs : deriveInitialRemainingMs(order);
+                    const currentMs = typeof order.remainingMs === 'number' ? order.remainingMs : deriveInitialRemainingMs(order, order.serverTime);
                     if (typeof currentMs === 'number') {
                         const nextMs = Math.max(0, currentMs - 1000);
                         if (nextMs !== order.remainingMs) {

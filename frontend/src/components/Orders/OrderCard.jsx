@@ -88,7 +88,7 @@ const OrderCard = ({
   onMarkReady
 }) => {
   const initialRemainingMs = useMemo(
-    () => clampRemainingMs(deriveInitialRemainingMs(order)),
+    () => clampRemainingMs(deriveInitialRemainingMs(order, order.serverTime)),
     [order]
   );
   const [remainingMs, setRemainingMs] = useState(initialRemainingMs);
@@ -145,7 +145,7 @@ const OrderCard = ({
     return null;
   }, [derivedExpired, order.status]);
   const timerStatusText = timerActive ? 'Time left ⏳' : staticTimerMessage;
-  const shouldShowTimerSection = Boolean(timerActive || timerStatusText);
+  const shouldShowTimerSection = Boolean(timerActive || staticTimerMessage);
   const timerClassName = `seller-order-card__timer seller-order-card__timer--${timerVariant}`;
   const canRespond = isPending && !derivedExpired;
   const showDriverInfo = Boolean(order.driver && order.status !== 'delivered');
@@ -267,7 +267,7 @@ const arePropsEqual = (prev, next) => {
   if (prev.order.id !== next.order.id) return false;
   if (prev.order.status !== next.order.status) return false;
   if ((prev.order.acceptance_deadline || null) !== (next.order.acceptance_deadline || null)) return false;
-  if ((prev.order.remaining_time ?? null) !== (next.order.remaining_time ?? null)) return false;
+  if ((prev.order.serverTime || null) !== (next.order.serverTime || null)) return false;
   if ((prev.order.driver?.id || null) !== (next.order.driver?.id || null)) return false;
   if (prev.actionState?.orderId !== next.actionState?.orderId) return false;
   if (prev.actionState?.type !== next.actionState?.type) return false;

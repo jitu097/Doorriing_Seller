@@ -24,22 +24,18 @@ export const parseTimestampToMs = (value) => {
 
 export const deriveAcceptanceDeadlineMs = (order = {}) => {
   const explicit = parseTimestampToMs(order.acceptance_deadline || order.acceptanceDeadline);
-  if (explicit !== null) return explicit;
-  
-  const created = parseTimestampToMs(order.created_at || order.createdAt);
-  if (created !== null) return created + ACCEPTANCE_WINDOW_MS;
-  
-  return null;
+  return explicit; // No fallback to created_at
 };
 
-export const deriveInitialRemainingMs = (order = {}) => {
-  const provided = toFiniteNumber(order.remaining_time ?? order.remainingTime ?? order.remainingMs);
-  if (provided !== null) return provided;
-  
+export const deriveInitialRemainingMs = (order = {}, serverTime = null) => {
   const deadline = deriveAcceptanceDeadlineMs(order);
   if (deadline === null) return null;
-  
-  const diff = deadline - Date.now();
+
+  // Use serverTime if provided to correct local clock skew
+  const now = serverTime ? parseTimestampToMs(serverTime) : Date.now();
+  if (now === null) return null;
+
+  const diff = deadline - now;
   return diff > 0 ? diff : 0;
 };
 
@@ -63,14 +59,18 @@ export const resolveTimerVariant = (ms) => {
   return 'safe';
 };
 
-export const isPendingOrderExpired = (order = {}, remainingMs = null) => {
+export const isPendingOrderExpired = (order = {}, remainingMs = null, serverTime = null) => {
   const status = (order.status || order.order_status)?.toLowerCase?.() || '';
+  if (status === 'expired') return true;
   if (status !== 'pending') return false;
+  
   if (typeof remainingMs === 'number') return remainingMs <= 0;
   
   const deadline = deriveAcceptanceDeadlineMs(order);
   if (deadline === null) return false;
-  return deadline <= Date.now();
+  
+  const now = serverTime ? parseTimestampToMs(serverTime) : Date.now();
+  return deadline <= now;
 };
 
 export const shouldStartTimer = (order = {}) => {

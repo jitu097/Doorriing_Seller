@@ -26,21 +26,21 @@ const OrderAlertOverlay = ({ orders, onAccept, onDecline, onExpire, loading }) =
 
     const deadlineMs = useMemo(
         () => (order ? deriveAcceptanceDeadlineMs(order) : null),
-        [order?.acceptance_deadline, order?.created_at, order?.id]
+        [order?.acceptance_deadline, order?.id]
     );
     const initialRemainingMs = useMemo(
-        () => (order ? clampRemainingMs(deriveInitialRemainingMs(order)) : null),
-        [order?.id, order?.acceptance_deadline, order?.remaining_time, order?.created_at]
+        () => (order ? clampRemainingMs(deriveInitialRemainingMs(order, order.serverTime)) : null),
+        [order?.id, order?.acceptance_deadline, order?.serverTime]
     );
     const [remainingMs, setRemainingMs] = useState(initialRemainingMs);
     const orderStatus = (order.status || order.order_status)?.toLowerCase?.() || '';
     const isPendingLike = ['pending', 'new', ''].includes(orderStatus);
     const hasTimerSource = isPendingLike;
-    const isExpired = isPendingLike && typeof remainingMs === 'number' && remainingMs <= 0;
-    const timerActive = isPendingLike && typeof remainingMs === 'number' && remainingMs > 0;
+    const isExpired = (orderStatus === 'expired') || (isPendingLike && typeof remainingMs === 'number' && remainingMs <= 0);
+    const timerActive = isPendingLike && !isExpired && typeof remainingMs === 'number' && remainingMs > 0;
     const timerVariant = timerActive ? resolveTimerVariant(remainingMs) : 'neutral';
     const safeRemainingMs = clampRemainingMs(remainingMs) ?? 0;
-    const countdownDisplay = hasTimerSource ? formatCountdown(safeRemainingMs) : null;
+    const countdownDisplay = (timerActive || isExpired) ? formatCountdown(safeRemainingMs) : null;
     const expireNotifiedRef = useRef(null);
 
     useEffect(() => {

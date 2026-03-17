@@ -54,7 +54,7 @@ const parseTimestamp = (value) => {
     } else if (typeof value === 'string' && value.includes('T') && !value.includes('Z') && !value.includes('+')) {
         normalizedValue = value + 'Z';
     }
-    
+
     const timestamp = new Date(normalizedValue).getTime();
     return Number.isNaN(timestamp) ? null : timestamp;
 };
@@ -92,15 +92,16 @@ const computeRemainingTimeMs = (order, nowMs = Date.now()) => {
     return timestamp - nowMs;
 };
 
-// Only expire if deadline is NOT NULL and passed. If NULL, never expire (backward compatibility)
+// Strict expiry check: Backend as sole source of truth
 const shouldExpireOrder = (order, nowMs = Date.now()) => {
     if (!order) return false;
     if (normalizeOrderStatus(order.status) !== 'pending') return false;
-    // If deadline is null, never expire
-    if (!order.acceptance_deadline) return false;
-    const ts = parseTimestamp(order.acceptance_deadline);
-    if (ts === null) return false;
-    return nowMs > ts;
+    
+    // Use derived info as fallback if deadline is missing in memory
+    const { timestamp } = deriveDeadlineInfo(order, nowMs);
+    if (timestamp === null) return false;
+    
+    return nowMs > timestamp;
 };
 
 const autoExpireOrders = async (orders = [], shopId) => {
@@ -376,9 +377,10 @@ const getOrders = async (shopId, page = 1, limit = 20, status = null) => {
     const evaluatedOrders = await autoExpireOrders(rawOrders || [], shopId);
     const driverMap = await buildDriverMap(evaluatedOrders);
     const sanitizedOrders = evaluatedOrders.map(order => formatOrderRecord(order, { driverMap }));
-    
+
     return {
         orders: sanitizedOrders,
+        serverTime: new Date().toISOString(),
         pagination: {
             page: pagination.page,
             limit: pagination.limit,
@@ -404,7 +406,10 @@ const getOrderDetails = async (orderId, shopId) => {
     const [evaluatedOrder] = await autoExpireOrders([order], shopId);
     const driverMap = await buildDriverMap([evaluatedOrder]);
 
-    return formatOrderRecord(evaluatedOrder, { driverMap });
+    return {
+        ...formatOrderRecord(evaluatedOrder, { driverMap }),
+        serverTime: new Date().toISOString()
+    };
 };
 
 // Used for accept/reject: only expire if deadline is set and passed
@@ -468,11 +473,11 @@ const acceptOrder = async (orderId, shopId) => {
     } catch (err) {
         logError('notification.acceptOrder', err, { orderId });
     }
-    // Always return order_status and acceptance_deadline
     return {
         ...data,
         order_status: data.status,
-        acceptance_deadline: data.acceptance_deadline ?? null
+        acceptance_deadline: data.acceptance_deadline ?? null,
+        serverTime: new Date().toISOString()
     };
 };
 
@@ -506,11 +511,11 @@ const rejectOrder = async (orderId, shopId) => {
     } catch (err) {
         logError('notification.rejectOrder', err, { orderId });
     }
-    // Always return order_status and acceptance_deadline
     return {
         ...data,
         order_status: data.status,
-        acceptance_deadline: data.acceptance_deadline ?? null
+        acceptance_deadline: data.acceptance_deadline ?? null,
+        serverTime: new Date().toISOString()
     };
 };
 
