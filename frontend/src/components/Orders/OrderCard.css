@@ -232,4 +232,20 @@
   .seller-order-card__actions button {
     min-width: unset;
   }
+
+  .seller-order-card__timer-value {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .seller-order-card__timer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .seller-order-card__timer-value {
+    align-self: flex-end;
+  }
 }
