@@ -33,42 +33,27 @@ const OrderAlertOverlay = ({ orders, onAccept, onDecline, onExpire, loading }) =
         [order?.id, order?.acceptance_deadline, order?.remaining_time, order?.created_at]
     );
     const [remainingMs, setRemainingMs] = useState(initialRemainingMs);
-    const orderStatus = order.status?.toLowerCase?.() || '';
-    const timerEligible = orderStatus === 'pending';
-    const hasTimerSource = timerEligible && (deadlineMs !== null || (typeof initialRemainingMs === 'number' && initialRemainingMs > 0));
+    const orderStatus = (order.status || order.order_status)?.toLowerCase?.() || '';
+    const isPendingLike = ['pending', 'new', ''].includes(orderStatus);
+    const hasTimerSource = isPendingLike;
     const timerActive = hasTimerSource && typeof remainingMs === 'number' && remainingMs > 0;
-    const isExpired = timerEligible && typeof remainingMs === 'number' && remainingMs <= 0;
+    const isExpired = isPendingLike && typeof remainingMs === 'number' && remainingMs <= 0;
     const timerVariant = timerActive ? resolveTimerVariant(remainingMs) : 'neutral';
     const safeRemainingMs = clampRemainingMs(remainingMs) ?? 0;
     const countdownDisplay = hasTimerSource ? formatCountdown(safeRemainingMs) : null;
     const expireNotifiedRef = useRef(null);
 
     useEffect(() => {
-        setRemainingMs(initialRemainingMs);
+        const sourceMs = typeof order.remainingMs === 'number' ? order.remainingMs : initialRemainingMs;
+        setRemainingMs(sourceMs);
         expireNotifiedRef.current = null;
-    }, [initialRemainingMs, order?.id]);
+    }, [initialRemainingMs, order?.remainingMs, order?.id]);
+
+    // Local interval removed because OrderAlertManager now handles the countdown globally
+    // for all orders in the queue.
 
     useEffect(() => {
-        if (!timerEligible || !hasTimerSource) return undefined;
-
-        const intervalId = setInterval(() => {
-            setRemainingMs(prev => {
-                if (deadlineMs !== null) {
-                    const diff = deadlineMs - Date.now();
-                    return diff > 0 ? diff : 0;
-                }
-
-                const fallback = typeof prev === 'number' ? prev : (initialRemainingMs ?? 0);
-                const next = fallback - 1000;
-                return next > 0 ? next : 0;
-            });
-        }, 1000);
-
-        return () => clearInterval(intervalId);
-    }, [timerEligible, hasTimerSource, deadlineMs, initialRemainingMs]);
-
-    useEffect(() => {
-        if (!timerEligible) return;
+        if (!isPendingLike) return;
         if (typeof remainingMs !== 'number') return;
         if (remainingMs > 0) return;
         if (expireNotifiedRef.current === order.id) return;
@@ -76,7 +61,7 @@ const OrderAlertOverlay = ({ orders, onAccept, onDecline, onExpire, loading }) =
         if (typeof onExpire === 'function') {
             onExpire(order.id);
         }
-    }, [timerEligible, remainingMs, onExpire, order]);
+    }, [isPendingLike, remainingMs, onExpire, order]);
 
     const timerStatusText = isExpired ? 'Time Over ⏳' : 'Time left ⏳';
 

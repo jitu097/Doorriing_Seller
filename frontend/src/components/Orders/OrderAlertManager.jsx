@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useRealtimeSubscription } from '../../hooks/useRealtimeSubscription';
 import orderService from '../../services/orderService';
 import OrderAlertOverlay from './OrderAlertOverlay';
-import { deriveAcceptanceDeadlineMs } from '../../utils/orderAcceptanceTimer';
+import { deriveAcceptanceDeadlineMs, deriveInitialRemainingMs } from '../../utils/orderAcceptanceTimer';
 
 /**
  * Global Order Manager wrapper. 
@@ -24,7 +24,9 @@ const OrderAlertManager = () => {
         const fetchExistingOrders = async () => {
             try {
                 const response = await orderService.getOrders({ status: 'pending' });
-                const existingPending = response.data?.orders || response.orders || [];
+                const existingPending = (response.orders || response.data?.orders || []).filter(o => 
+                    ['pending', 'new'].includes(o.status?.toLowerCase() || o.order_status?.toLowerCase())
+                );
 
                 // Sort oldest first (backend defaults to descending `created_at`)
                 const chronologicalOrders = [...existingPending].reverse();
@@ -34,7 +36,11 @@ const OrderAlertManager = () => {
                         const newQueue = [...prevQueue];
                         chronologicalOrders.forEach(order => {
                             if (!newQueue.some(o => o.id === order.id)) {
-                                newQueue.push(order);
+                                const initialRemaining = deriveInitialRemainingMs(order);
+                                newQueue.push({ 
+                                    ...order, 
+                                    remainingMs: typeof initialRemaining === 'number' ? initialRemaining : null 
+                                });
                             }
                         });
                         return newQueue;
@@ -57,11 +63,16 @@ const OrderAlertManager = () => {
                 const response = await orderService.getOrderById(payload.new.id);
                 const orderData = response.data || response.order || response;
 
-                if (orderData && orderData.status?.toLowerCase() === 'pending') {
+                const status = (orderData.status || orderData.order_status)?.toLowerCase() || '';
+                if (orderData && ['pending', 'new'].includes(status)) {
                     setOrderQueue(prevQueue => {
                         // Prevent duplicate alerts for the exact same order id
                         if (prevQueue.some(o => o.id === orderData.id)) return prevQueue;
-                        return [...prevQueue, orderData];
+                        const initialRemaining = deriveInitialRemainingMs(orderData);
+                        return [...prevQueue, { 
+                            ...orderData, 
+                            remainingMs: typeof initialRemaining === 'number' ? initialRemaining : null 
+                        }];
                     });
                 }
             } catch (error) {
@@ -74,19 +85,37 @@ const OrderAlertManager = () => {
         if (!orderQueue.length) return undefined;
 
         const intervalId = setInterval(() => {
-            const now = Date.now();
             const expiredIds = [];
 
             setOrderQueue(prev => {
                 if (!prev.length) return prev;
 
                 let mutated = false;
-                const filtered = prev.filter(order => {
-                    const status = order.status?.toLowerCase?.() || '';
-                    if (status !== 'pending') return true;
-                    const deadline = deriveAcceptanceDeadlineMs(order);
-                    if (deadline === null) return true;
-                    if (deadline <= now) {
+                const updated = prev.map(order => {
+                    const status = (order.status || order.order_status)?.toLowerCase?.() || '';
+                    if (status !== 'pending') return order;
+                    
+                    if (typeof order.remainingMs === 'number') {
+                        const nextMs = Math.max(0, order.remainingMs - 1000);
+                        if (nextMs !== order.remainingMs) {
+                            mutated = true;
+                            return { ...order, remainingMs: nextMs };
+                        }
+                    } else {
+                        // If no remainingMs, try to derive it once
+                        const derived = deriveInitialRemainingMs(order);
+                        if (typeof derived === 'number') {
+                            mutated = true;
+                            return { ...order, remainingMs: derived };
+                        }
+                    }
+                    return order;
+                });
+
+                const filtered = updated.filter(order => {
+                    const status = (order.status || order.order_status)?.toLowerCase?.() || '';
+                    if (!['pending', 'new'].includes(status)) return true;
+                    if (typeof order.remainingMs === 'number' && order.remainingMs <= 0) {
                         expiredIds.push(order.id);
                         mutated = true;
                         return false;

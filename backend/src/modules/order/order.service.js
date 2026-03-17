@@ -41,7 +41,16 @@ const getStatusRank = (status) => {
 
 const parseTimestamp = (value) => {
     if (!value) return null;
-    const timestamp = new Date(value).getTime();
+    let normalizedValue = value;
+    // If it's a string and doesn't contain 'Z' or '+' (timezone indicator), append 'Z' to force UTC interpretation
+    if (typeof value === 'string' && !value.includes('Z') && !value.includes('+') && !value.includes('T')) {
+        // Simple date strings or YYYY-MM-DD HH:mm:ss
+        normalizedValue = value.replace(' ', 'T') + 'Z';
+    } else if (typeof value === 'string' && value.includes('T') && !value.includes('Z') && !value.includes('+')) {
+        normalizedValue = value + 'Z';
+    }
+    
+    const timestamp = new Date(normalizedValue).getTime();
     return Number.isNaN(timestamp) ? null : timestamp;
 };
 

@@ -11,7 +11,14 @@ const toFiniteNumber = (value) => {
 
 export const parseTimestampToMs = (value) => {
   if (!value) return null;
-  const parsed = Date.parse(value);
+  let normalizedValue = value;
+  // If it's a string and doesn't contain 'Z' or '+' (timezone indicator), append 'Z' to force UTC interpretation
+  if (typeof value === 'string' && !value.includes('Z') && !value.includes('+') && !value.includes('T')) {
+    normalizedValue = value.replace(' ', 'T') + 'Z';
+  } else if (typeof value === 'string' && value.includes('T') && !value.includes('Z') && !value.includes('+')) {
+    normalizedValue = value + 'Z';
+  }
+  const parsed = Date.parse(normalizedValue);
   return Number.isNaN(parsed) ? null : parsed;
 };
 
@@ -24,11 +31,14 @@ export const deriveAcceptanceDeadlineMs = (order = {}) => {
 };
 
 export const deriveInitialRemainingMs = (order = {}) => {
-  const provided = toFiniteNumber(order.remaining_time ?? order.remainingTime);
+  const provided = toFiniteNumber(order.remaining_time ?? order.remainingTime ?? order.remainingMs);
   if (provided !== null) return provided;
+  
   const deadline = deriveAcceptanceDeadlineMs(order);
   if (deadline === null) return null;
-  return deadline - Date.now();
+  
+  const diff = deadline - Date.now();
+  return diff > 0 ? diff : 0;
 };
 
 export const clampRemainingMs = (value) => {
@@ -52,18 +62,20 @@ export const resolveTimerVariant = (ms) => {
 };
 
 export const isPendingOrderExpired = (order = {}, remainingMs = null) => {
-  const status = order.status?.toLowerCase?.() || '';
+  const status = (order.status || order.order_status)?.toLowerCase?.() || '';
   if (status !== 'pending') return false;
   if (typeof remainingMs === 'number') return remainingMs <= 0;
+  
   const deadline = deriveAcceptanceDeadlineMs(order);
   if (deadline === null) return false;
   return deadline <= Date.now();
 };
 
 export const shouldStartTimer = (order = {}) => {
-  const status = order.status?.toLowerCase?.() || '';
+  const status = (order.status || order.order_status)?.toLowerCase?.() || '';
   if (status !== 'pending') return false;
   const deadline = deriveAcceptanceDeadlineMs(order);
-  if (deadline === null) return false;
-  return deadline > Date.now();
+  if (deadline !== null) return deadline > Date.now();
+  const remaining = deriveInitialRemainingMs(order);
+  return typeof remaining === 'number' && remaining > 0;
 };

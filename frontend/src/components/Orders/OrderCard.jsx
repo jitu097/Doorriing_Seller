@@ -116,10 +116,10 @@ const OrderCard = ({
     })),
     [items, order.id]
   );
-  const isPending = order.status === 'pending';
-  const derivedExpired = order.status === 'expired' || isPendingOrderExpired(order, remainingMs);
+  const isPending = order.status === 'pending' || order.order_status === 'pending';
+  const derivedExpired = order.status === 'expired' || order.order_status === 'expired' || isPendingOrderExpired(order, remainingMs);
   const timerActive = isPending && !derivedExpired && typeof remainingMs === 'number' && remainingMs > 0;
-  const hasTimerSource = deadlineMs !== null || (typeof initialRemainingMs === 'number' && initialRemainingMs > 0);
+  const hasTimerSource = isPending && (deadlineMs !== null || (typeof initialRemainingMs === 'number' && initialRemainingMs > 0) || (typeof order.remainingMs === 'number'));
   const shouldRunTimer = isPending && !derivedExpired && hasTimerSource;
 
   useEffect(() => {
@@ -127,19 +127,14 @@ const OrderCard = ({
 
     const intervalId = setInterval(() => {
       setRemainingMs(prev => {
-        if (deadlineMs !== null) {
-          const diff = deadlineMs - Date.now();
-          return diff > 0 ? diff : 0;
-        }
-
-        const fallback = typeof prev === 'number' ? prev : (initialRemainingMs ?? 0);
-        const next = fallback - 1000;
+        const current = typeof prev === 'number' ? prev : (initialRemainingMs ?? 0);
+        const next = current - 1000;
         return next > 0 ? next : 0;
       });
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [shouldRunTimer, deadlineMs, initialRemainingMs]);
+  }, [shouldRunTimer, initialRemainingMs]);
 
   const timerVariant = timerActive ? resolveTimerVariant(remainingMs) : 'neutral';
   const countdownDisplay = timerActive ? formatCountdown(remainingMs) : null;
@@ -188,22 +183,8 @@ const OrderCard = ({
         </ul>
       </section>
 
-      {showDriverInfo && (
-        <section className="seller-order-card__driver">
-          <div>
-            <p className="seller-order-card__label">Assigned Driver</p>
-            <strong>{order.driver.name}</strong>
-            {order.driver.phone && <span>{order.driver.phone}</span>}
-          </div>
-          {order.driver.phone && (
-            <a href={`tel:${order.driver.phone}`} className="seller-order-card__driver-call">
-              Call {order.driver.phone}
-            </a>
-          )}
-        </section>
-      )}
-
-      {shouldShowTimerSection && (
+      {/* Only show timer for pending orders with accept/reject actions */}
+      {order.status === 'pending' && shouldShowTimerSection && (
         <section className={timerClassName}>
           <div>
             <p className="seller-order-card__label">Acceptance window</p>
@@ -222,6 +203,18 @@ const OrderCard = ({
         </section>
       )}
 
+      {showDriverInfo && (
+        <section className="seller-order-card__driver">
+          <div>
+            <p className="seller-order-card__label">Delivery Partner</p>
+            <strong>{order.driver.name}</strong>
+          </div>
+          <a href={`tel:${order.driver.phone}`} className="seller-order-card__driver-call">
+            Call
+          </a>
+        </section>
+      )}
+
       <section className="seller-order-card__actions">
         {order.status === 'pending' && (
           <>
@@ -233,28 +226,34 @@ const OrderCard = ({
             </button>
           </>
         )}
-
         {order.status === 'accepted' && (
           <button className="solid primary" disabled={baseDisabled} onClick={() => onStartPreparing(order.id)}>
             {isActionLoading && actionState?.type === 'prepare' ? 'Starting…' : 'Start Preparing'}
           </button>
         )}
-
         {order.status === 'preparing' && (
           <>
-            {!order.driver && (
-              <button className="outline" disabled={baseDisabled} onClick={() => onAssignDriver(order.id)}>
-                Assign Driver
-              </button>
-            )}
-            <button className="solid warning" disabled={baseDisabled} onClick={() => onMarkReady(order.id)}>
+            <button 
+              className="outline" 
+              disabled={baseDisabled} 
+              onClick={() => onAssignDriver(order.id)}
+            >
+              {order.delivery_partner_id || order.delivery_partner_name ? 'Reassign Driver' : 'Assign Driver'}
+            </button>
+            <button 
+              className="solid success" 
+              disabled={baseDisabled} 
+              onClick={() => {
+                if (!order.delivery_partner_id && !order.delivery_partner_name) {
+                  alert('Please assign a driver first before marking the order as ready.');
+                  return;
+                }
+                onMarkReady(order.id);
+              }}
+            >
               {isActionLoading && actionState?.type === 'ready' ? 'Updating…' : 'Mark Ready'}
             </button>
           </>
-        )}
-
-        {['ready_for_pickup', 'picked_up', 'out_for_delivery', 'delivered'].includes(order.status) && !order.driver && (
-          <p className="seller-order-card__helper muted">Assign a driver to track delivery progress.</p>
         )}
       </section>
 
