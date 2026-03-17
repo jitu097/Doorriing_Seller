@@ -8,6 +8,8 @@ const walletService = require('../wallet/wallet.service');
 const SELLER_MUTABLE_STATUSES = ['pending', 'accepted', 'preparing'];
 const SELLER_ALLOWED_TARGET_STATUSES = ['preparing'];
 const DRIVER_ASSIGNABLE_STATUSES = ['preparing'];
+const ORDER_ACCEPTANCE_WINDOW_MINUTES = 5;
+const ORDER_ACCEPTANCE_WINDOW_MS = ORDER_ACCEPTANCE_WINDOW_MINUTES * 60 * 1000;
 
 const STATUS_FILTER_COMPAT_MAP = {
     accepted: ['accepted', 'confirmed'],
@@ -35,6 +37,84 @@ const getStatusRank = (status) => {
     if (!status) return -1;
     const normalized = normalizeOrderStatus(status);
     return STATUS_PRIORITY_MAP[normalized] ?? -1;
+};
+
+const parseTimestamp = (value) => {
+    if (!value) return null;
+    const timestamp = new Date(value).getTime();
+    return Number.isNaN(timestamp) ? null : timestamp;
+};
+
+const deriveDeadlineInfo = (order = {}, nowMs = Date.now()) => {
+    const existingTs = parseTimestamp(order.acceptance_deadline);
+    if (existingTs !== null) {
+        return {
+            timestamp: existingTs,
+            iso: order.acceptance_deadline,
+            wasDerived: false
+        };
+    }
+
+    const createdTs = parseTimestamp(order.created_at);
+    if (createdTs === null) {
+        return { timestamp: null, iso: null, wasDerived: false };
+    }
+
+    const derivedTs = createdTs + ORDER_ACCEPTANCE_WINDOW_MS;
+    return {
+        timestamp: derivedTs,
+        iso: new Date(derivedTs).toISOString(),
+        wasDerived: true
+    };
+};
+
+const computeRemainingTimeMs = (order, nowMs = Date.now()) => {
+    if (!order) return null;
+    const { timestamp, iso } = deriveDeadlineInfo(order, nowMs);
+    if (timestamp === null) return null;
+    if (!order.acceptance_deadline && iso) {
+        order.acceptance_deadline = iso;
+    }
+    return timestamp - nowMs;
+};
+
+const shouldExpireOrder = (order, nowMs = Date.now()) => {
+    if (!order) return false;
+    if (normalizeOrderStatus(order.status) !== 'pending') return false;
+    const { timestamp, iso } = deriveDeadlineInfo(order, nowMs);
+    if (timestamp === null) return false;
+    if (!order.acceptance_deadline && iso) {
+        order.acceptance_deadline = iso;
+    }
+    return nowMs >= timestamp;
+};
+
+const autoExpireOrders = async (orders = [], shopId) => {
+    if (!orders.length) return orders;
+
+    const now = Date.now();
+    const expiredIds = orders
+        .filter(order => shouldExpireOrder(order, now))
+        .map(order => order.id);
+
+    if (!expiredIds.length) {
+        return orders;
+    }
+
+    try {
+        const { error } = await supabase
+            .from('orders')
+            .update({ status: 'expired' })
+            .in('id', expiredIds)
+            .eq('shop_id', shopId);
+
+        if (error) throw error;
+    } catch (error) {
+        logError('autoExpireOrders', error, { shopId, expiredIds });
+    }
+
+    const expiredSet = new Set(expiredIds);
+    return orders.map(order => (expiredSet.has(order.id) ? { ...order, status: 'expired' } : order));
 };
 
 const resolveSellerFacingStatus = (orderRecord = {}, assignment = null) => {
@@ -96,7 +176,7 @@ const formatDriver = (driver) => {
     };
 };
 
-const fetchOrderForShop = async (orderId, shopId, select = 'id, status, order_number, total_amount, pending_until') => {
+const fetchOrderForShop = async (orderId, shopId, select = 'id, status, order_number, total_amount, acceptance_deadline, created_at') => {
     validateUUID(orderId);
     validateUUID(shopId);
     const { data, error } = await supabase
@@ -163,10 +243,15 @@ const formatOrderRecord = (order = {}, { driverMap = new Map() } = {}) => {
     const driverFromAssignment = latestAssignment?.partner;
     const fallbackDriver = driverMap.get(rest.delivery_partner_id) || null;
     const derivedStatus = resolveSellerFacingStatus(rest, latestAssignment);
+    const remainingTime = computeRemainingTimeMs(rest);
+    const normalizedRemainingTime = remainingTime === null ? null : Math.max(remainingTime, 0);
 
     return {
         ...rest,
         status: derivedStatus,
+        order_status: derivedStatus,
+        acceptance_deadline: rest.acceptance_deadline || null,
+        remaining_time: normalizedRemainingTime,
         items: formatItems(rawItems),
         customer: null,
         driver: formatDriver(driverFromAssignment || fallbackDriver),
@@ -187,6 +272,7 @@ const baseOrderSelect = `
     payment_status,
     customer_notes,
     created_at,
+    acceptance_deadline,
     accepted_at,
     preparing_at,
     out_for_delivery_at,
@@ -274,8 +360,9 @@ const getOrders = async (shopId, page = 1, limit = 20, status = null) => {
     if (error) throw error;
 
     const rawOrders = data || [];
-    const driverMap = await buildDriverMap(rawOrders);
-    const sanitizedOrders = rawOrders.map(order => formatOrderRecord(order, { driverMap }));
+    const evaluatedOrders = await autoExpireOrders(rawOrders, shopId);
+    const driverMap = await buildDriverMap(evaluatedOrders);
+    const sanitizedOrders = evaluatedOrders.map(order => formatOrderRecord(order, { driverMap }));
     const total = typeof count === 'number' ? count : sanitizedOrders.length;
     const totalPages = Math.max(1, Math.ceil(Math.max(total, 1) / pagination.limit));
 
@@ -303,20 +390,18 @@ const getOrderDetails = async (orderId, shopId) => {
     if (error) throw error;
     if (!order) throw new NotFoundError('Order not found');
 
-    const driverMap = await buildDriverMap([order]);
+    const [evaluatedOrder] = await autoExpireOrders([order], shopId);
+    const driverMap = await buildDriverMap([evaluatedOrder]);
 
-    return formatOrderRecord(order, { driverMap });
+    return formatOrderRecord(evaluatedOrder, { driverMap });
 };
 
 const checkExpiry = async (orderId, shopId) => {
-    const order = await fetchOrderForShop(orderId, shopId, 'id, status, pending_until, order_number');
+    let order = await fetchOrderForShop(orderId, shopId, 'id, status, acceptance_deadline, order_number, created_at');
+    [order] = await autoExpireOrders([order], shopId);
 
-    if (normalizeOrderStatus(order.status) === 'pending' && order.pending_until) {
-        const now = Date.now();
-        const pendingUntil = new Date(order.pending_until).getTime();
-        if (!Number.isNaN(pendingUntil) && pendingUntil < now) {
-            // Future enhancement: auto expire order.
-        }
+    if (normalizeOrderStatus(order.status) === 'expired') {
+        throw new BadRequestError('Order has expired and can no longer be updated.');
     }
 
     return order;
@@ -581,6 +666,7 @@ const getOrderStats = async (shopId) => {
         delivered: 0,
         cancelled: 0,
         rejected: 0,
+        expired: 0,
         totalRevenue: 0
     };
 
@@ -612,6 +698,9 @@ const getOrderStats = async (shopId) => {
                 break;
             case 'rejected':
                 stats.rejected++;
+                break;
+            case 'expired':
+                stats.expired++;
                 break;
             default:
                 break;

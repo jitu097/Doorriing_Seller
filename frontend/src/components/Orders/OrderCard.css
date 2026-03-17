@@ -87,6 +87,80 @@
   background: #0284c7;
 }
 
+.seller-order-card__timer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: #f8fafc;
+  gap: 16px;
+}
+
+.seller-order-card__timer-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.seller-order-card__timer-value {
+  font-family: 'JetBrains Mono', 'Space Mono', monospace;
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #0f172a;
+}
+
+.seller-order-card__timer--safe {
+  background: rgba(22, 163, 74, 0.08);
+  border-color: rgba(22, 163, 74, 0.4);
+}
+
+.seller-order-card__timer--safe .seller-order-card__timer-text,
+.seller-order-card__timer--safe .seller-order-card__timer-value {
+  color: #15803d;
+}
+
+.seller-order-card__timer--warning {
+  background: rgba(249, 115, 22, 0.08);
+  border-color: rgba(249, 115, 22, 0.4);
+}
+
+.seller-order-card__timer--warning .seller-order-card__timer-text,
+.seller-order-card__timer--warning .seller-order-card__timer-value {
+  color: #c2410c;
+}
+
+.seller-order-card__timer--danger {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+.seller-order-card__timer--danger .seller-order-card__timer-text,
+.seller-order-card__timer--danger .seller-order-card__timer-value {
+  color: #b91c1c;
+}
+
+.seller-order-card__timer--neutral {
+  background: rgba(148, 163, 184, 0.08);
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+.seller-order-card__timer--neutral .seller-order-card__timer-text {
+  color: #475569;
+}
+
+.seller-order-card__timer-value.pulse {
+  animation: timerPulse 1s ease-in-out infinite;
+}
+
+@keyframes timerPulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
 .seller-order-card__actions {
   display: flex;
   gap: 10px;

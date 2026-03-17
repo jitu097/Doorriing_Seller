@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useRealtimeSubscription } from '../../hooks/useRealtimeSubscription';
 import orderService from '../../services/orderService';
 import OrderAlertOverlay from './OrderAlertOverlay';
+import { deriveAcceptanceDeadlineMs } from '../../utils/orderAcceptanceTimer';
 
 /**
  * Global Order Manager wrapper. 
@@ -69,11 +70,42 @@ const OrderAlertManager = () => {
         }
     });
 
-    const activeOrder = orderQueue[0];
+    useEffect(() => {
+        if (!orderQueue.length) return undefined;
 
-    const popQueue = () => {
-        setOrderQueue(prev => prev.slice(1));
-    };
+        const intervalId = setInterval(() => {
+            const now = Date.now();
+            const expiredIds = [];
+
+            setOrderQueue(prev => {
+                if (!prev.length) return prev;
+
+                let mutated = false;
+                const filtered = prev.filter(order => {
+                    const status = order.status?.toLowerCase?.() || '';
+                    if (status !== 'pending') return true;
+                    const deadline = deriveAcceptanceDeadlineMs(order);
+                    if (deadline === null) return true;
+                    if (deadline <= now) {
+                        expiredIds.push(order.id);
+                        mutated = true;
+                        return false;
+                    }
+                    return true;
+                });
+
+                return mutated ? filtered : prev;
+            });
+
+            if (expiredIds.length) {
+                window.dispatchEvent(new CustomEvent('order-alert-action'));
+            }
+        }, 1000);
+
+        return () => clearInterval(intervalId);
+    }, [orderQueue.length]);
+
+    const activeOrder = orderQueue[0];
 
     const handleAccept = async (orderId) => {
         try {
@@ -95,6 +127,12 @@ const OrderAlertManager = () => {
             setLoadingAction(false);
         }
     };
+
+    const handleAutoExpire = useCallback((orderId) => {
+        if (!orderId) return;
+        setOrderQueue(prev => prev.filter(order => order.id !== orderId));
+        window.dispatchEvent(new CustomEvent('order-alert-action'));
+    }, []);
 
     const handleDecline = async (orderId) => {
         try {
@@ -124,6 +162,7 @@ const OrderAlertManager = () => {
             orders={orderQueue}
             onAccept={handleAccept}
             onDecline={handleDecline}
+            onExpire={handleAutoExpire}
             loading={loadingAction}
         />
     );

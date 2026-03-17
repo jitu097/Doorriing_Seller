@@ -1,5 +1,13 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useEffect, useMemo, useState } from 'react';
 import './OrderCard.css';
+import {
+  deriveAcceptanceDeadlineMs,
+  deriveInitialRemainingMs,
+  clampRemainingMs,
+  formatCountdown,
+  resolveTimerVariant,
+  isPendingOrderExpired
+} from '../../utils/orderAcceptanceTimer';
 
 const formatCurrency = (value) => {
   const amount = Number(value);
@@ -79,13 +87,24 @@ const OrderCard = ({
   onAssignDriver,
   onMarkReady
 }) => {
+  const deadlineMs = useMemo(() => deriveAcceptanceDeadlineMs(order), [order.acceptance_deadline, order.created_at, order.id]);
+  const initialRemainingMs = useMemo(
+    () => clampRemainingMs(deriveInitialRemainingMs(order)),
+    [order.id, order.acceptance_deadline, order.remaining_time, order.created_at]
+  );
+  const [remainingMs, setRemainingMs] = useState(initialRemainingMs);
+
+  useEffect(() => {
+    setRemainingMs(initialRemainingMs);
+  }, [initialRemainingMs]);
+
   const items = useMemo(() => (Array.isArray(order.items) ? order.items : []), [order.items]);
   const { label, style } = useMemo(
     () => statusClassName(statusMeta, order.status || 'pending'),
     [statusMeta, order.status]
   );
   const isActionLoading = actionState?.orderId === order.id;
-  const disabled = Boolean(isActionLoading);
+  const baseDisabled = Boolean(isActionLoading);
   const orderTotalDisplay = useMemo(() => formatCurrency(order.total_amount), [order.total_amount]);
   const orderedAtDisplay = useMemo(() => formatDateTime(order.created_at), [order.created_at]);
   const preparedItems = useMemo(
@@ -97,6 +116,44 @@ const OrderCard = ({
     })),
     [items, order.id]
   );
+  const isPending = order.status === 'pending';
+  const derivedExpired = order.status === 'expired' || isPendingOrderExpired(order, remainingMs);
+  const timerActive = isPending && !derivedExpired && typeof remainingMs === 'number' && remainingMs > 0;
+  const hasTimerSource = deadlineMs !== null || (typeof initialRemainingMs === 'number' && initialRemainingMs > 0);
+  const shouldRunTimer = isPending && !derivedExpired && hasTimerSource;
+
+  useEffect(() => {
+    if (!shouldRunTimer) return undefined;
+
+    const intervalId = setInterval(() => {
+      setRemainingMs(prev => {
+        if (deadlineMs !== null) {
+          const diff = deadlineMs - Date.now();
+          return diff > 0 ? diff : 0;
+        }
+
+        const fallback = typeof prev === 'number' ? prev : (initialRemainingMs ?? 0);
+        const next = fallback - 1000;
+        return next > 0 ? next : 0;
+      });
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [shouldRunTimer, deadlineMs, initialRemainingMs]);
+
+  const timerVariant = timerActive ? resolveTimerVariant(remainingMs) : 'neutral';
+  const countdownDisplay = timerActive ? formatCountdown(remainingMs) : null;
+  const staticTimerMessage = useMemo(() => {
+    if (derivedExpired && order.status === 'expired') return 'Not Accepted (Time Over)';
+    if (derivedExpired) return 'Time Over ⏳';
+    if (order.status === 'accepted') return 'Accepted ✅';
+    if (order.status === 'rejected') return 'Rejected ❌';
+    return null;
+  }, [derivedExpired, order.status]);
+  const timerStatusText = timerActive ? 'Time left ⏳' : staticTimerMessage;
+  const shouldShowTimerSection = Boolean(timerActive || timerStatusText);
+  const timerClassName = `seller-order-card__timer seller-order-card__timer--${timerVariant}`;
+  const canRespond = isPending && !derivedExpired;
   const showDriverInfo = Boolean(order.driver && order.status !== 'delivered');
 
   return (
@@ -146,20 +203,39 @@ const OrderCard = ({
         </section>
       )}
 
+      {shouldShowTimerSection && (
+        <section className={timerClassName}>
+          <div>
+            <p className="seller-order-card__label">Acceptance window</p>
+            {timerStatusText && (
+              <span className="seller-order-card__timer-text">
+                {timerStatusText}
+                {timerActive ? ':' : ''}
+              </span>
+            )}
+          </div>
+          {timerActive && (
+            <span className={`seller-order-card__timer-value ${timerVariant === 'danger' ? 'pulse' : ''}`}>
+              {countdownDisplay}
+            </span>
+          )}
+        </section>
+      )}
+
       <section className="seller-order-card__actions">
         {order.status === 'pending' && (
           <>
-            <button className="solid success" disabled={disabled} onClick={() => onAccept(order.id)}>
+            <button className="solid success" disabled={baseDisabled || !canRespond} onClick={() => onAccept(order.id)}>
               {isActionLoading && actionState?.type === 'accept' ? 'Accepting…' : 'Accept Order'}
             </button>
-            <button className="solid danger" disabled={disabled} onClick={() => onReject(order.id)}>
+            <button className="solid danger" disabled={baseDisabled || !canRespond} onClick={() => onReject(order.id)}>
               {isActionLoading && actionState?.type === 'reject' ? 'Rejecting…' : 'Reject'}
             </button>
           </>
         )}
 
         {order.status === 'accepted' && (
-          <button className="solid primary" disabled={disabled} onClick={() => onStartPreparing(order.id)}>
+          <button className="solid primary" disabled={baseDisabled} onClick={() => onStartPreparing(order.id)}>
             {isActionLoading && actionState?.type === 'prepare' ? 'Starting…' : 'Start Preparing'}
           </button>
         )}
@@ -167,11 +243,11 @@ const OrderCard = ({
         {order.status === 'preparing' && (
           <>
             {!order.driver && (
-              <button className="outline" disabled={disabled} onClick={() => onAssignDriver(order.id)}>
+              <button className="outline" disabled={baseDisabled} onClick={() => onAssignDriver(order.id)}>
                 Assign Driver
               </button>
             )}
-            <button className="solid warning" disabled={disabled} onClick={() => onMarkReady(order.id)}>
+            <button className="solid warning" disabled={baseDisabled} onClick={() => onMarkReady(order.id)}>
               {isActionLoading && actionState?.type === 'ready' ? 'Updating…' : 'Mark Ready'}
             </button>
           </>
@@ -192,6 +268,8 @@ const OrderCard = ({
 const arePropsEqual = (prev, next) => {
   if (prev.order.id !== next.order.id) return false;
   if (prev.order.status !== next.order.status) return false;
+  if ((prev.order.acceptance_deadline || null) !== (next.order.acceptance_deadline || null)) return false;
+  if ((prev.order.remaining_time ?? null) !== (next.order.remaining_time ?? null)) return false;
   if ((prev.order.driver?.id || null) !== (next.order.driver?.id || null)) return false;
   if (prev.actionState?.orderId !== next.actionState?.orderId) return false;
   if (prev.actionState?.type !== next.actionState?.type) return false;

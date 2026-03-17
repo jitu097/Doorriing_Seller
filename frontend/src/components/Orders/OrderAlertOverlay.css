@@ -144,6 +144,86 @@
     border-bottom: none;
 }
 
+.order-alert-timer {
+    margin: 0 24px 16px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid rgba(15, 23, 42, 0.2);
+    background: #f8fafc;
+    gap: 12px;
+}
+
+.order-alert-timer__label {
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    margin: 0 0 4px 0;
+}
+
+.order-alert-timer__status {
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.order-alert-timer__value {
+    font-family: 'JetBrains Mono', 'Space Mono', monospace;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.order-alert-timer--safe {
+    border-color: rgba(22, 163, 74, 0.4);
+    background: rgba(22, 163, 74, 0.08);
+}
+
+.order-alert-timer--safe .order-alert-timer__status,
+.order-alert-timer--safe .order-alert-timer__value {
+    color: #15803d;
+}
+
+.order-alert-timer--warning {
+    border-color: rgba(249, 115, 22, 0.4);
+    background: rgba(249, 115, 22, 0.08);
+}
+
+.order-alert-timer--warning .order-alert-timer__status,
+.order-alert-timer--warning .order-alert-timer__value {
+    color: #c2410c;
+}
+
+.order-alert-timer--danger {
+    border-color: rgba(220, 38, 38, 0.4);
+    background: rgba(220, 38, 38, 0.08);
+}
+
+.order-alert-timer--danger .order-alert-timer__status,
+.order-alert-timer--danger .order-alert-timer__value {
+    color: #b91c1c;
+}
+
+.order-alert-timer__value.pulse {
+    animation: timerPulse 1s ease-in-out infinite;
+}
+
+.order-alert-expired-note {
+    margin: 0;
+    text-align: center;
+    font-size: 0.95rem;
+    color: #b91c1c;
+    font-weight: 600;
+}
+
+@keyframes timerPulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
+
 .item-qty {
     font-weight: 600;
     color: #4CAF50;
