@@ -18,7 +18,7 @@
 
 @media (max-width: 600px) {
     .hero-boy-img {
-        max-width: 520px !important;
+        max-width: 380px !important;
         width: 100% !important;
         float: none;
         display: block;
@@ -127,8 +127,8 @@
 .hero-title {
     font-size: 3.5rem;
     font-weight: 800;
-    line-height: 1.2;
-    margin-bottom: 24px;
+    line-height: 1.0;
+    margin-bottom: -20px;
     color: var(--text-primary);
 }
 
