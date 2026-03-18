@@ -17,6 +17,7 @@ const AboutUs = lazy(() => import('../pages/legal/AboutUs'));
 const ContactUs = lazy(() => import('../pages/legal/ContactUs'));
 const PrivacyPolicy = lazy(() => import('../pages/legal/PrivacyPolicy'));
 const RefundCancellation = lazy(() => import('../pages/legal/RefundCancellation'));
+const DeleteAccountInfo = lazy(() => import('../pages/legal/DeleteAccountInfo'));
 
 // Grocery Pages
 const GroceryDashboard = lazy(() => import('../pages/Grocery/DAshboard'));
@@ -117,6 +118,7 @@ const AppRoutes = () => {
                     <Route path="/contact" element={<ContactUs />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                     <Route path="/refund-cancellation" element={<RefundCancellation />} />
+                    <Route path="/delete-account" element={<DeleteAccountInfo />} />
                 </Route>
 
                 {/* Protected Routes - Authentication Required */}

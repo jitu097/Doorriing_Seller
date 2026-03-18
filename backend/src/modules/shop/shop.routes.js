@@ -15,5 +15,6 @@ router.patch('/booking-status', requireShop, shopController.toggleBookingStatus)
 router.put('/:id/status', requireShop, shopController.updateStatusById);
 router.post('/image', requireShop, upload.single('image'), shopController.uploadShopImage);
 router.post('/cover', requireShop, upload.single('cover'), shopController.uploadCoverImage);
+router.delete('/delete-account', shopController.deleteAccount);
 
 module.exports = router;

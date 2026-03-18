@@ -3,6 +3,7 @@ const cache = require('../../utils/cache');
 const { ConflictError, NotFoundError, BadRequestError } = require('../../utils/errors');
 const { uploadToCloudinary, deleteFromCloudinary, extractPublicId } = require('../../config/cloudinary');
 const notificationService = require('../notification/notification.service');
+const admin = require('../../config/firebaseAdmin');
 
 const VALID_SHOP_STATUSES = ['open', 'closed'];
 
@@ -318,6 +319,71 @@ const updateBookingStatusById = async (sellerId, shopId, isBookingEnabled) => {
     return data;
 };
 
+const deleteSellerAccount = async (sellerId) => {
+    // 1. Get shop to find images and ID
+    const { data: shop, error: shopError } = await supabase
+        .from('shops')
+        .select('id, shop_image_url')
+        .eq('seller_id', sellerId)
+        .maybeSingle();
+
+    if (shopError) throw shopError;
+    if (!shop) throw new NotFoundError('Shop not found');
+
+    const shopId = shop.id;
+
+    // 2. Collect image public IDs for deletion
+    const { data: items, error: itemsError } = await supabase
+        .from('items')
+        .select('image_url')
+        .eq('shop_id', shopId);
+
+    if (itemsError) throw itemsError;
+
+    const publicIdsToDelete = [];
+    if (shop.shop_image_url) {
+        const sid = extractPublicId(shop.shop_image_url);
+        if (sid) publicIdsToDelete.push(sid);
+    }
+
+    (items || []).forEach(item => {
+        if (item.image_url) {
+            const iid = extractPublicId(item.image_url);
+            if (iid) publicIdsToDelete.push(iid);
+        }
+    });
+
+    // 3. Delete from database (Atomic)
+    const { error: rpcError } = await supabase.rpc('delete_seller_account', {
+        p_seller_id: sellerId
+    });
+
+    if (rpcError) throw rpcError;
+
+    // 4. Cleanup Cloudinary images (Non-atomic, handles best effort)
+    for (const publicId of publicIdsToDelete) {
+        try {
+            await deleteFromCloudinary(publicId);
+        } catch (cloudinaryError) {
+            console.error('Cloudinary deletion failed during account cleanup:', cloudinaryError);
+        }
+    }
+
+    // 5. Delete Firebase User
+    try {
+        await admin.auth().deleteUser(sellerId);
+    } catch (firebaseError) {
+        console.error('Firebase Auth deletion failed during account cleanup:', firebaseError);
+        // We log it but the account is effectively deleted from the app's perspective
+    }
+
+    // 6. Clear cache
+    cache.delete(`shop:seller:${sellerId}`);
+    cache.delete(`wallet:summary:${shopId}`);
+
+    return { success: true, message: 'Account and associated data deleted' };
+};
+
 module.exports = {
     createShop,
     getShop,
@@ -326,5 +392,6 @@ module.exports = {
     updateShopStatusById,
     uploadShopImage,
     uploadCoverImage,
-    updateBookingStatusById
+    updateBookingStatusById,
+    deleteSellerAccount
 };

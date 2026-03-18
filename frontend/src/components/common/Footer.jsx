@@ -32,6 +32,7 @@ const Footer = () => {
                                 <li><Link to="/privacy-policy">Privacy Policy</Link></li>
                                 <li><Link to="/terms-and-conditions">Terms & Conditions</Link></li>
                                 <li><Link to="/refund-cancellation">Refund / Cancellation</Link></li>
+                                <li><Link to="/delete-account">Delete Account</Link></li>
                             </ul>
                         </div>
                     </div>

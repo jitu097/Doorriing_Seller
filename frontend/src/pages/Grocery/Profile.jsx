@@ -3,6 +3,10 @@ import React, { useState, useEffect } from 'react';
 import './Profile.css';
 import groceryService from '../../services/groceryService';
 import { shopService } from '../../services/shopService';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import { auth } from '../../config/firebase';
+import { signOut } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
 
 const SUBSCRIPTION_STATUS_META = {
     active: {
@@ -51,8 +55,11 @@ const Profile = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [activeSection, setActiveSection] = useState('shop');
     const [loading, setLoading] = useState(true);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedImageFile, setSelectedImageFile] = useState(null);
     const [previewImage, setPreviewImage] = useState('');
+    const navigate = useNavigate();
     const [subscriptionInfo] = useState({
         planName: 'Seller Plan',
         price: 99,
@@ -183,6 +190,24 @@ const Profile = () => {
 
         setSelectedImageFile(file);
         setPreviewImage(URL.createObjectURL(file));
+    };
+
+    const handleDeleteAccount = async () => {
+        try {
+            setIsDeleting(true);
+            await shopService.deleteAccount();
+            await signOut(auth);
+            localStorage.clear();
+            sessionStorage.clear();
+            navigate('/login');
+            alert('Account and all associated data have been permanently deleted.');
+        } catch (error) {
+            console.error('Delete account failed:', error);
+            alert('Failed to delete account. Please try again or contact support.');
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteModal(false);
+        }
     };
 
     if (loading) return <div>Loading Profile...</div>;
@@ -390,6 +415,18 @@ const Profile = () => {
                                         <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '5px' }}>To toggle store status, use the main dashboard toggle (if available) or contact support.</p>
                                     </div>
                                 </div>
+
+                                <div className="danger-zone" style={{ marginTop: '40px', padding: '20px', border: '1px solid #fee2e2', borderRadius: '12px', background: '#fef2f2' }}>
+                                    <h3 style={{ color: '#991b1b', marginTop: 0 }}>Danger Zone</h3>
+                                    <p style={{ fontSize: '0.875rem', color: '#7f1d1d', margin: '10px 0' }}>Permanently delete your account and all associated shop data. This action cannot be undone.</p>
+                                    <button 
+                                        className="btn-delete-account" 
+                                        onClick={() => setShowDeleteModal(true)}
+                                        style={{ padding: '10px 20px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}
+                                    >
+                                        Delete Account
+                                    </button>
+                                </div>
                             </div>
                         )}
 
@@ -439,6 +476,17 @@ const Profile = () => {
                     </div>
                 </div>
             </div>
+
+            <ConfirmModal 
+                isOpen={showDeleteModal}
+                title="Delete Account Permanently?"
+                message="This action is irreversible. All your shop data, items, images, and order history will be permanently removed from Doorriing. You will be logged out immediately."
+                confirmText={isDeleting ? "Deleting..." : "Permanently Delete"}
+                confirmInput="DELETE"
+                type="danger"
+                onConfirm={handleDeleteAccount}
+                onCancel={() => setShowDeleteModal(false)}
+            />
         </>
     );
 };

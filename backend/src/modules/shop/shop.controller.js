@@ -133,6 +133,15 @@ const toggleBookingStatus = async (req, res, next) => {
     }
 };
 
+const deleteAccount = async (req, res, next) => {
+    try {
+        const result = await shopService.deleteSellerAccount(req.user.id);
+        successResponse(res, result, 'Account and all data deleted successfully');
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createShop,
     getShop,
@@ -141,5 +150,6 @@ module.exports = {
     updateStatusById,
     uploadShopImage,
     uploadCoverImage,
-    toggleBookingStatus
+    toggleBookingStatus,
+    deleteAccount
 };

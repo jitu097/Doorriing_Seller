@@ -135,4 +135,11 @@ export const shopService = {
       headers: {} // Let browser set Content-Type for FormData
     });
   },
+
+  // Delete Account
+  deleteAccount: async () => {
+    return await apiCall('/shop/delete-account', {
+      method: 'DELETE'
+    });
+  },
 };
