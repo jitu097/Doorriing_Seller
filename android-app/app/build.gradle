@@ -150,9 +150,26 @@ android {
 
         
     }
+
+    signingConfigs {
+        release {
+            def props = new Properties()
+            def propFile = file("../local.properties")
+            if (propFile.exists()) {
+                props.load(new FileInputStream(propFile))
+            }
+            storeFile props.containsKey('RELEASE_STORE_FILE') ? file(props['RELEASE_STORE_FILE']) : null
+            storePassword props['RELEASE_STORE_PASSWORD']
+            keyAlias props['RELEASE_KEY_ALIAS']
+            keyPassword props['RELEASE_KEY_PASSWORD']
+        }
+    }
+
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false // Fixed: Disabled minification to prevent file locking errors
+            signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
     compileOptions {
