@@ -1,6 +1,6 @@
 {
-  "name": "Doorriing Seller",
-  "short_name": "Doorriing Seller",
+  "name": "Doorriing Partner",
+  "short_name": "Doorriing Partner",
   "description": "Doorriing Seller Dashboard",
   "start_url": "https://seller.doorriing.com/",
   "scope": "/",
@@ -10,7 +10,7 @@
   "theme_color": "#ff6b00",
   "icons": [
     {
-      "src": "store_icon.png",
+      "src": "store_icon_512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
