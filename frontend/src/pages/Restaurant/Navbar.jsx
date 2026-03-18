@@ -68,6 +68,7 @@ export default function Navbar() {
   const handleLogout = async () => {
     if (!window.confirm('Logout?')) return;
     await signOut(auth);
+    localStorage.removeItem('lastActiveTime');
     navigate('/login');
     setSidebarOpen(false);
   };

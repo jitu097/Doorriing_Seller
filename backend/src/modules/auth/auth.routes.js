@@ -5,6 +5,7 @@ const { verifyToken } = require('../../middlewares/auth.middleware');
 const { loadSeller } = require('../../middlewares/seller.middleware');
 
 router.post('/bootstrap', verifyToken, authController.bootstrap);
+router.post('/forgot-password', authController.forgotPassword);
 router.get('/profile', verifyToken, loadSeller, authController.getProfile);
 
 module.exports = router;

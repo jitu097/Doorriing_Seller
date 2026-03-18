@@ -8,12 +8,8 @@ const LandingPage = () => {
 
     return (
         <div className="landing-container">
-            <nav className="landing-nav">
+            <nav className="landing-nav" style={{ justifyContent: 'center' }}>
                 <div className="brand">Doorriing Seller</div>
-                <div className="nav-links">
-                    <Link to="/login" className="nav-btn login-link">Log In</Link>
-                    <Link to="/login" className="nav-btn signup-link">Join Now</Link>
-                </div>
             </nav>
 
             <section className="hero-section">
@@ -27,14 +23,9 @@ const LandingPage = () => {
 
                     </p>
 
-                    <div className="cta-group">
-                        <button className="cta-btn primary-cta" onClick={() => navigate('/login')}>
-                            Start Selling Today
-                        </button>
-                        <button className="cta-btn secondary-cta" onClick={() => navigate('/login')}>
-                            Seller Login
-                        </button>
-                    </div>
+                    <button className="cta-btn primary-cta" onClick={() => navigate('/login')} style={{ margin: '0 auto', display: 'block' }}>
+                        Get Started
+                    </button>
                 </div>
             </section>
             <Footer />

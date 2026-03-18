@@ -20,7 +20,7 @@ const resolveApiBaseUrl = () => {
   return VITE_API_URL || localFallback;
 };
 
-const API_BASE_URL = resolveApiBaseUrl();
+export const API_BASE_URL = resolveApiBaseUrl();
 
 // Helper function to get auth token
 const getAuthToken = async () => {

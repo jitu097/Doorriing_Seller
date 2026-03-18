@@ -10,6 +10,7 @@ const Sidebar = ({ isOpen, onClose, menuItems, profilePath }) => {
     const handleLogout = async () => {
         if (!window.confirm('Logout?')) return;
         await signOut(auth);
+        localStorage.removeItem('lastActiveTime');
         navigate('/login');
     };
 

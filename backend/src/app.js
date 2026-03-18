@@ -68,6 +68,15 @@ const reportsLimiter = rateLimit({
     message: { success: false, message: 'Too many analytics requests, please slow down.' }
 });
 
+// Stricter limiter for forgot password — 5 req/15min per IP
+const forgotPasswordLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many password reset attempts, please try again in 15 minutes.' }
+});
+
 // ─── Health Check ─────────────────────────────────────────────────────────────
 app.get('/health', async (req, res) => {
     try {
@@ -90,6 +99,7 @@ app.get('/health', async (req, res) => {
 });
 
 // ─── Apply Limiters ───────────────────────────────────────────────────────────
+app.use('/api/auth/forgot-password', forgotPasswordLimiter);
 app.use('/api/auth', authLimiter);
 app.use('/api/analytics', reportsLimiter);
 app.use('/api', apiLimiter);

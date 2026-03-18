@@ -20,7 +20,27 @@ const getProfile = async (req, res, next) => {
     }
 };
 
+const forgotPassword = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        
+        // Simple validation
+        if (!email || !email.includes('@')) {
+            return res.status(400).json({ success: false, message: 'Invalid email address' });
+        }
+
+        // Generic log (avoid logging sensitive data)
+        console.log(`[AUTH] Password reset requested for: ${email.split('@')[0]}... @ ${new Date().toISOString()}`);
+        
+        // Always return generic success for security
+        successResponse(res, null, 'If this email is registered, a password reset link has been sent.');
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     bootstrap,
-    getProfile
+    getProfile,
+    forgotPassword
 };

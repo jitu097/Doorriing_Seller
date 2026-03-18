@@ -142,6 +142,11 @@ const Login = () => {
                             required
                         />
                     </div>
+                    <div className="form-footer" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+                        <Link to="/forgot-password" style={{ color: 'var(--primary-orange)', fontSize: '0.85rem', fontWeight: '500' }}>
+                            Forgot Password?
+                        </Link>
+                    </div>
 
                     <PrimaryButton type="submit" disabled={loading}>
                         {loading ? 'Logging in...' : 'Log In'}

@@ -9,6 +9,7 @@ import OrderAlertManager from '../components/Orders/OrderAlertManager';
 // Lazy load pages
 const Login = lazy(() => import('../pages/auth/Login'));
 const Register = lazy(() => import('../pages/auth/Register'));
+const ForgotPassword = lazy(() => import('../pages/auth/ForgotPassword'));
 const Registration = lazy(() => import('../pages/onboarding/Registration'));
 const LandingPage = lazy(() => import('../pages/landing/LandingPage'));
 const TermsAndConditions = lazy(() => import('../pages/legal/TermsAndConditions'));
@@ -110,6 +111,7 @@ const AppRoutes = () => {
                 <Route element={<PublicRoute />}>
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
                     <Route path="/about" element={<AboutUs />} />
                     <Route path="/contact" element={<ContactUs />} />
