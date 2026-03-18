@@ -1,4 +1,4 @@
-const CACHE_NAME = "doorriing-seller-cache-v1";
+const CACHE_NAME = "doorriing-seller-cache-v2";
 const ASSETS_TO_PRECACHE = [
   "/",
   "/index.html",
@@ -51,22 +51,20 @@ self.addEventListener("fetch", (event) => {
   }
 
   event.respondWith(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.match(event.request).then((cachedResponse) => {
-        const fetchPromise = fetch(event.request).then((networkResponse) => {
-          // Cache the new response if it's valid
-          if (networkResponse && networkResponse.status === 200) {
-            cache.put(event.request, networkResponse.clone());
-          }
-          return networkResponse;
-        }).catch(() => {
-            // If fetch fails (offline), return the cached response if available
-            return cachedResponse;
-        });
-
-        // Return the cached response if available, else wait for the network
-        return cachedResponse || fetchPromise;
+    caches.match(event.request).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        return networkResponse;
+      }).catch(() => {
+        return cachedResponse || new Response("Offline", { status: 503, statusText: "Offline" });
       });
+
+      return cachedResponse || fetchPromise;
     })
   );
 });
