@@ -18,10 +18,10 @@ const LandingPage = () => {
                         Grow Your Business with <br />
                         <span>Doorriing Partner</span>
                     </h1>
-                    <p className="hero-subtitle">
-                        The easiest way to manage your shop, orders, and products online.
 
-                    </p>
+                        
+                            <img src="/boy.png" alt="Boy" className="hero-boy-img" />
+       
 
                     <button className="cta-btn primary-cta" onClick={() => navigate('/login')} style={{ margin: '0 auto', display: 'block' }}>
                         Get Started
