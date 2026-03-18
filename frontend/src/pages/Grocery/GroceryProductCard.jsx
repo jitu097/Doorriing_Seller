@@ -24,6 +24,13 @@ const GroceryProductCard = ({ item, onEdit, onDelete, onToggleStatus }) => {
     };
     const discountLabel = formatDiscountLabel(discountLabelSource);
 
+    // Base quantity display logic
+    const baseQty = Number(item.base_quantity) > 0 ? Number(item.base_quantity) : null;
+    const unit = item.unit || '';
+    const priceDisplay = baseQty && unit
+        ? `${baseQty}${unit} - ₹${finalPrice.toFixed(2)}`
+        : `₹${finalPrice.toFixed(2)}`;
+
     return (
         <div className="grocery-card">
             <div className="grocery-card-content">
@@ -87,8 +94,8 @@ const GroceryProductCard = ({ item, onEdit, onDelete, onToggleStatus }) => {
                 {/* Price and Toggle Row */}
                 <div className="grocery-card-price-row">
                     <div className="grocery-card-price">
+                        <span className="price-final">{priceDisplay}</span>
                         {hasDiscount && <span className="price-original">₹{basePrice.toFixed(2)}</span>}
-                        <span className="price-final">₹{finalPrice.toFixed(2)}</span>
                     </div>
 
                     <div className="grocery-card-switches">

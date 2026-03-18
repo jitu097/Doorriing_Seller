@@ -86,7 +86,7 @@ function Dashboard() {
 						<p>Welcome back! Here's your daily overview.</p>
 					</div>
 					<div className="header-actions">
-						<span className="date-badge">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+						<span className="date-badge">{new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' })}</span>
 					</div>
 				</header>
 

@@ -219,11 +219,15 @@ const formatItems = (rawItems = []) => rawItems.map(item => {
     const unitPrice = coerceNumber(item?.unit_price ?? item?.price ?? catalogPrice);
     const totalPrice = coerceNumber(item?.total_price);
     const computedTotal = totalPrice ?? (unitPrice !== null ? unitPrice * quantity : null);
+    const baseQuantity = Number(item?.items?.base_quantity) || 1;
+    const totalQuantity = quantity * baseQuantity;
 
     return {
         name: item?.items?.name || 'Item',
         quantity,
         unit: item?.items?.unit || null,
+        base_quantity: baseQuantity,
+        total_quantity: totalQuantity,
         image_url: item?.items?.image_url || null,
         unit_price: unitPrice,
         total_price: computedTotal,
@@ -302,6 +306,7 @@ const baseOrderSelect = `
         items (
             name,
             unit,
+            base_quantity,
             image_url,
             price
         )

@@ -11,6 +11,13 @@ const normalizeNumber = (value, fallback = 0) => {
 };
 const normalizeFoodType = (value) => (value && value.toLowerCase() === 'nonveg' ? 'nonveg' : 'veg');
 
+const VALID_UNITS = new Set(['gram', 'ml', 'piece', 'kg', 'plate', 'gm', 'ltr', 'pieces', 'litre', 'packet', 'box', 'dozen']);
+
+const normalizeBaseQuantity = (value) => {
+    const parsed = normalizeNumber(value, 1);
+    return parsed > 0 ? parsed : 1;
+};
+
 const createItem = async (shopId, itemData) => {
     // Validate category_id is required
     if (!itemData.category_id) {
@@ -98,7 +105,8 @@ const createItem = async (shopId, itemData) => {
             unit: itemData.unit,
             food_type: normalizeFoodType(itemData.food_type),
             image_url: itemData.image_url || null,
-            is_available: itemData.is_available !== undefined ? itemData.is_available : true
+            is_available: itemData.is_available !== undefined ? itemData.is_available : true,
+            base_quantity: normalizeBaseQuantity(itemData.base_quantity)
         })
         .select()
         .single();
@@ -135,6 +143,7 @@ const getItems = async (shopId, categoryId = null) => {
             half_portion_final_price,
             stock_quantity,
             unit,
+            base_quantity,
             image_url,
             is_available,
             food_type,
@@ -179,6 +188,7 @@ const getItem = async (itemId, shopId) => {
             half_portion_final_price,
             stock_quantity,
             unit,
+            base_quantity,
             image_url,
             is_available,
             food_type,
@@ -201,12 +211,13 @@ const updateItem = async (itemId, shopId, updates) => {
         'unit', 'image_url', 'category_id', 'subcategory_id', 'is_available',
         'food_type', 'discount_type', 'discount_value', 'final_price',
         'full_price', 'full_discount_type', 'full_discount_value', 'full_final_price',
-        'half_discount_type', 'half_discount_value', 'half_portion_final_price'
+        'half_discount_type', 'half_discount_value', 'half_portion_final_price',
+        'base_quantity'
     ];
     const numericFields = new Set([
         'price', 'half_portion_price', 'stock_quantity', 'discount_value', 'final_price',
         'full_price', 'full_discount_value', 'full_final_price',
-        'half_discount_value', 'half_portion_final_price'
+        'half_discount_value', 'half_portion_final_price', 'base_quantity'
     ]);
     const discountTypeFields = new Set(['discount_type', 'full_discount_type', 'half_discount_type']);
 
@@ -244,6 +255,14 @@ const updateItem = async (itemId, shopId, updates) => {
         }
     }
 
+    // Validate base_quantity if provided
+    if (updates.base_quantity !== undefined && updates.base_quantity !== null) {
+        const bq = normalizeNumber(updates.base_quantity, 1);
+        if (bq <= 0) {
+            throw new Error('base_quantity must be greater than 0');
+        }
+    }
+
     const filteredUpdates = {};
     Object.keys(updates).forEach(key => {
         if (!allowedFields.includes(key) || updates[key] === undefined) {
@@ -251,9 +270,10 @@ const updateItem = async (itemId, shopId, updates) => {
         }
 
         if (updates[key] === null) {
-            filteredUpdates[key] = null;
+            // For base_quantity, null → default 1
+            filteredUpdates[key] = key === 'base_quantity' ? 1 : null;
         } else if (numericFields.has(key)) {
-            filteredUpdates[key] = normalizeNumber(updates[key], 0);
+            filteredUpdates[key] = normalizeNumber(updates[key], key === 'base_quantity' ? 1 : 0);
         } else if (discountTypeFields.has(key)) {
             filteredUpdates[key] = normalizeDiscountType(updates[key]);
         } else if (key === 'food_type') {

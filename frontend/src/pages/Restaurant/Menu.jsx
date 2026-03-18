@@ -185,6 +185,26 @@ const Menu = () => {
 		setNewItem(createInitialItemState());
 	};
 
+	const handleQuickAddProduct = async (categoryId) => {
+		if (!categoryId) {
+			setShowModal(true);
+			return;
+		}
+
+		try {
+			const subs = await subcategoryService.getSubcategories(categoryId);
+			setSubcategories(subs || []);
+			setNewItem({
+				...createInitialItemState(),
+				category: categoryId
+			});
+			setShowModal(true);
+		} catch (error) {
+			console.error('Failed to prepare quick add:', error);
+			setShowModal(true);
+		}
+	};
+
 	const handleModalOpen = () => {
 		setEditingItemId(null);
 		setSubcategories([]);
@@ -449,17 +469,21 @@ const Menu = () => {
 										src={cat.image_url || fallbackCategoryImage}
 										alt={cat.name}
 										loading="lazy"
-										style={{ width: 30, height: 30, borderRadius: 8, objectFit: 'cover', marginRight: 10 }}
+										style={{ width: 30, height: 30, borderRadius: 8, objectFit: 'cover', marginRight: 4 }}
 									/>
 									<span className="category-name" onClick={() => handleAccordion(idx)}>{cat.name}</span>
 									<span className="category-items">{cat.items?.length || 0} items</span>
-									{!cat.is_active && <span className="category-badge hidden">Hidden</span>}
-									<span className="category-toggle">
-										<label className="switch">
-											<input type="checkbox" checked={cat.is_active} onChange={() => handleToggleCategory(cat.id)} style={{ marginLeft: -8 }} />
-											<span className="slider round"></span>
-										</label>
-									</span>
+									{!cat.is_active && <span className="category-badge hidden" style={{ marginRight: '10px' }}>Hidden</span>}
+									<button
+										className="category-add-btn"
+										onClick={(e) => {
+											e.stopPropagation();
+											handleQuickAddProduct(cat.id);
+										}}
+										title={`Add item to ${cat.name}`}
+									>
+										+
+									</button>
 								</div>
 								{openIndex === idx && (
 									<div className="category-content">

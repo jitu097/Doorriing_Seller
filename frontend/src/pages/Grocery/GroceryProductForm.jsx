@@ -176,9 +176,9 @@ const GroceryProductForm = ({
                         </select>
                     </div>
 
-                    {/* Quantity & Unit Row */}
+                    {/* Quantity, Unit & Base Quantity Row */}
                     <div className="form-row">
-                        <div className="form-group half-width">
+                        <div className="form-group third-width">
                             <label>Quantity</label>
                             <input
                                 type="number"
@@ -190,7 +190,7 @@ const GroceryProductForm = ({
                                 required
                             />
                         </div>
-                        <div className="form-group half-width">
+                        <div className="form-group third-width">
                             <label>Unit</label>
                             <select
                                 name="unit"
@@ -199,15 +199,42 @@ const GroceryProductForm = ({
                                 onChange={onChange}
                                 required
                             >
-                                <option value="pieces">Pieces</option>
-                                <option value="kg">Kg</option>
                                 <option value="gram">Gram</option>
-                                <option value="litre">Litre</option>
                                 <option value="ml">ml</option>
+                                <option value="kg">Kg</option>
+                                <option value="plate">Plate</option>
+                                <option value="pieces">Pieces</option>
+                                <option value="litre">Litre</option>
                                 <option value="packet">Packet</option>
                                 <option value="box">Box</option>
                                 <option value="dozen">Dozen</option>
                             </select>
+                        </div>
+                        <div className="form-group third-width">
+                            <label>Base Quantity <span style={{ color: 'red' }}>*</span></label>
+                            <input
+                                type="number"
+                                name="base_quantity"
+                                className="form-control"
+                                value={formData.base_quantity || ''}
+                                onChange={onChange}
+                                placeholder="e.g. 200"
+                                min={1}
+                                required
+                            />
+                            <small className="form-hint">e.g. 200 (for 200g)</small>
+                        </div>
+                    </div>
+                    {/* Price Preview */}
+                    <div className="form-group">
+                        <div className="price-preview" style={{ fontWeight: 500, color: '#444' }}>
+                            {formData.price && formData.base_quantity && formData.unit ? (
+                                <span>
+                                    ₹{formData.price} for {formData.base_quantity}{formData.unit}
+                                </span>
+                            ) : (
+                                <span>Enter price, base quantity, and unit to preview</span>
+                            )}
                         </div>
                     </div>
 

@@ -74,7 +74,7 @@ function Dashboard() {
 					</div>
 					<div className="header-actions">
 						<Link to="/grocery/products" className="manage-products-btn">Manage products</Link>
-						<span className="date-badge">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+						<span className="date-badge">{new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' })}</span>
 					</div>
 				</header>
 

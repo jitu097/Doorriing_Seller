@@ -10,6 +10,10 @@ const normalizeNumber = (value, fallback = 0) => {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : fallback;
 };
+const normalizeBaseQuantity = (value) => {
+    const parsed = normalizeNumber(value, 1);
+    return parsed > 0 ? parsed : 1;
+};
 
 /**
  * Service: Grocery
@@ -42,6 +46,7 @@ const buildItemPayload = (shopId, data) => {
         half_portion_price: data.half_portion_price || null,
         stock_quantity: data.stock_quantity || 0,
         unit: data.unit || null,
+        base_quantity: normalizeBaseQuantity(data.base_quantity),
         image_url: data.image_url || null,
         is_available: data.is_available !== undefined ? data.is_available : true,
         subcategory_id: data.subcategory_id || null,
@@ -160,6 +165,7 @@ const getGroceryItems = async (shopId, filters = {}) => {
             half_portion_final_price,
             stock_quantity,
             unit,
+            base_quantity,
             image_url,
             is_available,
             expiry_date,
@@ -210,6 +216,7 @@ const getGroceryItemById = async (shopId, itemId) => {
             half_portion_final_price,
             stock_quantity,
             unit,
+            base_quantity,
             image_url,
             is_available,
             expiry_date,
@@ -236,12 +243,21 @@ const updateGroceryItem = async (shopId, itemId, updates) => {
         'stock_quantity', 'unit', 'image_url', 'is_available', 'category_id',
         'expiry_date', 'subcategory_id', 'discount_type', 'discount_value',
         'final_price', 'full_price', 'full_discount_type', 'full_discount_value',
-        'full_final_price'
+        'full_final_price', 'base_quantity'
     ];
     const numericFields = new Set([
         'price', 'half_portion_price', 'stock_quantity', 'discount_value',
-        'final_price', 'full_price', 'full_discount_value', 'full_final_price'
+        'final_price', 'full_price', 'full_discount_value', 'full_final_price',
+        'base_quantity'
     ]);
+
+    // Validate base_quantity if provided
+    if (updates.base_quantity !== undefined && updates.base_quantity !== null) {
+        const bq = normalizeNumber(updates.base_quantity, 1);
+        if (bq <= 0) {
+            throw new BadRequestError('base_quantity must be greater than 0');
+        }
+    }
 
     // 2. Validate category_id if being updated
     if (updates.category_id) {
@@ -289,7 +305,10 @@ const updateGroceryItem = async (shopId, itemId, updates) => {
     const payload = {};
     allowedFields.forEach(field => {
         if (updates[field] !== undefined) {
-            if (numericFields.has(field)) {
+            if (field === 'base_quantity') {
+                // null or missing base_quantity defaults to 1
+                payload[field] = updates[field] === null ? 1 : normalizeBaseQuantity(updates[field]);
+            } else if (numericFields.has(field)) {
                 payload[field] = normalizeNumber(updates[field], 0);
             } else if (field === 'discount_type' || field === 'full_discount_type') {
                 payload[field] = normalizeDiscountType(updates[field]);

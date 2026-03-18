@@ -54,7 +54,8 @@ const createInitialItemState = () => ({
 	subcategory_id: '',
 	image: null,
 	stock_quantity: '',
-	unit: 'pieces',
+	unit: 'gram',
+	base_quantity: 1,
 	price: '',
 	discount_type: DISCOUNT_TYPES.NONE,
 	discount_value: '',
@@ -161,6 +162,26 @@ const Products = () => {
 		setNewItem(createInitialItemState());
 	};
 
+	const handleQuickAddProduct = async (categoryId) => {
+		if (!categoryId || categoryId === 'uncategorized') {
+			setShowModal(true);
+			return;
+		}
+
+		try {
+			const subs = await subcategoryService.getSubcategories(categoryId);
+			setSubcategories(subs || []);
+			setNewItem({
+				...createInitialItemState(),
+				category_id: categoryId
+			});
+			setShowModal(true);
+		} catch (error) {
+			console.error('Failed to prepare quick add:', error);
+			setShowModal(true);
+		}
+	};
+
 	const handleEditItem = async (item) => {
 		setEditingItem(item);
 
@@ -187,7 +208,8 @@ const Products = () => {
 			subcategory_id: item.subcategory_id || '',
 			image: null, // Keep null, only update if new file selected
 			stock_quantity: item.stock_quantity,
-			unit: item.unit || 'pieces',
+			unit: item.unit || 'gram',
+			base_quantity: item.base_quantity > 0 ? item.base_quantity : 1,
 			price: item.price,
 			discount_type: resolvedDiscountType,
 			discount_value: resolvedDiscountValue,
@@ -225,6 +247,7 @@ const Products = () => {
 				...restFields,
 				price: priceValue,
 				category_id: restFields.category_id || null,
+				base_quantity: Number(restFields.base_quantity) > 0 ? Number(restFields.base_quantity) : 1,
 				discount_type: discountType,
 				discount_value: discountType === DISCOUNT_TYPES.NONE ? 0 : rawDiscountValue,
 				final_price: finalPrice,
@@ -419,6 +442,16 @@ const Products = () => {
 								<span className="category-arrow" onClick={() => handleAccordion(idx)}>{openIndex === idx ? '▼' : '▶'}</span>
 								<span className="category-name" onClick={() => handleAccordion(idx)}>{cat.name}</span>
 								<span className="category-items">{cat.items.length} items</span>
+								<button
+									className="category-add-btn"
+									onClick={(e) => {
+										e.stopPropagation();
+										handleQuickAddProduct(cat.id);
+									}}
+									title={`Add product to ${cat.name}`}
+								>
+									+
+								</button>
 							</div>
 							{openIndex === idx && (
 								<div className="category-content">
@@ -433,6 +466,7 @@ const Products = () => {
 													onEdit={handleEditItem}
 													onDelete={handleDeleteItem}
 													onToggleStatus={handleToggleItem}
+													showBaseQuantity
 												/>
 											))}
 										</div>
