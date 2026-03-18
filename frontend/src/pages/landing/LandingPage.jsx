@@ -8,8 +8,8 @@ const LandingPage = () => {
 
     return (
         <div className="landing-container">
-            <nav className="landing-nav" style={{ justifyContent: 'center' }}>
-                <div className="brand">Doorriing Seller</div>
+            <nav className="landing-nav" style={{ justifyContent: 'flex-start' }}>
+                <div className="brand">Doorriing Partner</div>
             </nav>
 
             <section className="hero-section">
