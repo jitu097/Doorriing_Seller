@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import NotificationBell from '../../components/common/NotificationBell';
+import NotificationPermissionPrompt from '../../components/common/NotificationPermissionPrompt';
 import Sidebar from '../../components/common/Sidebar';
 import FooterMobile from './Footer';
 import { shopService } from '../../services/shopService';
@@ -92,6 +93,7 @@ export default function Navbar() {
           ))}
         </div>
         <div className="rest-navbar-right">
+          <NotificationPermissionPrompt />
           <NotificationBell />
           <button className="hamburger-btn" onClick={() => setSidebarOpen(true)}>
             <span />

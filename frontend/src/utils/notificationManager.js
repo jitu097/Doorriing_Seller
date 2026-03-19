@@ -3,7 +3,6 @@ import { app, auth, firebaseConfig } from '../config/firebase';
 import { getFallbackAuthenticatedRoute } from './authManager';
 import notificationService from '../services/notificationService';
 
-const PROMPTED_PERMISSION_KEY = 'notificationPermissionPrompted';
 const LAST_TOKEN_KEY = 'notificationLastFcmToken';
 const LAST_OWNER_KEY = 'notificationLastOwnerKey';
 const TOAST_CONTAINER_ID = 'notification-toast-container';
@@ -16,8 +15,10 @@ let messagingSupportPromise = null;
 let messagingServiceWorkerPromise = null;
 let foregroundUnsubscribe = null;
 let foregroundListenerAttached = false;
-let initializationPromise = null;
+let runtimePreparationPromise = null;
+let activationPromise = null;
 let initializedUserKey = null;
+let preparedUserKey = null;
 
 const canUseWindow = () => typeof window !== 'undefined';
 
@@ -47,6 +48,41 @@ const isBrowserNotificationCapable = () =>
     'Notification' in window &&
     'serviceWorker' in navigator &&
     'PushManager' in window;
+
+export const getNotificationSupport = async () => {
+    const browserCapable = isBrowserNotificationCapable();
+    if (!browserCapable) {
+        return {
+            supported: false,
+            reasons: {
+                notificationApi: canUseWindow() && 'Notification' in window,
+                serviceWorker: canUseWindow() && 'serviceWorker' in navigator,
+                pushManager: canUseWindow() && 'PushManager' in window,
+                firebaseMessaging: false,
+            },
+        };
+    }
+
+    const firebaseMessaging = await isMessagingSupported();
+
+    return {
+        supported: firebaseMessaging,
+        reasons: {
+            notificationApi: true,
+            serviceWorker: true,
+            pushManager: true,
+            firebaseMessaging,
+        },
+    };
+};
+
+export const getNotificationPermissionState = () => {
+    if (!canUseWindow() || !('Notification' in window)) {
+        return 'unsupported';
+    }
+
+    return Notification.permission;
+};
 
 const isMessagingSupported = async () => {
     if (!messagingSupportPromise) {
@@ -107,6 +143,54 @@ const registerMessagingServiceWorker = async () => {
     return messagingServiceWorkerPromise;
 };
 
+const waitForServiceWorkerActivation = async (registration) => {
+    if (!registration) {
+        return null;
+    }
+
+    if (registration.active) {
+        return registration;
+    }
+
+    const worker = registration.installing || registration.waiting;
+    if (!worker) {
+        await navigator.serviceWorker.ready;
+        return registration.active ? registration : registration;
+    }
+
+    await new Promise((resolve, reject) => {
+        const timeoutId = window.setTimeout(() => {
+            reject(new Error('Service worker activation timed out.'));
+        }, 10000);
+
+        const handleStateChange = () => {
+            if (worker.state === 'activated') {
+                window.clearTimeout(timeoutId);
+                worker.removeEventListener('statechange', handleStateChange);
+                resolve();
+            }
+        };
+
+        worker.addEventListener('statechange', handleStateChange);
+    });
+
+    return registration;
+};
+
+const ensureAppServiceWorkerRegistration = async () => {
+    if (!canUseWindow() || !('serviceWorker' in navigator)) {
+        return null;
+    }
+
+    try {
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        return await waitForServiceWorkerActivation(registration);
+    } catch (error) {
+        console.error('Failed to register app service worker', error);
+        return null;
+    }
+};
+
 const normalizeRoute = (route) => {
     if (!route) {
         return getFallbackAuthenticatedRoute();
@@ -132,6 +216,7 @@ const normalizeRoute = (route) => {
 const resolveClickAction = (payload) => {
     const data = payload?.data || {};
     const directRoute =
+        data.url ||
         data.click_action ||
         data.route ||
         payload?.fcmOptions?.link ||
@@ -349,8 +434,8 @@ export const showAppNotification = (message) => {
 };
 
 export const requestPermission = async () => {
-    const supported = await isMessagingSupported();
-    if (!supported) {
+    const support = await getNotificationSupport();
+    if (!support.supported) {
         return 'unsupported';
     }
 
@@ -362,16 +447,10 @@ export const requestPermission = async () => {
         return 'denied';
     }
 
-    if (readStorage(PROMPTED_PERMISSION_KEY) === '1') {
-        return 'default';
-    }
-
-    const permission = await Notification.requestPermission();
-    writeStorage(PROMPTED_PERMISSION_KEY, '1');
-    return permission;
+    return Notification.requestPermission();
 };
 
-export const generateToken = async () => {
+const generateToken = async () => {
     const supported = await isMessagingSupported();
     if (!supported) {
         return null;
@@ -383,7 +462,7 @@ export const generateToken = async () => {
         return null;
     }
 
-    const permission = await requestPermission();
+    const permission = getNotificationPermissionState();
     if (permission !== 'granted') {
         return null;
     }
@@ -393,7 +472,9 @@ export const generateToken = async () => {
         return null;
     }
 
-    const registration = await registerMessagingServiceWorker();
+    const registration = await waitForServiceWorkerActivation(
+        await registerMessagingServiceWorker()
+    );
     const token = await getToken(messaging, {
         vapidKey,
         serviceWorkerRegistration: registration,
@@ -460,7 +541,69 @@ export const listenForegroundMessages = async () => {
     return foregroundUnsubscribe;
 };
 
-export const initNotifications = async (user) => {
+const resolvePushSubscription = async () => {
+    try {
+        const registration = await waitForServiceWorkerActivation(
+            await registerMessagingServiceWorker()
+        );
+        return await registration.pushManager.getSubscription();
+    } catch (error) {
+        console.error('Failed to resolve push subscription', error);
+        return null;
+    }
+};
+
+export const prepareNotifications = async (user) => {
+    if (!user?.uid) {
+        return {
+            supported: false,
+            prepared: false,
+            reason: 'missing-user',
+        };
+    }
+
+    if (preparedUserKey === user.uid) {
+        return {
+            supported: true,
+            prepared: true,
+            permission: getNotificationPermissionState(),
+        };
+    }
+
+    if (runtimePreparationPromise) {
+        return runtimePreparationPromise;
+    }
+
+    runtimePreparationPromise = (async () => {
+        const support = await getNotificationSupport();
+        if (!support.supported) {
+            return {
+                supported: false,
+                prepared: false,
+                reason: 'unsupported-browser',
+                support,
+            };
+        }
+
+        await listenForegroundMessages();
+        preparedUserKey = user.uid;
+
+        return {
+            supported: true,
+            prepared: true,
+            permission: getNotificationPermissionState(),
+            support,
+        };
+    })();
+
+    try {
+        return await runtimePreparationPromise;
+    } finally {
+        runtimePreparationPromise = null;
+    }
+};
+
+export const enableNotifications = async (user) => {
     if (!user?.uid) {
         return {
             supported: false,
@@ -473,31 +616,47 @@ export const initNotifications = async (user) => {
         return {
             supported: true,
             initialized: true,
+            permission: getNotificationPermissionState(),
+            pushSubscription: await resolvePushSubscription(),
         };
     }
 
-    if (initializationPromise) {
-        return initializationPromise;
+    if (activationPromise) {
+        return activationPromise;
     }
 
-    initializationPromise = (async () => {
-        const supported = await isMessagingSupported();
-        if (!supported) {
+    activationPromise = (async () => {
+        const prepared = await prepareNotifications(user);
+        if (!prepared.supported) {
             return {
                 supported: false,
                 initialized: false,
-                reason: 'unsupported-browser',
+                reason: prepared.reason || 'unsupported-browser',
+                support: prepared.support,
             };
         }
 
-        await listenForegroundMessages();
+        const permission = await requestPermission();
+        if (permission !== 'granted') {
+            return {
+                supported: true,
+                initialized: false,
+                reason: permission,
+                permission,
+                support: prepared.support,
+            };
+        }
 
+        const appServiceWorker = await ensureAppServiceWorkerRegistration();
         const token = await generateToken();
         if (!token) {
             return {
                 supported: true,
                 initialized: false,
-                reason: Notification.permission,
+                reason: 'token-unavailable',
+                permission,
+                appServiceWorkerScope: appServiceWorker?.scope || null,
+                support: prepared.support,
             };
         }
 
@@ -509,30 +668,102 @@ export const initNotifications = async (user) => {
                 supported: true,
                 initialized: false,
                 reason: error?.message || 'token-save-failed',
+                permission,
+                support: prepared.support,
             };
         }
 
+        const pushSubscription = await resolvePushSubscription();
         initializedUserKey = user.uid;
 
         return {
             supported: true,
             initialized: true,
             token,
+            permission,
+            pushSubscription,
+            appServiceWorkerScope: appServiceWorker?.scope || null,
+            serviceWorkerScope: MESSAGING_SW_SCOPE,
+            support: prepared.support,
         };
     })();
 
     try {
-        return await initializationPromise;
+        return await activationPromise;
     } finally {
-        initializationPromise = null;
+        activationPromise = null;
     }
+};
+
+export const initNotifications = async (user) => {
+    const prepared = await prepareNotifications(user);
+    if (!prepared.supported) {
+        return {
+            supported: false,
+            initialized: false,
+            reason: prepared.reason || 'unsupported-browser',
+        };
+    }
+
+    if (getNotificationPermissionState() !== 'granted') {
+        return {
+            supported: true,
+            initialized: false,
+            reason: getNotificationPermissionState(),
+            permission: getNotificationPermissionState(),
+        };
+    }
+
+    if (initializedUserKey === user?.uid) {
+        return {
+            supported: true,
+            initialized: true,
+            permission: 'granted',
+            pushSubscription: await resolvePushSubscription(),
+        };
+    }
+
+    const token = await generateToken();
+    if (!token) {
+        return {
+            supported: true,
+            initialized: false,
+            reason: 'token-unavailable',
+            permission: 'granted',
+        };
+    }
+
+    try {
+        await saveTokenToSupabase(user, token);
+    } catch (error) {
+        console.error('Failed to persist push notification token', error);
+        return {
+            supported: true,
+            initialized: false,
+            reason: error?.message || 'token-save-failed',
+            permission: 'granted',
+        };
+    }
+
+    initializedUserKey = user.uid;
+
+    return {
+        supported: true,
+        initialized: true,
+        token,
+        permission: 'granted',
+        pushSubscription: await resolvePushSubscription(),
+    };
 };
 
 export default {
     initNotifications,
+    prepareNotifications,
+    enableNotifications,
     requestPermission,
-    generateToken,
     saveTokenToSupabase,
     listenForegroundMessages,
     showAppNotification,
+    getNotificationSupport,
+    getNotificationPermissionState,
 };
