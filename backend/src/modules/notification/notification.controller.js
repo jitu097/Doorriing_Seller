@@ -40,9 +40,41 @@ const getUnreadCount = async (req, res, next) => {
     }
 };
 
+const registerPushToken = async (req, res, next) => {
+    try {
+        const { token } = req.body;
+        const result = await notificationService.upsertNotificationToken({
+            sellerId: req.user.id,
+            shopId: req.shop.id,
+            token,
+        });
+
+        successResponse(res, result, 'Push token saved successfully');
+    } catch (error) {
+        next(error);
+    }
+};
+
+const createNewOrderNotification = async (req, res, next) => {
+    try {
+        const { orderId, orderNumber } = req.body;
+        const result = await notificationService.createNewOrderNotification(
+            req.shop.id,
+            orderId,
+            orderNumber
+        );
+
+        successResponse(res, result, 'New order notification created');
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     getNotifications,
     markAsRead,
     markAllAsRead,
-    getUnreadCount
+    getUnreadCount,
+    registerPushToken,
+    createNewOrderNotification
 };

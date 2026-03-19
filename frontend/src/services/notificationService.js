@@ -24,9 +24,25 @@ export const markAllAsRead = async () => {
     });
 };
 
+export const registerPushToken = async (token) => {
+    return api('/seller/notifications/token', {
+        method: 'POST',
+        body: JSON.stringify({ token }),
+    });
+};
+
+export const createNewOrderNotification = async (orderId, orderNumber) => {
+    return api('/seller/notifications/new-order', {
+        method: 'POST',
+        body: JSON.stringify({ orderId, orderNumber }),
+    });
+};
+
 export default {
     getNotifications,
     getUnreadCount,
     markAsRead,
-    markAllAsRead
+    markAllAsRead,
+    registerPushToken,
+    createNewOrderNotification
 };

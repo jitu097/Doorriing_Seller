@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useRealtimeSubscription } from '../../hooks/useRealtimeSubscription';
 import orderService from '../../services/orderService';
+import notificationService from '../../services/notificationService';
 import OrderAlertOverlay from './OrderAlertOverlay';
+import { showAppNotification } from '../../utils/notificationManager';
 import { deriveAcceptanceDeadlineMs, deriveInitialRemainingMs } from '../../utils/orderAcceptanceTimer';
 
 /**
@@ -14,9 +16,59 @@ const OrderAlertManager = () => {
     const [loadingAction, setLoadingAction] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
+    const announcedOrderIdsRef = useRef(new Set());
 
     // Determine the base path based on current location ('/grocery' or '/restaurant')
     const basePath = location.pathname.includes('/grocery') ? '/grocery' : '/restaurant';
+
+    const announceIncomingOrder = useCallback(async (orderData) => {
+        if (!orderData?.id) {
+            return;
+        }
+
+        const status = (orderData.status || orderData.order_status)?.toLowerCase() || '';
+        if (!['pending', 'new'].includes(status)) {
+            return;
+        }
+
+        try {
+            await notificationService.createNewOrderNotification(
+                orderData.id,
+                orderData.order_number
+            );
+        } catch (notificationError) {
+            console.error('Failed to create new order notification', notificationError);
+        }
+
+        if (announcedOrderIdsRef.current.has(orderData.id)) {
+            return;
+        }
+
+        announcedOrderIdsRef.current.add(orderData.id);
+
+        const localNotification = {
+            id: `local-new-order-${orderData.id}`,
+            title: 'New Order Received',
+            message: `Order #${orderData.order_number || String(orderData.id).slice(0, 8).toUpperCase()} has been placed and is awaiting action.`,
+            type: 'new_order',
+            reference_id: orderData.id,
+            created_at: new Date().toISOString(),
+            is_read: false,
+        };
+
+        showAppNotification({
+            title: localNotification.title,
+            body: `Order #${orderData.order_number || String(orderData.id).slice(0, 8).toUpperCase()} is waiting for action.`,
+            clickAction: `${basePath}/orders`,
+            tag: `new-order-${orderData.id}`,
+        });
+
+        window.dispatchEvent(
+            new CustomEvent('seller-notification-created', {
+                detail: localNotification,
+            })
+        );
+    }, [basePath]);
 
     // 1. Fetch any EXISTING pending orders immediately upon component mount 
     // (Handles scenarios where the seller refreshed the page or was offline when the order arrived)
@@ -33,6 +85,9 @@ const OrderAlertManager = () => {
 
                 if (chronologicalOrders.length > 0) {
                     const serverTime = response.serverTime || response.data?.serverTime;
+                    await Promise.all(
+                        chronologicalOrders.map(order => announceIncomingOrder(order))
+                    );
                     setOrderQueue(prevQueue => {
                         const existingIds = new Set(prevQueue.map(o => o.id));
                         const toAdd = chronologicalOrders
@@ -50,7 +105,7 @@ const OrderAlertManager = () => {
             }
         };
         fetchExistingOrders();
-    }, []);
+    }, [announceIncomingOrder]);
 
     // 2. Subscribe to new incoming orders directly mapped to this seller's shop_id 
     // (shop_id filter is natively handled inside the useRealtimeSubscription hook)
@@ -64,6 +119,7 @@ const OrderAlertManager = () => {
 
                 const status = (orderData.status || orderData.order_status)?.toLowerCase() || '';
                 if (orderData && ['pending', 'new'].includes(status)) {
+                    await announceIncomingOrder(orderData);
                     const serverTime = response.serverTime || response.data?.serverTime || new Date().toISOString(); 
                     setOrderQueue(prevQueue => {
                         // Prevent duplicate alerts for the exact same order id

@@ -41,7 +41,15 @@ self.addEventListener("fetch", (event) => {
 
   // Skip caching for API calls (Supabase/Firebase/Railway) to ensure data freshness
   const url = new URL(event.request.url);
+  const isLocalDevHost = ["localhost", "127.0.0.1", "0.0.0.0"].includes(url.hostname);
   if (
+    isLocalDevHost ||
+    url.pathname.startsWith("/src/") ||
+    url.pathname.startsWith("/node_modules/") ||
+    url.pathname.startsWith("/@vite/") ||
+    url.pathname.startsWith("/@fs/") ||
+    url.pathname.includes("/.vite/") ||
+    url.searchParams.has("v") ||
     url.origin.includes("supabase.co") ||
     url.origin.includes("firebaseio.com") ||
     url.origin.includes("up.railway.app") ||
@@ -68,4 +76,3 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
-

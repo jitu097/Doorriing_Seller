@@ -8,6 +8,8 @@ router.use(verifyToken, loadSeller, loadShop);
 
 router.get('/', notificationController.getNotifications);
 router.get('/unread-count', notificationController.getUnreadCount);
+router.post('/token', notificationController.registerPushToken);
+router.post('/new-order', notificationController.createNewOrderNotification);
 router.patch('/:id/read', notificationController.markAsRead);
 router.patch('/read-all', notificationController.markAllAsRead);
 

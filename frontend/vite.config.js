@@ -7,15 +7,14 @@ export default defineConfig({
     plugins: [react()],
 
     resolve: {
+        dedupe: ['react', 'react-dom'],
         alias: {
-            'react': path.resolve('./node_modules/react'),
-            'react-dom': path.resolve('./node_modules/react-dom'),
-            'react-router-dom': path.resolve('./node_modules/react-router-dom'),
+            '@': path.resolve('./src'),
         },
     },
 
     optimizeDeps: {
-        include: ['react', 'react-dom', 'react-router-dom'],
+        include: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'react-router-dom'],
     },
 
     server: {

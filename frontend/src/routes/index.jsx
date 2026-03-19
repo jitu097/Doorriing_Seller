@@ -10,39 +10,68 @@ import {
     setStoredHomeRoute,
     useAuthSession,
 } from '../utils/authManager';
+import { initNotifications } from '../utils/notificationManager';
+
+const lazyWithRetry = (importer, key) =>
+    lazy(async () => {
+        try {
+            const module = await importer();
+
+            if (typeof window !== 'undefined') {
+                window.sessionStorage.removeItem(`lazy-retry:${key}`);
+            }
+
+            return module;
+        } catch (error) {
+            const retryKey = `lazy-retry:${key}`;
+            const canRetry =
+                typeof window !== 'undefined' &&
+                !window.sessionStorage.getItem(retryKey);
+
+            console.error(`Lazy route import failed for ${key}`, error);
+
+            if (canRetry) {
+                window.sessionStorage.setItem(retryKey, '1');
+                window.location.reload();
+                return new Promise(() => {});
+            }
+
+            throw error;
+        }
+    });
 
 // Lazy load pages
-const Login = lazy(() => import('../pages/auth/Login'));
-const Register = lazy(() => import('../pages/auth/Register'));
-const ForgotPassword = lazy(() => import('../pages/auth/ForgotPassword'));
-const Registration = lazy(() => import('../pages/onboarding/Registration'));
-const LandingPage = lazy(() => import('../pages/landing/LandingPage'));
-const TermsAndConditions = lazy(() => import('../pages/legal/TermsAndConditions'));
-const AboutUs = lazy(() => import('../pages/legal/AboutUs'));
-const ContactUs = lazy(() => import('../pages/legal/ContactUs'));
-const PrivacyPolicy = lazy(() => import('../pages/legal/PrivacyPolicy'));
-const RefundCancellation = lazy(() => import('../pages/legal/RefundCancellation'));
-const DeleteAccountInfo = lazy(() => import('../pages/legal/DeleteAccountInfo'));
+const Login = lazyWithRetry(() => import('../pages/auth/Login'), 'login');
+const Register = lazyWithRetry(() => import('../pages/auth/Register'), 'register');
+const ForgotPassword = lazyWithRetry(() => import('../pages/auth/ForgotPassword'), 'forgot-password');
+const Registration = lazyWithRetry(() => import('../pages/onboarding/Registration'), 'registration');
+const LandingPage = lazyWithRetry(() => import('../pages/landing/LandingPage'), 'landing');
+const TermsAndConditions = lazyWithRetry(() => import('../pages/legal/TermsAndConditions'), 'terms');
+const AboutUs = lazyWithRetry(() => import('../pages/legal/AboutUs'), 'about');
+const ContactUs = lazyWithRetry(() => import('../pages/legal/ContactUs'), 'contact');
+const PrivacyPolicy = lazyWithRetry(() => import('../pages/legal/PrivacyPolicy'), 'privacy');
+const RefundCancellation = lazyWithRetry(() => import('../pages/legal/RefundCancellation'), 'refund-cancellation');
+const DeleteAccountInfo = lazyWithRetry(() => import('../pages/legal/DeleteAccountInfo'), 'delete-account');
 
 // Grocery Pages
-const GroceryDashboard = lazy(() => import('../pages/Grocery/DAshboard'));
-const GroceryProducts = lazy(() => import('../pages/Grocery/Products'));
-const GroceryOrders = lazy(() => import('../pages/Grocery/Orders'));
-const GroceryOffers = lazy(() => import('../pages/Grocery/Offers'));
-const GroceryReports = lazy(() => import('../pages/Grocery/Reports'));
-const GroceryProfile = lazy(() => import('../pages/Grocery/Profile'));
-const GroceryLayout = lazy(() => import('../pages/Grocery/GroceryLayout'));
-const WalletPage = lazy(() => import('../pages/Wallet/Wallet'));
+const GroceryDashboard = lazyWithRetry(() => import('../pages/Grocery/DAshboard'), 'grocery-dashboard');
+const GroceryProducts = lazyWithRetry(() => import('../pages/Grocery/Products'), 'grocery-products');
+const GroceryOrders = lazyWithRetry(() => import('../pages/Grocery/Orders'), 'grocery-orders');
+const GroceryOffers = lazyWithRetry(() => import('../pages/Grocery/Offers'), 'grocery-offers');
+const GroceryReports = lazyWithRetry(() => import('../pages/Grocery/Reports'), 'grocery-reports');
+const GroceryProfile = lazyWithRetry(() => import('../pages/Grocery/Profile'), 'grocery-profile');
+const GroceryLayout = lazyWithRetry(() => import('../pages/Grocery/GroceryLayout'), 'grocery-layout');
+const WalletPage = lazyWithRetry(() => import('../pages/Wallet/Wallet'), 'wallet');
 
 // Restaurant Pages
-const RestaurantDashboard = lazy(() => import('../pages/Restaurant/Dashboard'));
-const RestaurantMenu = lazy(() => import('../pages/Restaurant/Menu'));
-const RestaurantOrders = lazy(() => import('../pages/Restaurant/Orders'));
-const RestaurantBooking = lazy(() => import('../pages/Restaurant/Booking'));
-const RestaurantOffers = lazy(() => import('../pages/Restaurant/offers'));
-const RestaurantReports = lazy(() => import('../pages/Restaurant/Reports'));
-const RestaurantProfile = lazy(() => import('../pages/Restaurant/Profile'));
-const RestaurantLayout = lazy(() => import('../pages/Restaurant/RestaurantLayout'));
+const RestaurantDashboard = lazyWithRetry(() => import('../pages/Restaurant/Dashboard'), 'restaurant-dashboard');
+const RestaurantMenu = lazyWithRetry(() => import('../pages/Restaurant/Menu'), 'restaurant-menu');
+const RestaurantOrders = lazyWithRetry(() => import('../pages/Restaurant/Orders'), 'restaurant-orders');
+const RestaurantBooking = lazyWithRetry(() => import('../pages/Restaurant/Booking'), 'restaurant-bookings');
+const RestaurantOffers = lazyWithRetry(() => import('../pages/Restaurant/offers'), 'restaurant-offers');
+const RestaurantReports = lazyWithRetry(() => import('../pages/Restaurant/Reports'), 'restaurant-reports');
+const RestaurantProfile = lazyWithRetry(() => import('../pages/Restaurant/Profile'), 'restaurant-profile');
+const RestaurantLayout = lazyWithRetry(() => import('../pages/Restaurant/RestaurantLayout'), 'restaurant-layout');
 
 const useResolvedAuthenticatedRoute = (enabled, userId) => {
     const [state, setState] = useState({
@@ -107,6 +136,7 @@ const RequireShop = () => {
     const [loading, setLoading] = useState(true);
     const [hasShop, setHasShop] = useState(false);
     const navigate = useNavigate();
+    const { user } = useAuthSession();
 
     useEffect(() => {
         const checkShop = async () => {
@@ -138,6 +168,16 @@ const RequireShop = () => {
         };
         checkShop();
     }, [navigate]);
+
+    useEffect(() => {
+        if (!hasShop || !user?.uid) {
+            return;
+        }
+
+        initNotifications(user).catch((error) => {
+            console.error('Push notification initialization failed', error);
+        });
+    }, [hasShop, user?.uid]);
 
     if (loading) return <Loader variant="fullscreen" message="Checking shop status..." />;
     return hasShop ? (
