@@ -7,6 +7,8 @@ import { bookingService } from '../../services/bookingService';
 import walletService from '../../services/walletService';
 import { shopService } from '../../services/shopService';
 import Loader from '../../components/common/Loader';
+import { useOrderInsertRealtime } from '../../hooks/useOrderInsertRealtime';
+import { mergeFetchedOrders, upsertOrderAtTop } from '../../utils/orderRealtime';
 
 function Dashboard() {
 	const [stats, setStats] = useState(null);
@@ -17,9 +19,11 @@ function Dashboard() {
 	const [isBookingEnabled, setIsBookingEnabled] = useState(false);
 	const [bookingToggleLoading, setBookingToggleLoading] = useState(false);
 
-	const fetchDashboardData = useCallback(async () => {
+	const fetchDashboardData = useCallback(async ({ silent = false } = {}) => {
 		try {
-			setLoading(true);
+			if (!silent) {
+				setLoading(true);
+			}
 
 			// Run all independent requests in parallel
 			const [data, wallet, ordersData, shop] = await Promise.all([
@@ -33,7 +37,11 @@ function Dashboard() {
 			setWalletData(wallet);
 
 			if (ordersData && ordersData.orders) {
-				setRecentOrders(ordersData.orders);
+				if (silent) {
+					setRecentOrders((prevOrders) => mergeFetchedOrders(ordersData.orders, prevOrders, 5));
+				} else {
+					setRecentOrders(ordersData.orders);
+				}
 			}
 
 			const bookingEnabled = shop?.is_booking_enabled === true;
@@ -47,9 +55,38 @@ function Dashboard() {
 		} catch (error) {
 			console.error('Failed to fetch dashboard data:', error);
 		} finally {
-			setLoading(false);
+			if (!silent) {
+				setLoading(false);
+			}
 		}
 	}, []);
+
+	const handleRealtimeOrderInsert = useCallback((payload) => {
+		const incomingOrder = payload?.new;
+		if (!incomingOrder?.id) {
+			return;
+		}
+
+		if (import.meta.env.DEV) {
+			console.log('[Dashboard][restaurant] realtime insert', incomingOrder);
+		}
+
+		void (async () => {
+			try {
+				const orderData = await orderService.getOrderById(incomingOrder.id);
+				const hydratedOrder = orderData?.order || orderData?.data || orderData;
+
+				setRecentOrders((prevOrders) => upsertOrderAtTop(prevOrders, hydratedOrder, 5));
+			} catch (error) {
+				console.error('Failed to hydrate realtime restaurant order', error);
+				setRecentOrders((prevOrders) => upsertOrderAtTop(prevOrders, incomingOrder, 5));
+			} finally {
+				void fetchDashboardData({ silent: true });
+			}
+		})();
+	}, [fetchDashboardData]);
+
+	useOrderInsertRealtime(handleRealtimeOrderInsert);
 
 	useEffect(() => {
 		fetchDashboardData();

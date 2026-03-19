@@ -2,9 +2,11 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import orderService from '../../services/orderService';
 import { useRealtimeSubscription } from '../../hooks/useRealtimeSubscription';
+import { useOrderInsertRealtime } from '../../hooks/useOrderInsertRealtime';
 import Loader from '../../components/common/Loader';
 import OrderCard from '../../components/Orders/OrderCard';
 import './Orders.css';
+import { mergeFetchedOrders, upsertOrderAtTop } from '../../utils/orderRealtime';
 
 const AssignDriverModal = lazy(() => import('../../components/Orders/AssignDriverModal'));
 
@@ -140,8 +142,16 @@ export default function Orders() {
 				totalPages: meta.totalPages || initialPagination.totalPages
 			};
 
-			setOrders(list);
-			setPagination(nextMeta);
+			if (silent) {
+				setOrders((prevOrders) => mergeFetchedOrders(list, prevOrders));
+				setPagination((prevPagination) => ({
+					...nextMeta,
+					total: Math.max(nextMeta.total, prevPagination.total)
+				}));
+			} else {
+				setOrders(list);
+				setPagination(nextMeta);
+			}
 			setCurrentPage(nextMeta.page);
 			statusRef.current = targetStatus;
 			pageRef.current = nextMeta.page;
@@ -159,6 +169,36 @@ export default function Orders() {
 	}, []); // Only fetch on mount
 
 	const refreshSilently = useCallback(() => fetchOrders({ silent: true }), [fetchOrders]);
+	const handleRealtimeInsert = useCallback((payload) => {
+		const incomingOrder = payload?.new;
+		if (!incomingOrder?.id) {
+			return;
+		}
+
+		if (import.meta.env.DEV) {
+			console.log('[Orders][grocery] realtime insert', incomingOrder);
+		}
+
+		void (async () => {
+			try {
+				const orderData = await orderService.getOrderById(incomingOrder.id);
+				const hydratedOrder = orderData?.order || orderData?.data || orderData;
+
+				setOrders((prevOrders) => upsertOrderAtTop(prevOrders, hydratedOrder));
+			} catch (error) {
+				console.error('Failed to hydrate realtime grocery order', error);
+				setOrders((prevOrders) => upsertOrderAtTop(prevOrders, incomingOrder));
+			} finally {
+				setPagination((prevPagination) => ({
+					...prevPagination,
+					total: prevPagination.total + 1
+				}));
+				void refreshSilently();
+			}
+		})();
+	}, [refreshSilently]);
+
+	useOrderInsertRealtime(handleRealtimeInsert);
 	useRealtimeSubscription('orders', refreshSilently);
 
 	useEffect(() => {

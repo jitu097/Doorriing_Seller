@@ -1,10 +1,12 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import './Dashboard.css';
 import groceryService from '../../services/groceryService';
 import walletService from '../../services/walletService';
 import Loader from '../../components/common/Loader';
+import { useOrderInsertRealtime } from '../../hooks/useOrderInsertRealtime';
+import orderService from '../../services/orderService';
+import { mergeFetchedOrders, upsertOrderAtTop } from '../../utils/orderRealtime';
 
 function Dashboard() {
 	const [stats, setStats] = useState({
@@ -21,46 +23,81 @@ function Dashboard() {
 	const [walletData, setWalletData] = useState(null);
 	const [loading, setLoading] = useState(true);
 
-	useEffect(() => {
-		const fetchDashboardData = async () => {
-			try {
-				// Run all 3 requests in parallel — no waterfall delay
-				const [statsData, ordersData, statusCounts, wallet] = await Promise.all([
-					groceryService.getDashboardStats(),
-					groceryService.getOrders({ limit: 5 }),
-					groceryService.getOrderStats(),
-					walletService.getWalletSummary()
-				]);
+	const fetchDashboardData = useCallback(async ({ silent = false } = {}) => {
+		try {
+			if (!silent) {
+				setLoading(true);
+			}
 
-				setWalletData(wallet);
+			const [statsData, ordersData, statusCounts, wallet] = await Promise.all([
+				groceryService.getDashboardStats(),
+				groceryService.getOrders({ limit: 5 }),
+				groceryService.getOrderStats(),
+				walletService.getWalletSummary()
+			]);
 
-				setStats({
-					pending: statusCounts.pending || 0,
-					confirmed: statusCounts.confirmed || 0,
-					preparing: statusCounts.preparing || 0,
-					outForDelivery: statusCounts.outForDelivery || 0,
-					delivered: statusCounts.delivered || 0,
-					cancelled: statusCounts.cancelled || 0,
-					totalOrders: statsData.totalOrders || 0,
-					totalRevenue: statsData.totalRevenue || 0
-				});
+			setWalletData(wallet);
 
-				const orders = ordersData.data?.orders || ordersData.orders || [];
+			setStats({
+				pending: statusCounts.pending || 0,
+				confirmed: statusCounts.confirmed || 0,
+				preparing: statusCounts.preparing || 0,
+				outForDelivery: statusCounts.outForDelivery || 0,
+				delivered: statusCounts.delivered || 0,
+				cancelled: statusCounts.cancelled || 0,
+				totalOrders: statsData.totalOrders || 0,
+				totalRevenue: statsData.totalRevenue || 0
+			});
+
+			const orders = ordersData.data?.orders || ordersData.orders || [];
+			if (silent) {
+				setRecentOrders((prevOrders) => mergeFetchedOrders(orders, prevOrders, 5));
+			} else {
 				setRecentOrders(orders);
-			} catch (error) {
-				console.error("Error fetching dashboard data", error);
-			} finally {
+			}
+		} catch (error) {
+			console.error('Error fetching dashboard data', error);
+		} finally {
+			if (!silent) {
 				setLoading(false);
 			}
-		};
-
-		fetchDashboardData();
+		}
 	}, []);
+
+	const handleRealtimeOrderInsert = useCallback((payload) => {
+		const incomingOrder = payload?.new;
+		if (!incomingOrder?.id) {
+			return;
+		}
+
+		if (import.meta.env.DEV) {
+			console.log('[Dashboard][grocery] realtime insert', incomingOrder);
+		}
+
+		void (async () => {
+			try {
+				const orderData = await orderService.getOrderById(incomingOrder.id);
+				const hydratedOrder = orderData?.order || orderData?.data || orderData;
+
+				setRecentOrders((prevOrders) => upsertOrderAtTop(prevOrders, hydratedOrder, 5));
+			} catch (error) {
+				console.error('Failed to hydrate realtime grocery order', error);
+				setRecentOrders((prevOrders) => upsertOrderAtTop(prevOrders, incomingOrder, 5));
+			} finally {
+				void fetchDashboardData({ silent: true });
+			}
+		})();
+	}, [fetchDashboardData]);
+
+	useOrderInsertRealtime(handleRealtimeOrderInsert);
+
+	useEffect(() => {
+		void fetchDashboardData();
+	}, [fetchDashboardData]);
 
 	if (loading) {
 		return <Loader variant="fullscreen" message="Loading dashboard..." />;
 	}
-
 
 	const activeOrdersCount = (stats.pending || 0) + (stats.confirmed || 0) + (stats.preparing || 0) + (stats.outForDelivery || 0);
 
@@ -78,13 +115,12 @@ function Dashboard() {
 					</div>
 				</header>
 
-				{/* Stats Grid */}
 				<div className="stats-grid">
 					<div className="stat-card">
 						<div className="stat-icon revenue-icon"><img src="/potli.png" alt="Total Revenue" style={{ width: 40, height: 40 }} /></div>
 						<div className="stat-info">
 							<h3>Total Revenue</h3>
-							<p className="stat-value">₹{(walletData?.balance || 0).toLocaleString()}</p>
+							<p className="stat-value">â‚¹{(walletData?.balance || 0).toLocaleString()}</p>
 							<span className="stat-hint">Lifetime earnings</span>
 						</div>
 					</div>
@@ -111,12 +147,12 @@ function Dashboard() {
 						<div className="stat-info">
 							<h3>Cancelled</h3>
 							<p className="stat-value">{stats.cancelled || 0}</p>
-							<span className="stat-hint">Total cancellations</span>						</div>
+							<span className="stat-hint">Total cancellations</span>
+						</div>
 					</div>
 				</div>
 
 				<div className="dashboard-content-grid">
-					{/* Recent Orders Panel */}
 					<div className="dashboard-panel recent-orders">
 						<div className="panel-header">
 							<h2>Recent Orders</h2>
@@ -146,7 +182,7 @@ function Dashboard() {
 														{order.status}
 													</span>
 												</td>
-												<td className="amount">₹{order.total_amount}</td>
+												<td className="amount">â‚¹{order.total_amount}</td>
 												<td className="time">{new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
 											</tr>
 										))
@@ -155,8 +191,6 @@ function Dashboard() {
 							</table>
 						</div>
 					</div>
-
-
 				</div>
 			</div>
 		</>
