@@ -154,15 +154,17 @@
 
 @media (max-width: 640px) {
     .notification-permission-inline {
-        width: 100%;
-        justify-content: center;
-        margin: 8px 0 0;
+        width: auto;
+        justify-content: flex-start;
+        margin: 0;
     }
 
     .notification-enable-btn {
-        width: 100%;
-        max-width: 260px;
-        justify-content: center;
+        width: auto;
+        max-width: none;
+        padding: 8px 10px;
+        font-size: 0.72rem;
+        box-shadow: none;
     }
 
     .notification-permission-footer {

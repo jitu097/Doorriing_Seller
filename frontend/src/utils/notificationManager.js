@@ -1,14 +1,19 @@
-import { getToken, getMessaging, isSupported, onMessage } from 'firebase/messaging';
+import { deleteToken, getToken, getMessaging, isSupported, onMessage } from 'firebase/messaging';
 import { app, auth, firebaseConfig } from '../config/firebase';
 import { getFallbackAuthenticatedRoute } from './authManager';
 import notificationService from '../services/notificationService';
 
 const LAST_TOKEN_KEY = 'notificationLastFcmToken';
 const LAST_OWNER_KEY = 'notificationLastOwnerKey';
+const LAST_TOKEN_REFRESH_KEY = 'notificationLastTokenRefreshAt';
 const TOAST_CONTAINER_ID = 'notification-toast-container';
 const TOAST_STYLE_ID = 'notification-toast-style';
 const TOAST_DURATION_MS = 5000;
 const MESSAGING_SW_SCOPE = '/firebase-cloud-messaging-push-scope';
+const TOKEN_REFRESH_INTERVAL_MS = 12 * 60 * 60 * 1000;
+const DEFAULT_NOTIFICATION_TITLE = 'Doorriing Seller';
+const DEFAULT_NOTIFICATION_BODY = 'You have a new update';
+const DEFAULT_NOTIFICATION_ICON = '/Doorriing-seller.png';
 
 let messagingInstance = null;
 let messagingSupportPromise = null;
@@ -256,8 +261,8 @@ const normalizePayload = (payload) => {
     const data = payload?.data || {};
 
     return {
-        title: notification.title || data.title || 'New notification',
-        body: notification.body || data.body || data.message || '',
+        title: notification.title || data.title || DEFAULT_NOTIFICATION_TITLE,
+        body: notification.body || data.body || data.message || DEFAULT_NOTIFICATION_BODY,
         image: notification.image || data.image || null,
         data,
         clickAction: resolveClickAction(payload),
@@ -398,8 +403,8 @@ const showBrowserNotification = (message) => {
     try {
         const notification = new Notification(message.title, {
             body: message.body,
-            icon: '/icons/icon-192.png',
-            badge: '/icons/icon-192.png',
+            icon: message.icon || DEFAULT_NOTIFICATION_ICON,
+            badge: message.badge || DEFAULT_NOTIFICATION_ICON,
             tag: message.tag || undefined,
         });
 
@@ -472,6 +477,20 @@ const generateToken = async () => {
         return null;
     }
 
+    const lastRefreshAt = Number(readStorage(LAST_TOKEN_REFRESH_KEY) || 0);
+    const shouldRefreshToken =
+        !readStorage(LAST_TOKEN_KEY) ||
+        !Number.isFinite(lastRefreshAt) ||
+        Date.now() - lastRefreshAt > TOKEN_REFRESH_INTERVAL_MS;
+
+    if (shouldRefreshToken) {
+        try {
+            await deleteToken(messaging);
+        } catch (error) {
+            console.error('Failed to clear existing FCM token before refresh', error);
+        }
+    }
+
     const registration = await waitForServiceWorkerActivation(
         await registerMessagingServiceWorker()
     );
@@ -479,6 +498,10 @@ const generateToken = async () => {
         vapidKey,
         serviceWorkerRegistration: registration,
     });
+
+    if (token) {
+        writeStorage(LAST_TOKEN_REFRESH_KEY, String(Date.now()));
+    }
 
     return token || null;
 };
@@ -504,13 +527,6 @@ export const saveTokenToSupabase = async (user, token) => {
     const ownerKey = buildOwnerKey(activeUser);
     const previousToken = readStorage(LAST_TOKEN_KEY);
     const previousOwnerKey = readStorage(LAST_OWNER_KEY);
-
-    if (previousToken === token && previousOwnerKey === ownerKey) {
-        return {
-            fcm_token: token,
-            skipped: true,
-        };
-    }
 
     const payload = await notificationService.registerPushToken(token);
 

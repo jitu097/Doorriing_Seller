@@ -16,8 +16,10 @@ const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
 const DEFAULT_APP_ROUTE = '/';
-const DEFAULT_ICON = '/icons/icon-192.png';
-const DEFAULT_BADGE = '/icons/icon-192.png';
+const DEFAULT_TITLE = 'Doorriing Seller';
+const DEFAULT_BODY = 'You have a new update';
+const DEFAULT_ICON = '/Doorriing-seller.png';
+const DEFAULT_BADGE = '/Doorriing-seller.png';
 
 const normalizeTargetUrl = (value) => {
     const fallbackRoute = DEFAULT_APP_ROUTE;
@@ -55,7 +57,7 @@ const buildNotificationOptions = (payload) => {
     const resolvedUrl = resolveNotificationUrl(payload);
 
     return {
-        body: notification.body || data.body || data.message || '',
+        body: notification.body || data.body || data.message || DEFAULT_BODY,
         icon: notification.icon || data.icon || DEFAULT_ICON,
         badge: notification.badge || data.badge || DEFAULT_BADGE,
         image: notification.image || data.image || undefined,
@@ -65,8 +67,12 @@ const buildNotificationOptions = (payload) => {
         requireInteraction: false,
         actions: [
             {
-                action: 'open',
-                title: 'Open',
+                action: 'view',
+                title: 'View',
+            },
+            {
+                action: 'dismiss',
+                title: 'Dismiss',
             },
         ],
         data: {
@@ -114,12 +120,16 @@ const findBestClient = async (targetUrl) => {
 
 onBackgroundMessage(messaging, (payload) => {
     const notification = payload?.notification || {};
-    const title = notification.title || payload?.data?.title || 'New notification';
+    const title = notification.title || payload?.data?.title || DEFAULT_TITLE;
     self.registration.showNotification(title, buildNotificationOptions(payload));
 });
 
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
+
+    if (event.action === 'dismiss') {
+        return;
+    }
 
     const targetUrl = normalizeTargetUrl(
         event.notification?.data?.url || event.notification?.data?.click_action || DEFAULT_APP_ROUTE

@@ -60,7 +60,14 @@ const NotificationPermissionPrompt = () => {
         return 'Enable notifications to get instant order updates.';
     }, [permission, supported]);
 
-    const shouldShowEnableButton = supported && permission !== 'granted';
+    const shouldShowActionButton = permission !== 'granted';
+    const actionButtonLabel = useMemo(() => {
+        if (!supported) {
+            return 'Notifications Info';
+        }
+
+        return 'Enable Notifications';
+    }, [supported]);
 
     const handleAgree = async () => {
         if (!user?.uid) {
@@ -117,16 +124,16 @@ const NotificationPermissionPrompt = () => {
     return (
         <>
             <div className="notification-permission-inline">
-                {shouldShowEnableButton && (
+                {shouldShowActionButton && (
                     <button
                         type="button"
                         className="notification-enable-btn"
                         onClick={() => setModalOpen(true)}
                     >
-                        Enable Notifications 🔔
+                        {actionButtonLabel}
                     </button>
                 )}
-                {(!shouldShowEnableButton || message) && (
+                {(!shouldShowActionButton || message) && (
                     <p className={`notification-permission-status ${permission === 'denied' ? 'is-warning' : ''}`}>
                         {message || statusText}
                     </p>
@@ -143,7 +150,7 @@ const NotificationPermissionPrompt = () => {
                                 className="notification-permission-close"
                                 onClick={() => setModalOpen(false)}
                             >
-                                ×
+                                x
                             </button>
                         </div>
 
