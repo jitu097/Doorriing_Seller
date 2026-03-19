@@ -1,8 +1,10 @@
 .grocery-layout {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    min-height: 100dvh;
+    height: 100dvh;
     background-color: #e4ba8e;
+    overflow: hidden;
 }
 
 /* Main Content Wrapper */
@@ -10,6 +12,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-height: 0;
 }
 
 /* Navbar Wrapper */
@@ -23,14 +26,17 @@
 /* Content Area */
 .layout-content {
     flex: 1;
+    min-height: 0;
     padding: 0;
     overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 @media (max-width: 700px) {
     .layout-content {
-        padding-bottom: 80px;
-        /* 60px Footer + 20px Buffer */
+        padding-bottom: calc(var(--app-bottom-offset) + 20px);
     }
 }
 
@@ -48,7 +54,6 @@
 
 @media (max-width: 700px) {
     .app-footer {
-        padding-bottom: 90px;
-        /* clears mobile bottom nav bar */
+        padding-bottom: calc(var(--app-bottom-offset) + 30px);
     }
 }

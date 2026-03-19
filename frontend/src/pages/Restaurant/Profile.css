@@ -103,6 +103,11 @@
     gap: 1rem;
 }
 
+.profile-actions-hidden {
+    visibility: hidden;
+    pointer-events: none;
+}
+
 .btn-edit,
 .btn-save {
     background: linear-gradient(135deg, rgb(109, 29, 29) 0%, rgb(139, 39, 39) 100%);
@@ -130,6 +135,7 @@
     display: grid;
     grid-template-columns: 250px 1fr;
     gap: 2rem;
+    align-items: start;
 }
 
 .profile-sidebar {
@@ -137,7 +143,11 @@
     border-radius: 12px;
     border: 1px solid #eee;
     padding: 1rem;
-    height: fit-content;
+    max-height: calc(100dvh - 220px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    position: sticky;
+    top: 0;
 }
 
 .sidebar-link {
@@ -512,10 +522,13 @@ input:checked+.slider:before {
     .profile-sidebar {
         display: flex;
         overflow-x: auto;
+        overflow-y: hidden;
         padding: 0.5rem;
         gap: 0.5rem;
         white-space: nowrap;
         background: white;
+        max-height: none;
+        position: static;
     }
 
     .sidebar-link {
@@ -562,6 +575,10 @@ input:checked+.slider:before {
 
     .profile-section {
         padding: 1.5rem;
+    }
+
+    .fixed-bottom-action-inner {
+        padding: 12px;
     }
 
     .subscription-header {

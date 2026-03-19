@@ -1,7 +1,8 @@
 /* Sidebar Container */
 .sidebar-container {
     width: 280px;
-    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
     background: #fff;
     display: flex;
     flex-direction: column;
@@ -11,12 +12,13 @@
     top: 0;
     right: 0;
     left: auto;
-    overflow-y: auto;
+    overflow: hidden;
     z-index: 2000;
     /* Higher than Navbar (1200) and Overlay (1299) */
     transform: translateX(100%);
     transition: transform 0.3s ease-in-out;
     box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+    overscroll-behavior: contain;
 }
 
 .sidebar-container.open {
@@ -102,6 +104,10 @@
     flex-direction: column;
     gap: 8px;
     flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 4px;
 }
 
 .nav-item {
@@ -176,7 +182,9 @@
     flex-direction: column;
     gap: 12px;
     padding-top: 24px;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
     border-top: 1px solid #f3f4f6;
+    flex-shrink: 0;
 }
 
 .profile-btn,

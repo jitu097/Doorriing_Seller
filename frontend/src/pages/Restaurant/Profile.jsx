@@ -199,7 +199,7 @@ export default function Profile() {
 	}
 
 	return (
-		<div className="admin-container">
+		<div className={`admin-container ${isEditing ? 'page-with-fixed-action' : ''}`}>
 			<div className="profile-header-card">
 				<div className="profile-cover" style={{
 					backgroundImage: (previewImage || formData.shop_image_url)
@@ -227,7 +227,7 @@ export default function Profile() {
 						<p className="profile-category">{formData.subcategory || 'Restaurant'}</p>
 						<p className="profile-location">📍 {formData.city || 'City'}</p>
 					</div>
-					<div className="profile-actions">
+					<div className={`profile-actions ${isEditing ? 'profile-actions-hidden' : ''}`}>
 						{isEditing ? (
 							<>
 								<button className="btn-cancel" onClick={() => { setIsEditing(false); fetchShopData(); }} disabled={saving}>Cancel</button>
@@ -480,6 +480,14 @@ export default function Profile() {
 				onConfirm={handleDeleteAccount}
 				onCancel={() => setShowDeleteModal(false)}
 			/>
+			{isEditing && (
+				<div className="fixed-bottom-action-bar">
+					<div className="fixed-bottom-action-inner">
+						<button className="btn-cancel" onClick={() => { setIsEditing(false); fetchShopData(); }} disabled={saving}>Cancel</button>
+						<button className="btn-save" onClick={handleSubmit} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</button>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

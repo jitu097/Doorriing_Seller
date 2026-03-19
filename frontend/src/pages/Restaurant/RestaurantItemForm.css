@@ -3,16 +3,18 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: 100dvh;
     background: rgba(0, 0, 0, 0.4);
     z-index: 2200;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     backdrop-filter: blur(3px);
     padding: 24px 16px;
+    padding-bottom: calc(var(--app-bottom-offset) + 24px);
     box-sizing: border-box;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .restaurant-form-card {
@@ -25,7 +27,8 @@
     animation: restaurant-form-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     flex-direction: column;
-    max-height: 90vh;
+    max-height: calc(100dvh - var(--app-bottom-offset) - 32px);
+    margin: auto 0;
 }
 
 @keyframes restaurant-form-slide-up {
@@ -88,7 +91,7 @@
     flex: 1;
     min-height: 0;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 96px;
+    padding-bottom: 32px;
 }
 
 .restaurant-form-body::-webkit-scrollbar {
@@ -320,6 +323,7 @@
 @media (max-width: 640px) {
     .restaurant-form-overlay {
         padding: 16px 8px;
+        padding-bottom: calc(var(--app-bottom-offset) + 16px);
     }
 
     .restaurant-form-card {
@@ -329,9 +333,14 @@
 
     .restaurant-form-body {
         padding: 24px;
+        padding-bottom: 24px;
     }
 
     .restaurant-form-row {
         flex-direction: column;
+    }
+
+    .restaurant-form-actions {
+        padding-top: 18px;
     }
 }

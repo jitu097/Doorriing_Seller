@@ -10,12 +10,13 @@
     bottom: 0;
     width: 100%;
     min-width: 100vw;
-    height: 60px;
+    height: var(--app-bottom-nav-height);
     background: #fce8d3;
     box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
     justify-content: space-around;
     align-items: center;
     z-index: 1200;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   .footer-link {
     color: #222;

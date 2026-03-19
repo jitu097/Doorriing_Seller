@@ -33,6 +33,14 @@
   /* Transitions */
   --transition-fast: 0.2s ease;
   --transition-normal: 0.3s ease;
+
+  /* App Layout */
+  --app-header-height: 72px;
+  --app-bottom-nav-height: 0px;
+  --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-bottom-offset: calc(var(--app-bottom-nav-height) + var(--app-safe-bottom));
+  --fixed-action-height: 76px;
+  --fixed-action-offset: calc(var(--fixed-action-height) + var(--app-bottom-offset) + 16px);
 }
 
 * {
@@ -47,6 +55,14 @@ body {
   color: var(--text-primary);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+html,
+body,
+#root {
+  height: 100%;
 }
 
 img {
@@ -64,6 +80,61 @@ button {
 a {
   text-decoration: none;
   color: inherit;
+}
+
+.app-shell-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.page-with-fixed-action {
+  padding-bottom: var(--fixed-action-offset);
+}
+
+.fixed-bottom-action-bar {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(var(--app-bottom-offset) + 16px);
+  z-index: 1250;
+  pointer-events: none;
+}
+
+.fixed-bottom-action-inner {
+  pointer-events: auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: rgba(252, 232, 211, 0.96);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(12px);
+}
+
+@media (max-width: 700px) {
+  :root {
+    --app-bottom-nav-height: 60px;
+  }
+
+  .fixed-bottom-action-bar {
+    left: 12px;
+    right: 12px;
+    bottom: calc(var(--app-bottom-offset) + 12px);
+  }
+
+  .fixed-bottom-action-inner {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .fixed-bottom-action-inner > * {
+    flex: 1 1 0;
+    min-width: 0;
+  }
 }
 
 /* Scrollbar */

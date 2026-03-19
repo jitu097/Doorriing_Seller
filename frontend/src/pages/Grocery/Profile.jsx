@@ -210,11 +210,11 @@ const Profile = () => {
         }
     };
 
-    if (loading) return <div>Loading Profile...</div>;
+    if (loading) return <div className="loading-container">Loading Profile...</div>;
 
     return (
         <>
-            <div className="admin-container">
+            <div className={`admin-container ${isEditing ? 'page-with-fixed-action' : ''}`}>
                 <div className="profile-header-card">
                     <div className="profile-cover" style={{
                         backgroundImage: previewImage || shopData.imageUrl ? `url(${previewImage || shopData.imageUrl})` : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
@@ -235,7 +235,7 @@ const Profile = () => {
                             <p className="profile-category">{shopData.category}</p>
                             <p className="profile-location">📍 {shopData.city}</p>
                         </div>
-                        <div className="profile-actions">
+                        <div className={`profile-actions ${isEditing ? 'profile-actions-hidden' : ''}`}>
                             {isEditing ? (
                                 <>
                                     <button className="btn-cancel" onClick={() => setIsEditing(false)}>Cancel</button>
@@ -487,6 +487,14 @@ const Profile = () => {
                 onConfirm={handleDeleteAccount}
                 onCancel={() => setShowDeleteModal(false)}
             />
+            {isEditing && (
+                <div className="fixed-bottom-action-bar">
+                    <div className="fixed-bottom-action-inner">
+                        <button className="btn-cancel" onClick={() => setIsEditing(false)}>Cancel</button>
+                        <button className="btn-save" onClick={handleSave}>Save Changes</button>
+                    </div>
+                </div>
+            )}
         </>
     );
 };

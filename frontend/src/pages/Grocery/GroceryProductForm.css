@@ -3,13 +3,17 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: 100dvh;
     background: rgba(0, 0, 0, 0.4);
     z-index: 2000;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     backdrop-filter: blur(3px);
+    padding: 24px 16px;
+    padding-bottom: calc(var(--app-bottom-offset) + 24px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .product-form-card {
@@ -22,8 +26,8 @@
     animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     flex-direction: column;
-    max-height: 90vh;
-    /* Prevent it from being taller than screen */
+    max-height: calc(100dvh - var(--app-bottom-offset) - 32px);
+    margin: auto 0;
 }
 
 @keyframes slideUp {
@@ -83,6 +87,11 @@
 .product-form-body {
     padding: 32px;
     overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding-bottom: 32px;
     /* Custom scrollbar */
     scrollbar-width: thin;
     scrollbar-color: #d1d5db transparent;
@@ -300,4 +309,25 @@ textarea.form-control {
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+}
+
+@media (max-width: 640px) {
+    .product-form-overlay {
+        padding: 16px 8px;
+        padding-bottom: calc(var(--app-bottom-offset) + 16px);
+    }
+
+    .product-form-body {
+        padding: 24px;
+        padding-bottom: 24px;
+    }
+
+    .form-row,
+    .discount-row {
+        flex-direction: column;
+    }
+
+    .form-actions {
+        padding-top: 18px;
+    }
 }
