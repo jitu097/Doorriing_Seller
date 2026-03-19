@@ -1,4 +1,5 @@
 const supabase = require('../../config/supabaseClient');
+const admin = require('../../config/firebaseAdmin');
 const { BadRequestError } = require('../../utils/errors');
 
 const NOTIFICATION_COLUMNS = 'id, shop_id, customer_id, title, message, type, reference_id, is_read, created_at';
@@ -6,6 +7,156 @@ const TOKEN_COLUMNS = 'id, fcm_token, customer_id, shop_id, updated_at, created_
 
 const logServiceError = (scope, error) => {
     console.error(`[NotificationService] ${scope}`, error);
+};
+
+const logServiceInfo = (scope, payload = {}) => {
+    console.log(`[NotificationService] ${scope}`, payload);
+};
+
+const getShopBasePath = async (shopId) => {
+    const { data, error } = await supabase
+        .from('shops')
+        .select('business_type')
+        .eq('id', shopId)
+        .maybeSingle();
+
+    if (error) {
+        throw error;
+    }
+
+    const businessType = String(data?.business_type || '').toLowerCase();
+    return businessType === 'grocery' ? '/grocery' : '/restaurant';
+};
+
+const resolveNotificationRoute = async (shopId, type) => {
+    const basePath = await getShopBasePath(shopId);
+    const normalizedType = String(type || '').toLowerCase();
+
+    if (normalizedType.includes('booking')) {
+        return `${basePath}/bookings`;
+    }
+
+    if (normalizedType.includes('stock') || normalizedType.includes('product') || normalizedType.includes('menu')) {
+        return `${basePath}/products`;
+    }
+
+    if (normalizedType.includes('order')) {
+        return `${basePath}/orders`;
+    }
+
+    return `${basePath}/dashboard`;
+};
+
+const cleanupInvalidTokens = async (tokens = []) => {
+    if (!tokens.length) {
+        return;
+    }
+
+    const { error } = await supabase
+        .from('notification_tokens')
+        .delete()
+        .in('fcm_token', tokens);
+
+    if (error) {
+        logServiceError('cleanupInvalidTokens', error);
+    }
+};
+
+const sendPushToShop = async ({ shopId, title, body, type, referenceId }) => {
+    const { data: tokenRows, error } = await supabase
+        .from('notification_tokens')
+        .select('fcm_token')
+        .eq('shop_id', shopId);
+
+    if (error) {
+        throw error;
+    }
+
+    const tokens = [...new Set((tokenRows || []).map(row => row.fcm_token).filter(Boolean))];
+    logServiceInfo('sendPushToShop.tokensResolved', {
+        shopId,
+        type,
+        referenceId,
+        tokenCount: tokens.length,
+    });
+
+    if (!tokens.length) {
+        logServiceInfo('sendPushToShop.skippedNoTokens', {
+            shopId,
+            type,
+            referenceId,
+        });
+        return { successCount: 0, failureCount: 0 };
+    }
+
+    const route = await resolveNotificationRoute(shopId, type);
+    logServiceInfo('sendPushToShop.dispatching', {
+        shopId,
+        type,
+        referenceId,
+        route,
+        title,
+    });
+
+    const response = await admin.messaging().sendEachForMulticast({
+        tokens,
+        notification: {
+            title,
+            body,
+        },
+        data: {
+            type: String(type || ''),
+            referenceId: String(referenceId || ''),
+            route,
+            click_action: route,
+            title: String(title || ''),
+            body: String(body || ''),
+        },
+        webpush: {
+            fcmOptions: {
+                link: route,
+            },
+            notification: {
+                icon: '/icons/icon-192.png',
+                badge: '/icons/icon-192.png',
+            },
+        },
+    });
+
+    const invalidTokens = [];
+    response.responses.forEach((result, index) => {
+        if (!result.success) {
+            logServiceError('sendPushToShop.tokenFailure', {
+                shopId,
+                type,
+                referenceId,
+                tokenSuffix: tokens[index]?.slice?.(-12),
+                code: result.error?.code || 'unknown',
+                message: result.error?.message || 'Unknown push error',
+            });
+            const code = result.error?.code || '';
+            if (
+                code.includes('registration-token-not-registered') ||
+                code.includes('invalid-registration-token')
+            ) {
+                invalidTokens.push(tokens[index]);
+            }
+        }
+    });
+
+    await cleanupInvalidTokens(invalidTokens);
+    logServiceInfo('sendPushToShop.completed', {
+        shopId,
+        type,
+        referenceId,
+        successCount: response.successCount,
+        failureCount: response.failureCount,
+        invalidTokenCount: invalidTokens.length,
+    });
+    return {
+        successCount: response.successCount,
+        failureCount: response.failureCount,
+    };
 };
 
 const getNotifications = async (shopId, limit = 20) => {
@@ -45,6 +196,26 @@ const createNotification = async (shopId, title, message, type, referenceId) => 
     if (error) {
         logServiceError('createNotification', error);
         return null; // Silent failure
+    }
+
+    logServiceInfo('createNotification.saved', {
+        shopId,
+        notificationId: data?.id,
+        type,
+        referenceId,
+        title,
+    });
+
+    try {
+        await sendPushToShop({
+            shopId,
+            title,
+            body: message,
+            type,
+            referenceId,
+        });
+    } catch (pushError) {
+        logServiceError('sendPushToShop', pushError);
     }
 
     return data;
