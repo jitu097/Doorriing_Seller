@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { auth } from '../../config/firebase';
-import { signOut } from 'firebase/auth';
 import { shopService } from '../../services/shopService';
 import NotificationBell from '../../components/common/NotificationBell';
 import Sidebar from '../../components/common/Sidebar';
+import { logoutUser } from '../../utils/authManager';
 import FooterMobile from './footer';
 import './Navbar.css';
 
@@ -67,10 +66,11 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     if (!window.confirm('Logout?')) return;
-    await signOut(auth);
-    localStorage.removeItem('lastActiveTime');
-    navigate('/login');
-    setSidebarOpen(false);
+    const loggedOut = await logoutUser();
+    if (loggedOut) {
+      navigate('/login', { replace: true });
+      setSidebarOpen(false);
+    }
   };
 
   return (

@@ -1,10 +1,15 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../config/firebase';
 import { shopService } from '../services/shopService';
 import Loader from '../components/common/Loader';
 import OrderAlertManager from '../components/Orders/OrderAlertManager';
+import {
+    getFallbackAuthenticatedRoute,
+    getDashboardRoute,
+    resolveAuthenticatedRoute,
+    setStoredHomeRoute,
+    useAuthSession,
+} from '../utils/authManager';
 
 // Lazy load pages
 const Login = lazy(() => import('../pages/auth/Login'));
@@ -39,21 +44,57 @@ const RestaurantReports = lazy(() => import('../pages/Restaurant/Reports'));
 const RestaurantProfile = lazy(() => import('../pages/Restaurant/Profile'));
 const RestaurantLayout = lazy(() => import('../pages/Restaurant/RestaurantLayout'));
 
+const useResolvedAuthenticatedRoute = (enabled, userId) => {
+    const [state, setState] = useState({
+        loading: enabled,
+        route: null,
+    });
+
+    useEffect(() => {
+        if (!enabled) {
+            setState({ loading: false, route: null });
+            return undefined;
+        }
+
+        let cancelled = false;
+        setState((previousState) => ({
+            loading: true,
+            route: previousState.route,
+        }));
+
+        resolveAuthenticatedRoute()
+            .then((route) => {
+                if (!cancelled) {
+                    setState({ loading: false, route });
+                }
+            })
+            .catch((error) => {
+                console.error('Authenticated route resolution failed:', error);
+
+                if (!cancelled) {
+                    setState({
+                        loading: false,
+                        route: getFallbackAuthenticatedRoute(),
+                    });
+                }
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [enabled, userId]);
+
+    return state;
+};
+
 /**
  * ROUTE GUARD: Basic Authentication
  * Checks if user is logged in
  */
 const ProtectedRoute = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState(null);
+    const { isAuthReady, isAuthenticated } = useAuthSession();
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            setIsAuthenticated(!!user);
-        });
-        return () => unsubscribe();
-    }, []);
-
-    if (isAuthenticated === null) return <Loader variant="fullscreen" message="Loading..." />;
+    if (!isAuthReady) return <Loader variant="fullscreen" message="Loading..." />;
     return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
@@ -74,11 +115,23 @@ const RequireShop = () => {
                 if (!response.hasShop) {
                     navigate('/registration', { replace: true });
                 } else {
+                    const homeRoute = getDashboardRoute(
+                        response.shop?.business_type || response.shop?.category
+                    );
+                    setStoredHomeRoute(homeRoute);
                     setHasShop(true);
                 }
             } catch (error) {
                 console.error('Shop check failed:', error);
-                navigate('/registration', { replace: true });
+                if (String(error?.message || '').toLowerCase().includes('404') || String(error?.message || '').toLowerCase().includes('not found')) {
+                    navigate('/registration', { replace: true });
+                } else {
+                    const fallbackRoute = getFallbackAuthenticatedRoute();
+                    if (fallbackRoute) {
+                        setStoredHomeRoute(fallbackRoute);
+                    }
+                    setHasShop(true);
+                }
             } finally {
                 setLoading(false);
             }
@@ -95,8 +148,42 @@ const RequireShop = () => {
     ) : null;
 };
 
-const PublicRoute = () => {
-    return <Outlet />;
+const AuthOnlyPublicRoute = () => {
+    const { isAuthReady, isAuthenticated, user } = useAuthSession();
+    const { loading: routeLoading, route } = useResolvedAuthenticatedRoute(isAuthenticated, user?.uid);
+
+    if (!isAuthReady || routeLoading) {
+        return <Loader variant="fullscreen" message="Loading..." />;
+    }
+
+    return isAuthenticated ? <Navigate to={route || getFallbackAuthenticatedRoute()} replace /> : <Outlet />;
+};
+
+const AppEntryRoute = () => {
+    const { isAuthReady, isAuthenticated, user } = useAuthSession();
+    const { loading: routeLoading, route } = useResolvedAuthenticatedRoute(isAuthenticated, user?.uid);
+
+    if (!isAuthReady || routeLoading) {
+        return <Loader variant="fullscreen" message="Loading..." />;
+    }
+
+    return (
+        <Navigate
+            to={isAuthenticated ? route || getFallbackAuthenticatedRoute() : '/login'}
+            replace
+        />
+    );
+};
+
+const DashboardRoute = () => {
+    const { isAuthReady, isAuthenticated, user } = useAuthSession();
+    const { loading: routeLoading, route } = useResolvedAuthenticatedRoute(isAuthenticated, user?.uid);
+
+    if (!isAuthReady || routeLoading) {
+        return <Loader variant="fullscreen" message="Loading..." />;
+    }
+
+    return <Navigate to={isAuthenticated ? route || getFallbackAuthenticatedRoute() : '/login'} replace />;
 };
 
 // --- Main Routes ---
@@ -105,14 +192,20 @@ const AppRoutes = () => {
     return (
         <Suspense fallback={<Loader variant="fullscreen" message="Loading App..." />}>
             <Routes>
-                {/* Landing Page */}
-                <Route path="/" element={<LandingPage />} />
+                {/* App Entry */}
+                <Route path="/" element={<AppEntryRoute />} />
+                <Route path="/dashboard" element={<DashboardRoute />} />
+                <Route path="/landing" element={<LandingPage />} />
 
-                {/* Public Routes (Login, Register, Terms) */}
-                <Route element={<PublicRoute />}>
+                {/* Auth Pages */}
+                <Route element={<AuthOnlyPublicRoute />}>
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
+                </Route>
+
+                {/* Public Routes */}
+                <Route element={<Outlet />}>
                     <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
                     <Route path="/about" element={<AboutUs />} />
                     <Route path="/contact" element={<ContactUs />} />

@@ -1,24 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../config/firebase';
+import { useAuthSession } from '../utils/authManager';
 
 const ProtectedRoutes = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState(null);
+    const { isAuthReady, isAuthenticated } = useAuthSession();
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setIsAuthenticated(true);
-            } else {
-                setIsAuthenticated(false);
-            }
-        });
-
-        return () => unsubscribe();
-    }, []);
-
-    if (isAuthenticated === null) {
+    if (!isAuthReady) {
         // Return a simple loading spinner or blank screen while checking auth
         return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Loading...</div>;
     }

@@ -2,6 +2,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { shopService } from '../../services/shopService';
+import {
+	getDashboardRoute,
+	logoutUser,
+	setStoredHomeRoute
+} from '../../utils/authManager';
 import './Registration.css';
 
 export default function Registration() {
@@ -26,6 +31,7 @@ export default function Registration() {
 		shopPhoto: null
 	});
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [isLeavingToLogin, setIsLeavingToLogin] = useState(false);
 	const [photoPreview, setPhotoPreview] = useState(null);
 	const [termsAccepted, setTermsAccepted] = useState(false);
 	const [showTermsModal, setShowTermsModal] = useState(false);
@@ -102,6 +108,21 @@ export default function Registration() {
 		setPhotoPreview(null);
 	};
 
+	const handleBackToLogin = async () => {
+		if (isLeavingToLogin) {
+			return;
+		}
+
+		setIsLeavingToLogin(true);
+
+		try {
+			await logoutUser();
+			navigate('/login', { replace: true });
+		} finally {
+			setIsLeavingToLogin(false);
+		}
+	};
+
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		setIsSubmitting(true);
@@ -154,12 +175,8 @@ export default function Registration() {
 			await shopService.createShop(payload);
 
 			// Determine route
-			const category = formData.category.toLowerCase();
-			const dashboardRoutes = {
-				grocery: '/grocery/dashboard',
-				restaurant: '/restaurant/dashboard'
-			};
-			const targetRoute = dashboardRoutes[category] || '/dashboard';
+			const targetRoute = getDashboardRoute(formData.category);
+			setStoredHomeRoute(targetRoute);
 
 			// Success Popup Logic
 			const popup = document.createElement('div');
@@ -226,6 +243,14 @@ export default function Registration() {
 				<div className="register-header-content">
 					<div className="register-header-inner">
 						<div className="register-header-left">
+							<button
+								type="button"
+								className="register-back-button"
+								onClick={handleBackToLogin}
+								disabled={isLeavingToLogin}
+							>
+								← Back to Login
+							</button>
 							<h1 className="register-title">Shop Registration</h1>
 						</div>
 					</div>

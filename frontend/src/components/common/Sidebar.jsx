@@ -1,7 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { signOut } from 'firebase/auth';
-import { auth } from '../../config/firebase';
+import { logoutUser } from '../../utils/authManager';
 import './Sidebar.css';
 
 const Sidebar = ({ isOpen, onClose, menuItems, profilePath }) => {
@@ -9,9 +8,10 @@ const Sidebar = ({ isOpen, onClose, menuItems, profilePath }) => {
 
     const handleLogout = async () => {
         if (!window.confirm('Logout?')) return;
-        await signOut(auth);
-        localStorage.removeItem('lastActiveTime');
-        navigate('/login');
+        const loggedOut = await logoutUser();
+        if (loggedOut) {
+            navigate('/login', { replace: true });
+        }
     };
 
     const handleLinkClick = () => {

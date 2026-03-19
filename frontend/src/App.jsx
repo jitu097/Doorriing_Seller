@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import AppRoutes from './routes';
-import useInactivityLogout from './hooks/useInactivityLogout';
+import { initAuth } from './utils/authManager';
 import './App.css';
 
 function App() {
-    // Enable inactivity-based logout
-    useInactivityLogout();
+    useEffect(() => {
+        void initAuth();
+    }, []);
 
     return (
         <BrowserRouter>

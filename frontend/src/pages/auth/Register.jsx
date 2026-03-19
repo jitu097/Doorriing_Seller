@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../../config/firebase';
 import PrimaryButton from '../../components/common/PrimaryButton';
+import { setStoredHomeRoute } from '../../utils/authManager';
 import './Login.css'; // Reusing Login styles for consistency as layout is identical
 
 const Register = () => {

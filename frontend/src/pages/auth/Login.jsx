@@ -4,6 +4,7 @@ import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../../config/firebase';
 import { shopService } from '../../services/shopService';
 import PrimaryButton from '../../components/common/PrimaryButton';
+import { getDashboardRoute, setStoredHomeRoute } from '../../utils/authManager';
 import './Login.css';
 
 const Login = () => {
@@ -60,8 +61,8 @@ const Login = () => {
 
             if (response.hasShop) {
                 // Shop exists - go to dashboard
-                const category = response.shop.business_type?.toLowerCase() || 'restaurant';
-                const dashboardRoute = category === 'grocery' ? '/grocery/dashboard' : '/restaurant/dashboard';
+                const dashboardRoute = getDashboardRoute(response.shop?.business_type || response.shop?.category);
+                setStoredHomeRoute(dashboardRoute);
                 navigate(dashboardRoute, { replace: true });
             } else {
                 // No shop - must register
