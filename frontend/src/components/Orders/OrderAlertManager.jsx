@@ -20,9 +20,13 @@ const OrderAlertManager = () => {
 
     // Determine the base path based on current location ('/grocery' or '/restaurant')
     const basePath = location.pathname.includes('/grocery') ? '/grocery' : '/restaurant';
+    
+
+
+    // No log
 
     const announceIncomingOrder = useCallback(async (orderData) => {
-        if (!orderData?.id) {
+        if (!orderData?.id || announcedOrderIdsRef.current.has(orderData.id)) {
             return;
         }
 
@@ -30,6 +34,8 @@ const OrderAlertManager = () => {
         if (!['pending', 'new'].includes(status)) {
             return;
         }
+
+        announcedOrderIdsRef.current.add(orderData.id);
 
         try {
             await notificationService.createNewOrderNotification(
@@ -39,12 +45,6 @@ const OrderAlertManager = () => {
         } catch (notificationError) {
             console.error('Failed to create new order notification', notificationError);
         }
-
-        if (announcedOrderIdsRef.current.has(orderData.id)) {
-            return;
-        }
-
-        announcedOrderIdsRef.current.add(orderData.id);
 
         const localNotification = {
             id: `local-new-order-${orderData.id}`,
@@ -79,7 +79,8 @@ const OrderAlertManager = () => {
                 const existingPending = (response.orders || response.data?.orders || []).filter(o => 
                     ['pending', 'new'].includes(o.status?.toLowerCase() || o.order_status?.toLowerCase())
                 );
-
+                
+                // No log
                 // Sort oldest first (backend defaults to descending `created_at`)
                 const chronologicalOrders = [...existingPending].reverse();
 
@@ -92,11 +93,21 @@ const OrderAlertManager = () => {
                         const existingIds = new Set(prevQueue.map(o => o.id));
                         const toAdd = chronologicalOrders
                             .filter(order => !existingIds.has(order.id))
-                            .map(order => ({ 
-                                ...order, 
-                                serverTime, // Attach server snapshot time
-                                remainingMs: deriveInitialRemainingMs(order, serverTime)
-                            }));
+                            .map(order => {
+                                let initialRemaining = null;
+                                try {
+                                    initialRemaining = deriveInitialRemainingMs(order, serverTime);
+                                } catch (e) {
+                                    console.error('[OrderAlertManager] Failed to derive initial remaining for existing order', order.id, e);
+                                }
+                                return { 
+                                    ...order, 
+                                    serverTime, 
+                                    remainingMs: initialRemaining
+                                };
+                            });
+                        
+                        // No log
                         return toAdd.length ? [...prevQueue, ...toAdd] : prevQueue;
                     });
                 }
@@ -124,7 +135,15 @@ const OrderAlertManager = () => {
                     setOrderQueue(prevQueue => {
                         // Prevent duplicate alerts for the exact same order id
                         if (prevQueue.some(o => o.id === orderData.id)) return prevQueue;
-                        const initialRemaining = deriveInitialRemainingMs(orderData, serverTime);
+                        
+                        let initialRemaining = null;
+                        try {
+                            initialRemaining = deriveInitialRemainingMs(orderData, serverTime);
+                        } catch (e) {
+                            console.error('[OrderAlertManager] Failed to derive initial remaining for realtime order', orderData.id, e);
+                        }
+
+                        // No log
                         return [...prevQueue, { 
                             ...orderData, 
                             serverTime,
@@ -185,9 +204,7 @@ const OrderAlertManager = () => {
         return () => clearInterval(intervalId);
     }, [orderQueue.length]);
 
-    const activeOrder = orderQueue[0];
-
-    const handleAccept = async (orderId) => {
+    const handleAccept = useCallback(async (orderId) => {
         try {
             setLoadingAction(true);
             await orderService.acceptOrder(orderId);
@@ -206,7 +223,7 @@ const OrderAlertManager = () => {
         } finally {
             setLoadingAction(false);
         }
-    };
+    }, [basePath, navigate]);
 
     const handleAutoExpire = useCallback((orderId) => {
         if (!orderId) return;
@@ -214,7 +231,7 @@ const OrderAlertManager = () => {
         window.dispatchEvent(new CustomEvent('order-alert-action'));
     }, []);
 
-    const handleDecline = async (orderId) => {
+    const handleDecline = useCallback(async (orderId) => {
         try {
             setLoadingAction(true);
             await orderService.rejectOrder(orderId);
@@ -233,7 +250,7 @@ const OrderAlertManager = () => {
         } finally {
             setLoadingAction(false);
         }
-    };
+    }, [basePath, navigate]);
 
     if (orderQueue.length === 0) return null;
 

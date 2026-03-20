@@ -7,6 +7,8 @@ import Loader from '../../components/common/Loader';
 import { useOrderInsertRealtime } from '../../hooks/useOrderInsertRealtime';
 import orderService from '../../services/orderService';
 import { mergeFetchedOrders, upsertOrderAtTop } from '../../utils/orderRealtime';
+import { soundEffects } from '../../utils/soundEffects';
+import Toast from '../../components/common/Toast';
 
 function Dashboard() {
 	const [stats, setStats] = useState({
@@ -22,6 +24,8 @@ function Dashboard() {
 	const [recentOrders, setRecentOrders] = useState([]);
 	const [walletData, setWalletData] = useState(null);
 	const [loading, setLoading] = useState(true);
+	const [newlyAddedOrderId, setNewlyAddedOrderId] = useState(null);
+	const [notification, setNotification] = useState(null);
 
 	const fetchDashboardData = useCallback(async ({ silent = false } = {}) => {
 		try {
@@ -70,9 +74,14 @@ function Dashboard() {
 			return;
 		}
 
-		if (import.meta.env.DEV) {
-			console.log('[Dashboard][grocery] realtime insert', incomingOrder);
-		}
+		// Play sound notification
+		soundEffects.playNewOrder();
+
+		// Auto-scroll to top to see the new order
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+
+		// Show toast
+		setNotification({ message: 'New Order Received!', type: 'info' });
 
 		void (async () => {
 			try {
@@ -80,9 +89,16 @@ function Dashboard() {
 				const hydratedOrder = orderData?.order || orderData?.data || orderData;
 
 				setRecentOrders((prevOrders) => upsertOrderAtTop(prevOrders, hydratedOrder, 5));
+				
+				// Highlight the new order
+				setNewlyAddedOrderId(incomingOrder.id);
+				setTimeout(() => setNewlyAddedOrderId(null), 5000);
 			} catch (error) {
 				console.error('Failed to hydrate realtime grocery order', error);
 				setRecentOrders((prevOrders) => upsertOrderAtTop(prevOrders, incomingOrder, 5));
+				
+				setNewlyAddedOrderId(incomingOrder.id);
+				setTimeout(() => setNewlyAddedOrderId(null), 5000);
 			} finally {
 				void fetchDashboardData({ silent: true });
 			}
@@ -117,16 +133,16 @@ function Dashboard() {
 
 				<div className="stats-grid">
 					<div className="stat-card">
-						<div className="stat-icon revenue-icon"><img src="/potli.png" alt="Total Revenue" style={{ width: 40, height: 40 }} /></div>
+						<div className="stat-icon revenue-icon"><img src="/potli.png" alt="Total Revenue" style={{ width: 40, height: 40 }} loading="lazy" /></div>
 						<div className="stat-info">
 							<h3>Total Revenue</h3>
-							<p className="stat-value">â‚¹{(walletData?.balance || 0).toLocaleString()}</p>
+							<p className="stat-value">₹{(walletData?.balance || 0).toLocaleString()}</p>
 							<span className="stat-hint">Lifetime earnings</span>
 						</div>
 					</div>
 
 					<div className="stat-card">
-						<div className="stat-icon orders-icon"><img src="/checkout.png" alt="Active Orders" style={{ width: 40, height: 40 }} /></div>
+						<div className="stat-icon orders-icon"><img src="/checkout.png" alt="Active Orders" style={{ width: 40, height: 40 }} loading="lazy" /></div>
 						<div className="stat-info">
 							<h3>Active Orders</h3>
 							<p className="stat-value">{activeOrdersCount}</p>
@@ -135,7 +151,7 @@ function Dashboard() {
 					</div>
 
 					<div className="stat-card">
-						<div className="stat-icon success-icon"><img src="/delivered.png" alt="Delivered" style={{ width: 40, height: 40 }} /></div>
+						<div className="stat-icon success-icon"><img src="/delivered.png" alt="Delivered" style={{ width: 40, height: 40 }} loading="lazy" /></div>
 						<div className="stat-info">
 							<h3>Delivered</h3>
 							<p className="stat-value">{stats.delivered || 0}</p>
@@ -143,7 +159,7 @@ function Dashboard() {
 						</div>
 					</div>
 					<div className="stat-card">
-						<div className="stat-icon cancel-icon"><img src="/cancel.png" alt="Cancelled" style={{ width: 40, height: 40 }} /></div>
+						<div className="stat-icon cancel-icon"><img src="/cancel.png" alt="Cancelled" style={{ width: 40, height: 40 }} loading="lazy" /></div>
 						<div className="stat-info">
 							<h3>Cancelled</h3>
 							<p className="stat-value">{stats.cancelled || 0}</p>
@@ -175,14 +191,17 @@ function Dashboard() {
 										<tr><td colSpan="4" className="empty-state">No recent orders found</td></tr>
 									) : (
 										recentOrders.map(order => (
-											<tr key={order.id}>
+											<tr 
+												key={order.id} 
+												className={newlyAddedOrderId === order.id ? 'new-order-highlight' : ''}
+											>
 												<td className="order-id">#{order.order_number}</td>
 												<td>
 													<span className={`status-badge ${(order.status || '').toLowerCase()}`}>
 														{order.status}
 													</span>
 												</td>
-												<td className="amount">â‚¹{order.total_amount}</td>
+												<td className="amount">₹{order.total_amount}</td>
 												<td className="time">{new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
 											</tr>
 										))
@@ -193,6 +212,13 @@ function Dashboard() {
 					</div>
 				</div>
 			</div>
+			{notification && (
+				<Toast 
+					message={notification.message} 
+					type={notification.type} 
+					onClose={() => setNotification(null)} 
+				/>
+			)}
 		</>
 	);
 }

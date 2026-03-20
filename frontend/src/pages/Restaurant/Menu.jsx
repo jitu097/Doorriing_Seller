@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './Menu.css';
 import './RestaurantItemForm.css';
 import MenuItemCard from './MenuItemCard';
@@ -98,7 +98,7 @@ const Menu = () => {
 		fetchCategories();
 	}, []);
 
-	const fetchCategories = async () => {
+	const fetchCategories = useCallback(async () => {
 		try {
 			setLoading(true);
 			const data = await categoryService.getCategories();
@@ -110,13 +110,13 @@ const Menu = () => {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
 
-	const handleAccordion = (idx) => {
-		setOpenIndex(openIndex === idx ? null : idx);
-	};
+	const handleAccordion = useCallback((idx) => {
+		setOpenIndex(prev => (prev === idx ? null : idx));
+	}, []);
 
-	const handleInputChange = async (e) => {
+	const handleInputChange = useCallback(async (e) => {
 		const { name, value, type, checked, files } = e.target;
 
 		if (type === 'checkbox') {
@@ -176,16 +176,16 @@ const Menu = () => {
 		}
 
 		setNewItem((prev) => ({ ...prev, [name]: value }));
-	};
+	}, []);
 
-	const handleModalClose = () => {
+	const handleModalClose = useCallback(() => {
 		setShowModal(false);
 		setSubcategories([]);
 		setEditingItemId(null);
 		setNewItem(createInitialItemState());
-	};
+	}, []);
 
-	const handleQuickAddProduct = async (categoryId) => {
+	const handleQuickAddProduct = useCallback(async (categoryId) => {
 		if (!categoryId) {
 			setShowModal(true);
 			return;
@@ -203,33 +203,37 @@ const Menu = () => {
 			console.error('Failed to prepare quick add:', error);
 			setShowModal(true);
 		}
-	};
+	}, []);
 
-	const handleModalOpen = () => {
+	const handleModalOpen = useCallback(() => {
 		setEditingItemId(null);
 		setSubcategories([]);
 		setNewItem(createInitialItemState());
 		setShowModal(true);
-	};
-	const handleCategoryModalOpen = () => setShowCategoryModal(true);
-	const handleCategoryModalClose = () => {
+	}, []);
+
+	const handleCategoryModalOpen = useCallback(() => setShowCategoryModal(true), []);
+
+	const handleCategoryModalClose = useCallback(() => {
 		setShowCategoryModal(false);
 		setNewCategory('');
 		setCategoryImageFile(null);
-	};
-	const handleSubcategoryModalOpen = () => setShowSubcategoryModal(true);
-	const handleSubcategoryModalClose = () => {
+	}, []);
+
+	const handleSubcategoryModalOpen = useCallback(() => setShowSubcategoryModal(true), []);
+
+	const handleSubcategoryModalClose = useCallback(() => {
 		setShowSubcategoryModal(false);
 		setSelectedCategory('');
 		setSubcategoriesList([]);
 		setNewSubcategory('');
-	};
+	}, []);
 
-	const handleModalOverlayClick = (event) => {
+	const handleModalOverlayClick = useCallback((event) => {
 		if (event.target === event.currentTarget) {
 			handleModalClose();
 		}
-	};
+	}, [handleModalClose]);
 
 	const handleCategoryImageChange = (e) => {
 		if (e.target.files && e.target.files[0]) {
@@ -237,7 +241,7 @@ const Menu = () => {
 		}
 	};
 
-	const handleSaveItem = async (e) => {
+	const handleSaveItem = useCallback(async (e) => {
 		e.preventDefault();
 
 		const fullPrice = clampToZero(parseCurrencyInput(newItem.fullPrice));
@@ -295,9 +299,9 @@ const Menu = () => {
 			console.error(editingItemId ? 'Failed to update item:' : 'Failed to create item:', error);
 			alert(`Failed to ${editingItemId ? 'update' : 'create'} item. Please try again.`);
 		}
-	};
+	}, [newItem, editingItemId, fetchCategories, handleModalClose]);
 
-	const handleAddCategory = async (e) => {
+	const handleAddCategory = useCallback(async (e) => {
 		e.preventDefault();
 		if (newCategory.trim()) {
 			try {
@@ -314,9 +318,9 @@ const Menu = () => {
 				alert('Failed to create category. Please try again.');
 			}
 		}
-	};
+	}, [newCategory, categories.length, categoryImageFile, fetchCategories, handleCategoryModalClose]);
 
-	const handleDeleteCategory = async (categoryId) => {
+	const handleDeleteCategory = useCallback(async (categoryId) => {
 		if (window.confirm('Are you sure you want to delete this category? All items in this category will also be deleted.')) {
 			try {
 				await categoryService.deleteCategory(categoryId);
@@ -326,9 +330,9 @@ const Menu = () => {
 				alert('Failed to delete category. Please try again.');
 			}
 		}
-	};
+	}, [fetchCategories]);
 
-	const handleToggleCategory = async (categoryId) => {
+	const handleToggleCategory = useCallback(async (categoryId) => {
 		try {
 			await categoryService.toggleCategory(categoryId);
 			fetchCategories();
@@ -336,9 +340,9 @@ const Menu = () => {
 			console.error('Failed to toggle category:', error);
 			alert('Failed to toggle category. Please try again.');
 		}
-	};
+	}, [fetchCategories]);
 
-	const handleToggleItem = async (itemId) => {
+	const handleToggleItem = useCallback(async (itemId) => {
 		try {
 			await itemService.toggleItem(itemId);
 			fetchCategories();
@@ -346,9 +350,9 @@ const Menu = () => {
 			console.error('Failed to toggle item:', error);
 			alert('Failed to toggle item. Please try again.');
 		}
-	};
+	}, [fetchCategories]);
 
-	const handleDeleteItem = async (itemId) => {
+	const handleDeleteItem = useCallback(async (itemId) => {
 		if (window.confirm('Are you sure you want to delete this item?')) {
 			try {
 				await itemService.deleteItem(itemId);
@@ -358,7 +362,47 @@ const Menu = () => {
 				alert('Failed to delete item. Please try again.');
 			}
 		}
-	};
+	}, [fetchCategories]);
+	
+	const handleEditItem = useCallback(async (item, categoryId) => {
+		// Load subcategories for this category
+		const targetCategoryId = item.category_id || categoryId;
+		if (targetCategoryId) {
+			try {
+				const subs = await subcategoryService.getSubcategories(targetCategoryId);
+				setSubcategories(subs || []);
+			} catch (error) {
+				console.error('Failed to load subcategories:', error);
+				setSubcategories([]);
+			}
+		}
+
+		const resolvedFullPrice = item.full_price ?? item.price ?? '';
+		const resolvedFullDiscountType = item.full_discount_type || item.discount_type || OFFER_TYPES.NONE;
+		const resolvedFullDiscountValue = resolvedFullDiscountType === OFFER_TYPES.NONE ? '' : String(item.full_discount_value ?? item.discount_value ?? '');
+		const hasHalfPortion = item.half_portion_price !== null && typeof item.half_portion_price !== 'undefined';
+		const resolvedHalfDiscountType = item.half_discount_type || OFFER_TYPES.NONE;
+
+		setEditingItemId(item.id);
+		setNewItem({
+			name: item.name,
+			description: item.description || '',
+			category: targetCategoryId || '',
+			subcategory_id: item.subcategory_id || '',
+			image: null,
+			halfPortion: hasHalfPortion,
+			fullPrice: resolvedFullPrice !== null && resolvedFullPrice !== undefined ? String(resolvedFullPrice) : '',
+			fullDiscountType: resolvedFullDiscountType,
+			fullDiscountValue: resolvedFullDiscountValue,
+			halfPrice: hasHalfPortion ? String(item.half_portion_price ?? '') : '',
+			halfDiscountType: hasHalfPortion ? resolvedHalfDiscountType : OFFER_TYPES.NONE,
+			halfDiscountValue: hasHalfPortion && resolvedHalfDiscountType !== OFFER_TYPES.NONE ? String(item.half_discount_value ?? '') : '',
+			unit: item.unit || 'plate',
+			active: item.is_available,
+			food_type: normalizeFoodType(item.food_type)
+		});
+		setShowModal(true);
+	}, []);
 
 	// Subcategory handlers
 	const handleCategorySelectChange = async (e) => {
@@ -497,44 +541,7 @@ const Menu = () => {
 														item={item}
 														onToggle={handleToggleItem}
 														onDelete={handleDeleteItem}
-														onEdit={async (item) => {
-															// Load subcategories for this category
-															if (item.category_id) {
-																try {
-																	const subs = await subcategoryService.getSubcategories(item.category_id);
-																	setSubcategories(subs || []);
-																} catch (error) {
-																	console.error('Failed to load subcategories:', error);
-																	setSubcategories([]);
-																}
-															}
-
-												const resolvedFullPrice = item.full_price ?? item.price ?? '';
-												const resolvedFullDiscountType = item.full_discount_type || item.discount_type || OFFER_TYPES.NONE;
-												const resolvedFullDiscountValue = resolvedFullDiscountType === OFFER_TYPES.NONE ? '' : String(item.full_discount_value ?? item.discount_value ?? '');
-												const hasHalfPortion = item.half_portion_price !== null && typeof item.half_portion_price !== 'undefined';
-												const resolvedHalfDiscountType = item.half_discount_type || OFFER_TYPES.NONE;
-
-												setEditingItemId(item.id);
-												setNewItem({
-													name: item.name,
-													description: item.description || '',
-													category: item.category_id || cat.id,
-													subcategory_id: item.subcategory_id || '',
-													image: null,
-													halfPortion: hasHalfPortion,
-													fullPrice: resolvedFullPrice !== null && resolvedFullPrice !== undefined ? String(resolvedFullPrice) : '',
-													fullDiscountType: resolvedFullDiscountType,
-													fullDiscountValue: resolvedFullDiscountValue,
-													halfPrice: hasHalfPortion ? String(item.half_portion_price ?? '') : '',
-													halfDiscountType: hasHalfPortion ? resolvedHalfDiscountType : OFFER_TYPES.NONE,
-													halfDiscountValue: hasHalfPortion && resolvedHalfDiscountType !== OFFER_TYPES.NONE ? String(item.half_discount_value ?? '') : '',
-													unit: item.unit || 'plate',
-													active: item.is_available,
-													food_type: normalizeFoodType(item.food_type)
-												});
-												setShowModal(true);
-														}}
+														onEdit={(item) => handleEditItem(item, cat.id)}
 													/>
 												))}
 											</div>

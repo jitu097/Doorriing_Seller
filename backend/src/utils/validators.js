@@ -2,7 +2,10 @@ const { BadRequestError } = require('./errors');
 
 const sanitizeString = (str) => {
     if (typeof str !== 'string') return str;
-    return str.trim().replace(/[<>]/g, '');
+    // Remove potential script tags and trim
+    return str.trim()
+        .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gim, '')
+        .replace(/[<>]/g, '');
 };
 
 const validateRequired = (fields, data) => {

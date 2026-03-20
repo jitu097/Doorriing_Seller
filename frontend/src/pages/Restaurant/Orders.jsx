@@ -118,9 +118,6 @@ export default function Orders() {
       return;
     }
 
-    if (import.meta.env.DEV) {
-      console.log('[Orders][restaurant] realtime insert', incomingOrder);
-    }
 
     void (async () => {
       try {

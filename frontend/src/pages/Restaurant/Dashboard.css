@@ -59,6 +59,12 @@ body {
   display: flex;
   gap: 12px;
   align-items: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
 .stat-icon {
@@ -116,6 +122,12 @@ body {
   color: rgb(109, 29, 29);
   text-decoration: none;
   font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.view-all-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
 }
 
 /* ===== TABLE ===== */
@@ -137,6 +149,10 @@ body {
 
 .admin-table th {
   background: #fafafa;
+}
+
+.admin-table tr {
+  transition: background-color 0.3s ease;
 }
 
 .empty-state {
@@ -163,12 +179,13 @@ body {
   background: #f8f9fa;
   border-radius: 10px;
   border-left: 4px solid rgb(109, 29, 29);
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .booking-item:hover {
   background: #fff5e6;
-  transform: translateX(4px);
+  transform: translateX(4px) scale(1.01);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .booking-time {
@@ -218,6 +235,18 @@ body {
 .booking-status .status-badge {
   font-size: 0.7rem;
   padding: 4px 10px;
+}
+
+/* ===== ANIMATIONS ===== */
+.new-order-highlight {
+  animation: pulse-highlight 2s ease-in-out infinite;
+  background-color: #fff9e6 !important;
+}
+
+@keyframes pulse-highlight {
+  0% { background-color: #fff9e6; }
+  50% { background-color: #ffd70033; }
+  100% { background-color: #fff9e6; }
 }
 
 /* ===== MOBILE FIXES ===== */

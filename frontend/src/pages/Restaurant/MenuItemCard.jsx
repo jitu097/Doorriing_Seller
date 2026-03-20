@@ -27,6 +27,7 @@ const MenuItemCard = ({ item, onToggle, onDelete, onEdit }) => {
                     src={item.image_url || '/avatar-default.png'}
                     alt={item.name}
                     className="item-image"
+                    loading="lazy"
                 />
                 <span className={`status-badge ${item.is_available ? 'active' : 'inactive'}`}>
                     {item.is_available ? 'ACTIVE' : 'INACTIVE'}
@@ -111,4 +112,4 @@ const MenuItemCard = ({ item, onToggle, onDelete, onEdit }) => {
     );
 };
 
-export default MenuItemCard;
+export default React.memo(MenuItemCard);

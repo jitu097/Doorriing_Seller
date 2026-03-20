@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './Products.css';
 import groceryService from '../../services/groceryService';
 import { useRealtimeSubscription } from '../../hooks/useRealtimeSubscription';
@@ -89,7 +89,7 @@ const Products = () => {
 	const [newItem, setNewItem] = useState(createInitialItemState());
 
 	// --- Data Fetching ---
-	const fetchData = async () => {
+	const fetchData = useCallback(async () => {
 		try {
 			setLoading(true);
 			const [fetchedCategories, fetchedItems] = await Promise.all([
@@ -104,7 +104,7 @@ const Products = () => {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
 
 	useRealtimeSubscription('items', () => { setTimeout(fetchData, 0) });
 
@@ -114,16 +114,16 @@ const Products = () => {
 
 	// --- Event Handlers ---
 
-	const handleAccordion = (idx) => {
-		setOpenIndex(openIndex === idx ? null : idx);
-	};
+	const handleAccordion = useCallback((idx) => {
+		setOpenIndex(prev => (prev === idx ? null : idx));
+	}, []);
 
-	const handleInputChange = async (e) => {
+	const handleInputChange = useCallback(async (e) => {
 		const { name, value, type, checked, files } = e.target;
 		if (type === 'checkbox') {
-			setNewItem({ ...newItem, [name]: checked });
+			setNewItem(prev => ({ ...prev, [name]: checked }));
 		} else if (type === 'file') {
-			setNewItem({ ...newItem, image: files[0] });
+			setNewItem(prev => ({ ...prev, image: files[0] }));
 		} else {
 			// Load subcategories when category changes
 			if (name === 'category_id' && value) {
@@ -134,7 +134,7 @@ const Products = () => {
 				} catch (error) {
 					console.error('Failed to load subcategories:', error);
 					setSubcategories([]);
-					setNewItem({ ...newItem, [name]: value });
+					setNewItem(prev => ({ ...prev, [name]: value }));
 				}
 			} else if (name === 'category_id' && !value) {
 				setSubcategories([]);
@@ -146,23 +146,23 @@ const Products = () => {
 					discount_value: value === DISCOUNT_TYPES.NONE ? '' : prev.discount_value,
 				}));
 			} else {
-				setNewItem({ ...newItem, [name]: value });
+				setNewItem(prev => ({ ...prev, [name]: value }));
 			}
 		}
-	};
+	}, []);
 
 	const handleCategoryInputChange = (e) => {
 		setNewCategory(e.target.value);
 	};
 
-	const handleModalClose = () => {
+	const handleModalClose = useCallback(() => {
 		setShowModal(false);
 		setEditingItem(null);
 		setSubcategories([]);
 		setNewItem(createInitialItemState());
-	};
+	}, []);
 
-	const handleQuickAddProduct = async (categoryId) => {
+	const handleQuickAddProduct = useCallback(async (categoryId) => {
 		if (!categoryId || categoryId === 'uncategorized') {
 			setShowModal(true);
 			return;
@@ -180,9 +180,9 @@ const Products = () => {
 			console.error('Failed to prepare quick add:', error);
 			setShowModal(true);
 		}
-	};
+	}, []);
 
-	const handleEditItem = async (item) => {
+	const handleEditItem = useCallback(async (item) => {
 		setEditingItem(item);
 
 		// Load subcategories for this category
@@ -216,13 +216,13 @@ const Products = () => {
 			active: item.is_available
 		});
 		setShowModal(true);
-	};
+	}, []);
 
-	const handleToggleItem = async (id, currentStatus) => {
+	const handleToggleItem = useCallback(async (id, currentStatus) => {
 		try {
 			const newStatus = !currentStatus;
 			// Optimistic update
-			setItems(items.map(i => i.id === id ? { ...i, is_available: newStatus } : i));
+			setItems(prev => prev.map(i => i.id === id ? { ...i, is_available: newStatus } : i));
 
 			await groceryService.toggleItemAvailability(id, newStatus);
 		} catch (err) {
@@ -230,9 +230,9 @@ const Products = () => {
 			alert('Failed to update status');
 			fetchData(); // Revert
 		}
-	};
+	}, [fetchData]);
 
-	const handleSaveItem = async (e) => {
+	const handleSaveItem = useCallback(async (e) => {
 		e.preventDefault();
 		try {
 			setIsSubmitting(true);
@@ -277,7 +277,7 @@ const Products = () => {
 		} finally {
 			setIsSubmitting(false);
 		}
-	};
+	}, [newItem, editingItem, fetchData, handleModalClose]);
 
 	const handleAddCategory = async (e) => {
 		e.preventDefault();
@@ -297,12 +297,12 @@ const Products = () => {
 		}
 	};
 
-	const handleDeleteItem = async (id, name) => {
+	const handleDeleteItem = useCallback(async (id, name) => {
 		if (window.confirm(`Are you sure you want to delete "${name}"?`)) {
 			try {
 				await groceryService.deleteGroceryItem(id);
 				// Optimistic UI update
-				setItems(items.filter(item => item.id !== id));
+				setItems(prev => prev.filter(item => item.id !== id));
 			} catch (err) {
 				console.error(err);
 				alert(err.message || 'Failed to delete item');
@@ -310,7 +310,7 @@ const Products = () => {
 				fetchData();
 			}
 		}
-	};
+	}, [fetchData]);
 
 	// Subcategory handlers
 	const handleCategorySelectChange = async (e) => {
@@ -383,7 +383,7 @@ const Products = () => {
 	// --- Derived State for UI ---
 
 	// Group items by category for display
-	const getGroupedItems = () => {
+	const groupedData = useMemo(() => {
 		const grouped = categories.map(cat => ({
 			...cat,
 			items: items.filter(i => i.category_id === cat.id)
@@ -401,9 +401,7 @@ const Products = () => {
 			});
 		}
 		return grouped;
-	};
-
-	const groupedData = getGroupedItems();
+	}, [categories, items]);
 	const derivedBasePrice = clampToZero(parseCurrencyInput(newItem.price));
 	const derivedDiscountValue = newItem.discount_type === DISCOUNT_TYPES.NONE ? 0 : clampToZero(parseCurrencyInput(newItem.discount_value));
 	const derivedFinalPrice = calculateFinalPrice(derivedBasePrice, newItem.discount_type, derivedDiscountValue);

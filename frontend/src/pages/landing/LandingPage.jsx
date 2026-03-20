@@ -20,7 +20,7 @@ const LandingPage = () => {
                     </h1>
 
                         
-                            <img src="/boy.png" alt="Boy" className="hero-boy-img" />
+                            <img src="/boy.png" alt="Boy" className="hero-boy-img" loading="lazy" />
        
 
                     <button className="cta-btn primary-cta" onClick={() => navigate('/login')} style={{ margin: '0 auto', display: 'block' }}>

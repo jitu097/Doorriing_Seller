@@ -46,7 +46,7 @@ const GroceryProductCard = ({ item, onEdit, onDelete, onToggleStatus }) => {
 
                     <div className="grocery-card-imgbox">
                         {item.image_url ? (
-                            <img src={item.image_url} alt={item.name} className="grocery-card-img" />
+                            <img src={item.image_url} alt={item.name} className="grocery-card-img" loading="lazy" />
                         ) : (
                             <span className="grocery-card-placeholder">🛒</span>
                         )}
@@ -115,4 +115,4 @@ const GroceryProductCard = ({ item, onEdit, onDelete, onToggleStatus }) => {
     );
 };
 
-export default GroceryProductCard;
+export default React.memo(GroceryProductCard);

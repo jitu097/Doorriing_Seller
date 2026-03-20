@@ -36,7 +36,7 @@ const ForgotPassword = () => {
                     }
                 }
             } catch (backendErr) {
-                console.warn('Backend logging failed, proceeding with Firebase reset:', backendErr);
+                // Backend logging failed, proceeding with Firebase reset
             }
 
             await sendPasswordResetEmail(auth, email);

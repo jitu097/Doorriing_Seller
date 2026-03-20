@@ -43,13 +43,40 @@ export const useRealtimeSubscription = (tableName, onRowChange, providedShopId =
     }, [shopId]);
 
     useEffect(() => {
-        if (!tableName || !shopId) return;
+        if (!tableName || !shopId) return undefined;
 
         const debouncedCallback = debounce((payload) => {
             if (callbackRef.current) {
                 callbackRef.current(payload);
             }
         }, debounceMs);
+
+        const lastPayloadsRef = new Map();
+
+        const deduplicatedCallback = (payload) => {
+            const rowId = payload.new?.id || payload.old?.id;
+            if (!rowId) {
+                debouncedCallback(payload);
+                return;
+            }
+
+            const currentPayloadStr = JSON.stringify(payload.new || payload.old);
+            const lastPayloadStr = lastPayloadsRef.get(rowId);
+
+            if (currentPayloadStr === lastPayloadStr) {
+                return;
+            }
+
+            lastPayloadsRef.set(rowId, currentPayloadStr);
+            // Cleanup old entries after 5 minutes
+            setTimeout(() => {
+                if (lastPayloadsRef.get(rowId) === currentPayloadStr) {
+                    lastPayloadsRef.delete(rowId);
+                }
+            }, 300000);
+
+            debouncedCallback(payload);
+        };
 
         const subscriptionId = Math.random().toString(36).substring(2, 10);
         const channelName = `public:${tableName}:shop_id=eq.${shopId}-${subscriptionId}`;
@@ -58,17 +85,17 @@ export const useRealtimeSubscription = (tableName, onRowChange, providedShopId =
             .on(
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: tableName, filter: `shop_id=eq.${shopId}` },
-                debouncedCallback
+                deduplicatedCallback
             )
             .on(
                 'postgres_changes',
                 { event: 'UPDATE', schema: 'public', table: tableName, filter: `shop_id=eq.${shopId}` },
-                debouncedCallback
+                deduplicatedCallback
             )
             .on(
                 'postgres_changes',
                 { event: 'DELETE', schema: 'public', table: tableName, filter: `shop_id=eq.${shopId}` },
-                debouncedCallback
+                deduplicatedCallback
             )
             .subscribe();
 

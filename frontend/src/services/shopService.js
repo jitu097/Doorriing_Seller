@@ -36,7 +36,8 @@ const emitShopStatusChange = (isOpen) => {
 export const shopService = {
   // Get shop details
   getShop: async () => {
-    return await apiCall('/shop');
+    const response = await apiCall('/shop');
+    return response;
   },
 
   getCurrentShop: async () => {
@@ -74,7 +75,6 @@ export const shopService = {
   toggleStatus: async (isOpen) => {
     const targetStatus = isOpen ? SHOP_OPEN_STATUS : SHOP_CLOSED_STATUS;
     const currentShop = await shopService.getCurrentShop();
-
     if (currentShop?.id) {
       const response = await apiCall(`/shops/${currentShop.id}/status`, {
         method: 'PUT',

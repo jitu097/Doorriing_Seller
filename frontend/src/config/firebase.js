@@ -14,6 +14,8 @@ export const firebaseConfig = {
 };
 
 // Initialize Firebase
+// No log
+
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 

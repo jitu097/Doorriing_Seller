@@ -39,16 +39,12 @@ export const useOrderInsertRealtime = (onInsert, providedShopId = null) => {
         };
     }, [shopId, providedShopId]);
 
+    const processedOrderIdsRef = useRef(new Set());
+
     useEffect(() => {
         if (!shopId) return undefined;
 
-        if (import.meta.env.DEV) {
-            console.log('[Realtime][orders] creating INSERT subscription', {
-                shopId,
-                filter: `shop_id=eq.${shopId}`
-            });
-        }
-
+        console.log(`[Realtime] Subscribing to orders for shop: ${shopId}`);
         const channel = supabase
             .channel(`orders:insert:shop:${shopId}`)
             .on(
@@ -60,30 +56,34 @@ export const useOrderInsertRealtime = (onInsert, providedShopId = null) => {
                     filter: `shop_id=eq.${shopId}`
                 },
                 (payload) => {
-                    if (import.meta.env.DEV) {
-                        console.log('[Realtime][orders] INSERT payload received', payload);
-                        console.log('[Realtime][orders] current shop id', shopId);
-                    }
-
+                    console.log('[Realtime] New order received:', payload.new?.id);
                     if (!payload?.new || String(payload.new.shop_id) !== String(shopId)) {
+                        console.warn('[Realtime] Received order for different shop or invalid payload', { 
+                            expectedShopId: shopId, 
+                            receivedShopId: payload.new?.shop_id 
+                        });
                         return;
                     }
+
+                    const orderId = payload.new.id;
+                    if (processedOrderIdsRef.current.has(orderId)) {
+                        return;
+                    }
+
+                    // Add to processed set and set a timeout to cleanup (prevent infinite growth)
+                    processedOrderIdsRef.current.add(orderId);
+                    setTimeout(() => {
+                        processedOrderIdsRef.current.delete(orderId);
+                    }, 60000); // 1 minute window
 
                     if (callbackRef.current) {
                         callbackRef.current(payload);
                     }
                 }
             )
-            .subscribe((status) => {
-                if (import.meta.env.DEV) {
-                    console.log(`[Realtime][orders] channel status: ${status}`, { shopId });
-                }
-            });
+            .subscribe();
 
         return () => {
-            if (import.meta.env.DEV) {
-                console.log('[Realtime][orders] removing channel', { shopId });
-            }
             supabase.removeChannel(channel);
         };
     }, [shopId]);

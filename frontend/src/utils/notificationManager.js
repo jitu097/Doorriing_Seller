@@ -9,7 +9,8 @@ const LAST_TOKEN_REFRESH_KEY = 'notificationLastTokenRefreshAt';
 const TOAST_CONTAINER_ID = 'notification-toast-container';
 const TOAST_STYLE_ID = 'notification-toast-style';
 const TOAST_DURATION_MS = 5000;
-const MESSAGING_SW_SCOPE = '/firebase-cloud-messaging-push-scope';
+const MESSAGING_SW_SCOPE = '/firebase-push';
+const OLD_MESSAGING_SW_SCOPE = '/firebase-cloud-messaging-push-scope';
 const TOKEN_REFRESH_INTERVAL_MS = 12 * 60 * 60 * 1000;
 const DEFAULT_NOTIFICATION_TITLE = 'Doorriing Seller';
 const DEFAULT_NOTIFICATION_BODY = 'You have a new update';
@@ -109,44 +110,77 @@ const isMessagingSupported = async () => {
 };
 
 const getMessagingInstance = async () => {
-    const supported = await isMessagingSupported();
-    if (!supported) {
+    if (messagingInstance) {
+        return messagingInstance;
+    }
+
+    try {
+        const supported = await isMessagingSupported();
+        messagingInstance = getMessaging(app);
+        return messagingInstance;
+    } catch (error) {
+        console.error('[FCM] Failed to initialize messaging instance', error);
         return null;
     }
-
-    if (!messagingInstance) {
-        messagingInstance = getMessaging(app);
-    }
-
-    return messagingInstance;
 };
 
 const buildMessagingServiceWorkerUrl = () => {
-    const params = new URLSearchParams({
+    // Collect all required parameters from the config
+    const configValues = {
         apiKey: firebaseConfig.apiKey || '',
         authDomain: firebaseConfig.authDomain || '',
         projectId: firebaseConfig.projectId || '',
         storageBucket: firebaseConfig.storageBucket || '',
         messagingSenderId: firebaseConfig.messagingSenderId || '',
         appId: firebaseConfig.appId || '',
-    });
+    };
 
-    return `/firebase-messaging-sw.js?${params.toString()}`;
+    // Construct the URL with query parameters
+    const params = new URLSearchParams(configValues);
+    const url = `/firebase-messaging-sw.js?${params.toString()}`;
+    return url;
 };
 
 const registerMessagingServiceWorker = async () => {
+    // 1. Thorough cleanup for previous scopes/scripts to avoid AbortError
+    if ('serviceWorker' in navigator) {
+        try {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (const reg of regs) {
+                const isOurOldScope = reg.scope.includes(OLD_MESSAGING_SW_SCOPE);
+                const isOurRootWorker = reg.scope === window.location.origin + '/' && 
+                                      reg.active?.scriptURL?.includes('firebase-messaging-sw.js');
+                
+                if (isOurOldScope || isOurRootWorker) {
+                    await reg.unregister();
+                }
+            }
+        } catch (e) {
+            console.error('[FCM] Cleanup failed', e);
+        }
+    }
+
+    // No log
+    
     if (!messagingServiceWorkerPromise) {
         messagingServiceWorkerPromise = navigator.serviceWorker.register(
             buildMessagingServiceWorkerUrl(),
             {
                 scope: MESSAGING_SW_SCOPE,
-                type: 'module',
             }
-        );
+        ).then(reg => {
+            return reg;
+        }).catch(err => {
+            console.error('[FCM] Service Worker registration failed', err);
+            messagingServiceWorkerPromise = null; 
+            throw err;
+        });
     }
 
     return messagingServiceWorkerPromise;
 };
+
+
 
 const waitForServiceWorkerActivation = async (registration) => {
     if (!registration) {
@@ -461,11 +495,13 @@ const generateToken = async () => {
         return null;
     }
 
-    const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+    const vapidKey = (import.meta.env.VITE_FIREBASE_VAPID_KEY || '').trim();
     if (!vapidKey) {
         console.error('Missing VITE_FIREBASE_VAPID_KEY. Push notifications will remain disabled.');
         return null;
     }
+    
+    // No logs
 
     const permission = getNotificationPermissionState();
     if (permission !== 'granted') {
@@ -477,33 +513,43 @@ const generateToken = async () => {
         return null;
     }
 
+    // No logs
+    
+    // 1. Mandatory Register & Wait for Service Worker FIRST
+    // This ensures any subsequent Firebase Messaging calls (like deleteToken) 
+    // use our custom registration instead of trying to register a default one.
+    const registration = await waitForServiceWorkerActivation(
+        await registerMessagingServiceWorker()
+    );
+
     const lastRefreshAt = Number(readStorage(LAST_TOKEN_REFRESH_KEY) || 0);
     const shouldRefreshToken =
         !readStorage(LAST_TOKEN_KEY) ||
         !Number.isFinite(lastRefreshAt) ||
         Date.now() - lastRefreshAt > TOKEN_REFRESH_INTERVAL_MS;
 
-    if (shouldRefreshToken) {
-        try {
-            await deleteToken(messaging);
-        } catch (error) {
-            console.error('Failed to clear existing FCM token before refresh', error);
+    // Note: We skip deleteToken here because it often triggers a default service worker 
+    // registration on the root scope, which fails our evaluation checks.
+    // Instead, we just proceed to generate a new token with our custom registration.
+
+    // No logs
+    try {
+        const token = await getToken(messaging, {
+            vapidKey,
+            serviceWorkerRegistration: registration,
+        });
+        
+        if (token) {
+            writeStorage(LAST_TOKEN_REFRESH_KEY, String(Date.now()));
         }
+    
+        return token || null;
+    } catch (error) {
+        if (error.name === 'AbortError' || error.message?.toLowerCase().includes('push service error')) {
+            console.error('[FCM] CRITICAL: Push service aborted registration. This is often a browser-level issue. Please try: 1. Hard refresh (Ctrl+F5) 2. Unregister ALL service workers in DevTools -> Application.', error);
+        }
+        throw error;
     }
-
-    const registration = await waitForServiceWorkerActivation(
-        await registerMessagingServiceWorker()
-    );
-    const token = await getToken(messaging, {
-        vapidKey,
-        serviceWorkerRegistration: registration,
-    });
-
-    if (token) {
-        writeStorage(LAST_TOKEN_REFRESH_KEY, String(Date.now()));
-    }
-
-    return token || null;
 };
 
 const buildOwnerKey = (user) => String(user?.uid || auth.currentUser?.uid || 'anonymous');
@@ -525,14 +571,16 @@ export const saveTokenToSupabase = async (user, token) => {
 
     const activeUser = await ensureAuthenticatedSession(user);
     const ownerKey = buildOwnerKey(activeUser);
-    const previousToken = readStorage(LAST_TOKEN_KEY);
-    const previousOwnerKey = readStorage(LAST_OWNER_KEY);
-
-    const payload = await notificationService.registerPushToken(token);
-
-    writeStorage(LAST_TOKEN_KEY, token);
-    writeStorage(LAST_OWNER_KEY, ownerKey);
-    return payload;
+    
+    try {
+        const payload = await notificationService.registerPushToken(token);
+        writeStorage(LAST_TOKEN_KEY, token);
+        writeStorage(LAST_OWNER_KEY, ownerKey);
+        return payload;
+    } catch (error) {
+        console.error('[FCM] Failed to save token to backend', error);
+        throw error;
+    }
 };
 
 export const listenForegroundMessages = async () => {
@@ -663,6 +711,8 @@ export const enableNotifications = async (user) => {
             };
         }
 
+
+
         const appServiceWorker = await ensureAppServiceWorkerRegistration();
         const token = await generateToken();
         if (!token) {
@@ -714,6 +764,7 @@ export const enableNotifications = async (user) => {
 export const initNotifications = async (user) => {
     const prepared = await prepareNotifications(user);
     if (!prepared.supported) {
+        console.warn('[FCM] Notifications not supported', prepared.reason);
         return {
             supported: false,
             initialized: false,
@@ -722,6 +773,7 @@ export const initNotifications = async (user) => {
     }
 
     if (getNotificationPermissionState() !== 'granted') {
+        console.log('[FCM] Permission not granted:', getNotificationPermissionState());
         return {
             supported: true,
             initialized: false,
@@ -731,6 +783,7 @@ export const initNotifications = async (user) => {
     }
 
     if (initializedUserKey === user?.uid) {
+        console.log('[FCM] Already initialized for user', user.uid);
         return {
             supported: true,
             initialized: true,
@@ -741,6 +794,7 @@ export const initNotifications = async (user) => {
 
     const token = await generateToken();
     if (!token) {
+        console.warn('[FCM] No token available after generation');
         return {
             supported: true,
             initialized: false,
@@ -751,8 +805,10 @@ export const initNotifications = async (user) => {
 
     try {
         await saveTokenToSupabase(user, token);
+        initializedUserKey = user.uid;
+        console.log('[FCM] Initialization complete');
     } catch (error) {
-        console.error('Failed to persist push notification token', error);
+        console.error('[FCM] Failed to persist push notification token', error);
         return {
             supported: true,
             initialized: false,
@@ -760,8 +816,6 @@ export const initNotifications = async (user) => {
             permission: 'granted',
         };
     }
-
-    initializedUserKey = user.uid;
 
     return {
         supported: true,

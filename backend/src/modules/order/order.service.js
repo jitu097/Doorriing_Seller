@@ -159,7 +159,9 @@ const resolveSellerFacingStatus = (orderRecord = {}, assignment = null) => {
 };
 
 const logError = (scope, error, context = {}) => {
-    console.error(`[OrderService] ${scope}`, { error: error?.message, ...context });
+    if (process.env.NODE_ENV === 'development' || error?.statusCode >= 500) {
+        console.error(`[OrderService] ${scope}`, { error: error?.message, ...context });
+    }
 };
 
 const buildStatusFilterTokens = (status) => {
@@ -691,64 +693,61 @@ const markReadyForPickup = async (orderId, shopId) => {
 };
 
 const getOrderStats = async (shopId) => {
-    const { data, error } = await supabase
-        .from('orders')
-        .select('status, total_amount')
-        .eq('shop_id', shopId);
+    validateUUID(shopId);
 
-    if (error) throw error;
-
-    const stats = {
-        pending: 0,
-        accepted: 0,
-        preparing: 0,
-        readyForPickup: 0,
-        enRoute: 0,
-        delivered: 0,
-        cancelled: 0,
-        rejected: 0,
-        expired: 0,
-        totalRevenue: 0
+    // Run parallel counts for each status group to avoid fetching all rows into memory
+    const statusGroups = {
+        pending: ['pending'],
+        accepted: ['accepted'],
+        preparing: ['preparing'],
+        readyForPickup: ['ready_for_pickup'],
+        enRoute: ['picked_up', 'out_for_delivery'],
+        delivered: ['delivered'],
+        cancelled: ['cancelled'],
+        rejected: ['rejected'],
+        expired: ['expired']
     };
 
-    (data || []).forEach(order => {
-        const status = normalizeOrderStatus(order.status);
-        switch (status) {
-            case 'pending':
-                stats.pending++;
-                break;
-            case 'accepted':
-                stats.accepted++;
-                break;
-            case 'preparing':
-                stats.preparing++;
-                break;
-            case 'ready_for_pickup':
-                stats.readyForPickup++;
-                break;
-            case 'picked_up':
-            case 'out_for_delivery':
-                stats.enRoute++;
-                break;
-            case 'delivered':
-                stats.delivered++;
-                stats.totalRevenue += parseFloat(order.total_amount || 0);
-                break;
-            case 'cancelled':
-                stats.cancelled++;
-                break;
-            case 'rejected':
-                stats.rejected++;
-                break;
-            case 'expired':
-                stats.expired++;
-                break;
-            default:
-                break;
-        }
-    });
+    try {
+        const statusKeys = Object.keys(statusGroups);
+        const countPromises = statusKeys.map(key => {
+            const statuses = statusGroups[key];
+            let query = supabase
+                .from('orders')
+                .select('id', { count: 'exact', head: true })
+                .eq('shop_id', shopId);
+            
+            if (statuses.length === 1) {
+                query = query.eq('status', statuses[0]);
+            } else {
+                query = query.in('status', statuses);
+            }
+            return query.then(res => ({ key, count: res.count || 0 }));
+        });
 
-    return stats;
+        // Also fetch total revenue for delivered orders
+        const revenuePromise = supabase
+            .from('orders')
+            .select('total_amount')
+            .eq('shop_id', shopId)
+            .eq('status', 'delivered')
+            .then(res => {
+                const total = (res.data || []).reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
+                return { key: 'totalRevenue', count: total };
+            });
+
+        const results = await Promise.all([...countPromises, revenuePromise]);
+        
+        const stats = results.reduce((acc, curr) => {
+            acc[curr.key] = curr.count;
+            return acc;
+        }, {});
+
+        return stats;
+    } catch (error) {
+        logError('getOrderStats', error, { shopId });
+        throw error;
+    }
 };
 
 module.exports = {

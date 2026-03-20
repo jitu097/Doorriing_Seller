@@ -55,7 +55,7 @@ function Booking() {
 			setTotalPages(response.pagination?.totalPages || 1);
 
 			if (!response.bookings || response.bookings.length === 0) {
-				console.warn('⚠️ No bookings returned from API');
+				// No bookings returned
 			}
 		} catch (error) {
 			console.error('❌ Failed to fetch bookings:', error);

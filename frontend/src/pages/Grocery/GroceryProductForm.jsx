@@ -67,7 +67,7 @@ const GroceryProductForm = ({
                 <div className="product-form-divider"></div>
 
                 {/* Body / Form */}
-                <form onSubmit={onSubmit} className="product-form-body">
+                <form id="item-form" onSubmit={onSubmit} className="product-form-body">
 
                     {/* Item Name */}
                     <div className="form-group">
@@ -276,13 +276,14 @@ const GroceryProductForm = ({
                         </label>
                     </div>
 
-                    {/* Actions */}
-                    <div className="form-actions">
-                        <button type="submit" className="submit-btn" disabled={isSubmitting}>
-                            {isSubmitting ? 'Saving...' : 'Save Product'}
-                        </button>
-                    </div>
                 </form>
+
+                {/* Actions - Sticky Footer */}
+                <div className="product-form-footer">
+                    <button type="submit" form="item-form" className="submit-btn" disabled={isSubmitting}>
+                        {isSubmitting ? 'Saving...' : 'Save Product'}
+                    </button>
+                </div>
             </div>
         </div>
     );

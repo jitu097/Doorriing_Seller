@@ -9,6 +9,8 @@ import { shopService } from '../../services/shopService';
 import Loader from '../../components/common/Loader';
 import { useOrderInsertRealtime } from '../../hooks/useOrderInsertRealtime';
 import { mergeFetchedOrders, upsertOrderAtTop } from '../../utils/orderRealtime';
+import { soundEffects } from '../../utils/soundEffects';
+import Toast from '../../components/common/Toast';
 
 function Dashboard() {
 	const [stats, setStats] = useState(null);
@@ -18,6 +20,8 @@ function Dashboard() {
 	const [loading, setLoading] = useState(true);
 	const [isBookingEnabled, setIsBookingEnabled] = useState(false);
 	const [bookingToggleLoading, setBookingToggleLoading] = useState(false);
+	const [newlyAddedOrderId, setNewlyAddedOrderId] = useState(null);
+	const [notification, setNotification] = useState(null);
 
 	const fetchDashboardData = useCallback(async ({ silent = false } = {}) => {
 		try {
@@ -67,9 +71,14 @@ function Dashboard() {
 			return;
 		}
 
-		if (import.meta.env.DEV) {
-			console.log('[Dashboard][restaurant] realtime insert', incomingOrder);
-		}
+		// Play sound notification
+		soundEffects.playNewOrder();
+
+		// Auto-scroll to top to see the new order
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+
+		// Show toast
+		setNotification({ message: 'New Order Received!', type: 'info' });
 
 		void (async () => {
 			try {
@@ -77,9 +86,16 @@ function Dashboard() {
 				const hydratedOrder = orderData?.order || orderData?.data || orderData;
 
 				setRecentOrders((prevOrders) => upsertOrderAtTop(prevOrders, hydratedOrder, 5));
+
+				// Highlight the new order
+				setNewlyAddedOrderId(incomingOrder.id);
+				setTimeout(() => setNewlyAddedOrderId(null), 5000);
 			} catch (error) {
 				console.error('Failed to hydrate realtime restaurant order', error);
 				setRecentOrders((prevOrders) => upsertOrderAtTop(prevOrders, incomingOrder, 5));
+
+				setNewlyAddedOrderId(incomingOrder.id);
+				setTimeout(() => setNewlyAddedOrderId(null), 5000);
 			} finally {
 				void fetchDashboardData({ silent: true });
 			}
@@ -131,7 +147,7 @@ function Dashboard() {
 				<div className="stats-grid">
 					<div className="stat-card">
 						<div className="stat-icon revenue-icon">
-							<img src="/potli.png" alt="Potli" style={{ width: '2.2rem', height: '2.2rem', objectFit: 'contain' }} />
+							<img src="/potli.png" alt="Potli" style={{ width: '2.2rem', height: '2.2rem', objectFit: 'contain' }} loading="lazy" />
 						</div>
 						<div className="stat-info">
 							<h3>Total Revenue</h3>
@@ -142,7 +158,7 @@ function Dashboard() {
 
 					<div className="stat-card">
 						<div className="stat-icon orders-icon">
-							<img src="/checkout.png" alt="Checkout" style={{ width: '2.2rem', height: '2.2rem', objectFit: 'contain' }} />
+							<img src="/checkout.png" alt="Checkout" style={{ width: '2.2rem', height: '2.2rem', objectFit: 'contain' }} loading="lazy" />
 						</div>
 						<div className="stat-info">
 							<h3>Active Orders</h3>
@@ -153,7 +169,7 @@ function Dashboard() {
 
 					<div className="stat-card">
 						<div className="stat-icon success-icon">
-							<img src="/delivered.png" alt="Delivered" style={{ width: '2.2rem', height: '2.2rem', objectFit: 'contain' }} />
+							<img src="/delivered.png" alt="Delivered" style={{ width: '2.2rem', height: '2.2rem', objectFit: 'contain' }} loading="lazy" />
 						</div>
 						<div className="stat-info">
 							<h3>Delivered</h3>
@@ -164,7 +180,7 @@ function Dashboard() {
 
 					<div className="stat-card">
 						<div className="stat-icon cancel-icon">
-							<img src="/cancel.png" alt="Cancelled" style={{ width: '2.2rem', height: '2.2rem', objectFit: 'contain' }} />
+							<img src="/cancel.png" alt="Cancelled" style={{ width: '2.2rem', height: '2.2rem', objectFit: 'contain' }} loading="lazy" />
 						</div>
 						<div className="stat-info">
 							<h3>Cancelled</h3>
@@ -196,7 +212,10 @@ function Dashboard() {
 										<tr><td colSpan="4" className="empty-state">No recent orders found</td></tr>
 									) : (
 										recentOrders.slice(0, 5).map(order => (
-											<tr key={order.id}>
+											<tr 
+												key={order.id}
+												className={newlyAddedOrderId === order.id ? 'new-order-highlight' : ''}
+											>
 												<td className="order-id">#{order.id.substring(0, 8)}...</td>
 												<td>
 													<span className={`status-badge ${(order.status || '').toLowerCase()}`}>
@@ -255,6 +274,13 @@ function Dashboard() {
 
 				</div>
 			</div>
+			{notification && (
+				<Toast 
+					message={notification.message} 
+					type={notification.type} 
+					onClose={() => setNotification(null)} 
+				/>
+			)}
 		</>
 	);
 }

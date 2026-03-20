@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { walletService } from '../../services/walletService';
 import { payoutService } from '../../services/payoutService';
 import { useRealtimeSubscription } from '../../hooks/useRealtimeSubscription';
@@ -39,7 +39,7 @@ const WalletPage = () => {
         }
     }, [activeTab, txPage, reqPage]);
 
-    const fetchSummaryData = async () => {
+    const fetchSummaryData = useCallback(async () => {
         try {
             setLoading(true);
             const summaryData = await walletService.getWalletSummary();
@@ -50,9 +50,9 @@ const WalletPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    const fetchEarningsHistory = async () => {
+    const fetchEarningsHistory = useCallback(async () => {
         try {
             const txData = await walletService.getWalletTransactions(txPage, 10, 'order_earning');
             if (txData) {
@@ -62,9 +62,9 @@ const WalletPage = () => {
         } catch (err) {
             console.error('Failed to fetch transactions', err);
         }
-    };
+    }, [txPage]);
 
-    const fetchWithdrawRequests = async () => {
+    const fetchWithdrawRequests = useCallback(async () => {
         try {
             const reqData = await payoutService.getWithdrawRequests(reqPage, 10);
             if (reqData) {
@@ -74,16 +74,16 @@ const WalletPage = () => {
         } catch (err) {
             console.error('Failed to fetch withdraw requests', err);
         }
-    };
+    }, [reqPage]);
 
-    const handleWithdrawalSuccess = () => {
+    const handleWithdrawalSuccess = useCallback(() => {
         fetchSummaryData();
         if (activeTab === 'withdrawals') {
             fetchWithdrawRequests();
         } else {
             setActiveTab('withdrawals'); // switch to withdrawals to see the pending request
         }
-    };
+    }, [activeTab, fetchSummaryData, fetchWithdrawRequests]);
 
     if (loading && !summary) {
         return <Loader variant="fullscreen" message="Loading Wallet..." />;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { logoutUser } from '../../utils/authManager';
 import './Sidebar.css';
@@ -6,17 +6,17 @@ import './Sidebar.css';
 const Sidebar = ({ isOpen, onClose, menuItems, profilePath }) => {
     const navigate = useNavigate();
 
-    const handleLogout = async () => {
+    const handleLogout = useCallback(async () => {
         if (!window.confirm('Logout?')) return;
         const loggedOut = await logoutUser();
         if (loggedOut) {
             navigate('/login', { replace: true });
         }
-    };
+    }, [navigate]);
 
-    const handleLinkClick = () => {
+    const handleLinkClick = useCallback(() => {
         if (onClose) onClose();
-    };
+    }, [onClose]);
 
 
 
@@ -33,7 +33,7 @@ const Sidebar = ({ isOpen, onClose, menuItems, profilePath }) => {
                 onClick={() => { navigate(menuItems?.[0]?.path || '/'); handleLinkClick(); }}
                 style={{ cursor: 'pointer' }}
             >
-                <img src="/Doorriing.png" alt="Logo" />
+                <img src="/Doorriing.png" alt="Logo" loading="lazy" />
             </div>
 
             {/* Navigation Links */}
@@ -76,4 +76,4 @@ const Sidebar = ({ isOpen, onClose, menuItems, profilePath }) => {
     );
 };
 
-export default Sidebar;
+export default React.memo(Sidebar);

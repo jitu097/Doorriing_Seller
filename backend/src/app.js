@@ -81,7 +81,7 @@ const forgotPasswordLimiter = rateLimit({
 app.get('/health', async (req, res) => {
     try {
         // Simple probe to ensure DB is reachable
-        const { error } = await supabase.from('shop').select('id').limit(1);
+        const { error } = await supabase.from('shops').select('id').limit(1);
         if (error) throw error;
 
         res.status(200).json({

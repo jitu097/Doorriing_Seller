@@ -134,13 +134,11 @@
     background: #fff;
     font-family: inherit;
     box-sizing: border-box;
-    /* Important for width: 100% */
 }
 
 .form-control:focus {
     outline: none;
     border-color: #f97316;
-    /* Orange brand color */
     box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
 }
 
@@ -201,7 +199,6 @@ textarea.form-control {
     color: #111827;
 }
 
-/* File Upload styling to look like a clean box */
 .file-upload-wrapper {
     position: relative;
     width: 100%;
@@ -247,7 +244,6 @@ textarea.form-control {
     word-break: break-all;
 }
 
-/* Checkbox specific */
 .checkbox-group {
     flex-direction: row;
     align-items: center;
@@ -265,19 +261,18 @@ textarea.form-control {
 
 .checkbox-label {
     margin: 0 !important;
-    /* Override form-group label margin */
     font-weight: 500 !important;
     cursor: pointer;
 }
 
-/* Actions Footer */
-.form-actions {
-    margin-top: 12px;
-    padding-top: 20px;
+/* Actions Footer - Sticky */
+.product-form-footer {
+    padding: 20px 32px;
     border-top: 1px solid #f3f4f6;
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
+    background: #fff;
+    flex-shrink: 0;
 }
 
 .submit-btn {
@@ -292,7 +287,6 @@ textarea.form-control {
     box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.2);
     transition: transform 0.1s, box-shadow 0.1s;
     width: 100%;
-    /* Full width button often looks good in these modals, or auto */
 }
 
 .submit-btn:hover {
@@ -327,7 +321,7 @@ textarea.form-control {
         flex-direction: column;
     }
 
-    .form-actions {
-        padding-top: 18px;
+    .product-form-footer {
+        padding: 16px 24px;
     }
 }
