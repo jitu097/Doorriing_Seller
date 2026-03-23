@@ -249,7 +249,7 @@ export default function Registration() {
 								onClick={handleBackToLogin}
 								disabled={isLeavingToLogin}
 							>
-								← Back to Login
+								← 
 							</button>
 							<h1 className="register-title">Shop Registration</h1>
 						</div>

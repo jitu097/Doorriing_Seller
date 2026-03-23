@@ -1,6 +1,9 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+
 import Footer from '../../components/common/Footer';
+import Lottie from 'lottie-react';
+import loaderAnimation from '../../assets/loader.json';
 import './LandingPage.css';
 
 const LandingPage = () => {
@@ -20,7 +23,9 @@ const LandingPage = () => {
                     </h1>
 
                         
-                            <img src="/boy.png" alt="Boy" className="hero-boy-img" loading="lazy" />
+                    <div style={{ width: 300, margin: '0 auto' }}>
+                        <Lottie animationData={loaderAnimation} loop={true} style={{ width: '100%', height: '100%' }} />
+                    </div>
        
 
                     <button className="cta-btn primary-cta" onClick={() => navigate('/login')} style={{ margin: '0 auto', display: 'block' }}>
